@@ -23,6 +23,10 @@ import {
   siQwen,
   siReact,
   siSap,
+  siShopify,
+  siAndroid,
+  siIos,
+  siElectron,
   siTypescript,
 } from 'simple-icons';
 import azure from '../assets/logos/azure-plain.svg?raw';
@@ -79,4 +83,8 @@ export const logos: Record<LogoKey, Logo> = {
   onnx: fromSimple(siOnnx),
   claude: fromSimple(siClaude),
   ollama: fromSimple(siOllama),
+  shopify: fromSimple(siShopify),
+  android: fromSimple(siAndroid),
+  ios: fromSimple(siIos),
+  electron: fromSimple(siElectron),
 };

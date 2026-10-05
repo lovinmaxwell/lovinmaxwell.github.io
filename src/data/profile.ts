@@ -24,6 +24,7 @@ export type StackCategory =
   | 'Azure'
   | 'Frontend'
   | 'Mobile'
+  | 'E-commerce'
   | 'AI & Automation'
   | 'Data'
   | 'ERP / Integration'
@@ -59,7 +60,11 @@ export type LogoKey =
   | 'paddle'
   | 'onnx'
   | 'claude'
-  | 'ollama';
+  | 'ollama'
+  | 'shopify'
+  | 'android'
+  | 'ios'
+  | 'electron';
 
 export interface StackItem {
   name: string;
@@ -101,7 +106,8 @@ export type DomainIcon =
   | 'home'
   | 'building'
   | 'plug'
-  | 'scan';
+  | 'scan'
+  | 'devices';
 
 export interface Domain {
   title: string;
@@ -287,6 +293,8 @@ export const profile = {
       'Warehouse applications',
       'Delivery applications',
       'E-commerce applications',
+      'Shopify store customization',
+      'Cross-platform Android, iOS and desktop apps',
       'Music streaming applications',
       'IoT applications for smart home appliances',
     ],
@@ -321,7 +329,7 @@ export const profile = {
     kicker: 'About',
     title: 'End-to-end solutions, integrations and practical AI.',
     paragraphs: [
-      'I design and build end-to-end solutions across web, mobile and backend. .NET and Azure are my everyday tools, not my whole range.',
+      'I design and build end-to-end solutions across web, mobile and backend, including Android, iOS and desktop apps (Windows and macOS). .NET and Azure are my everyday tools, not my whole range.',
       'For 10+ years I have built enterprise applications, APIs and integrations in healthcare and large organizations.',
       'My ERP work covers ERPNext/Frappe, ADempiere and iDempiere. On SAP, I write the ABAP RFC function modules and the .NET side that calls them.',
       'I see AI as the future, so that is where I go deepest: LLM workflows, agent pipelines, n8n automation and custom OCR model research.',
@@ -366,9 +374,9 @@ export const profile = {
       },
       {
         title: 'E-commerce',
-        text: 'Storefronts and commerce apps with catalog, cart, checkout and order management, connected to back-office and ERP systems.',
+        text: 'Storefronts and commerce apps with catalog, cart, checkout and order management, connected to back-office and ERP systems, including Shopify store customization: themes, sections and storefront tweaks.',
         icon: 'bag',
-        chips: ['Flutter', 'React', 'REST'],
+        chips: ['Flutter', 'React', 'REST', 'Shopify'],
       },
       {
         title: 'Music streaming',
@@ -387,6 +395,13 @@ export const profile = {
         text: 'Control and monitoring apps for smart home appliances, connecting mobile interfaces to connected devices.',
         icon: 'home',
         chips: ['Flutter'],
+      },
+      {
+        title: 'Cross-platform apps',
+        text: 'Android, iOS and desktop (Windows/macOS), built with Flutter, .NET (WPF) and Electron.',
+        icon: 'devices',
+        chips: ['Android', 'iOS', 'Desktop', 'Flutter', 'WPF', 'Electron'],
+        span: 'wide',
       },
       {
         title: 'Document AI & OCR',
@@ -459,6 +474,7 @@ export const profile = {
       'Azure',
       'Frontend',
       'Mobile',
+      'E-commerce',
       'Data',
       'ERP / Integration',
       'Delivery',
@@ -633,6 +649,17 @@ export const profile = {
         marquee: true,
         top: true,
       },
+      // E-commerce
+      {
+        name: 'Shopify',
+        detail: 'themes, sections, storefront tweaks',
+        category: 'E-commerce',
+        tier: 'production',
+        logo: 'shopify',
+        note: 'Store customization',
+        marquee: true,
+        top: true,
+      },
       // Mobile
       {
         name: 'Flutter',
@@ -645,6 +672,41 @@ export const profile = {
         featured: true,
       },
       { name: 'Dart', category: 'Mobile', tier: 'production', logo: 'dart', note: 'HolyWhisper', marquee: true },
+      {
+        name: 'Android',
+        category: 'Mobile',
+        tier: 'production',
+        logo: 'android',
+        note: 'Flutter apps',
+        marquee: true,
+        top: true,
+      },
+      {
+        name: 'iOS',
+        category: 'Mobile',
+        tier: 'production',
+        logo: 'ios',
+        note: 'Flutter apps',
+        marquee: true,
+        top: true,
+      },
+      {
+        name: 'Desktop',
+        category: 'Mobile',
+        tier: 'production',
+        mono: 'DT',
+        note: 'Windows and macOS with Flutter, WPF and Electron',
+        top: true,
+      },
+      {
+        name: 'Electron',
+        category: 'Mobile',
+        tier: 'production',
+        logo: 'electron',
+        note: 'Desktop apps',
+        marquee: true,
+        top: true,
+      },
       // Data
       {
         name: 'SQL Server',
@@ -1335,9 +1397,9 @@ export const profile = {
         id: 'domains',
         question: 'What have you built?',
         suggested: true,
-        keywords: ['built', 'domain', 'what have you', 'do you build', 'apps', 'retail', 'pos ', 'point of sale', 'warehouse', 'delivery', 'e-commerce', 'ecommerce', 'music', 'spotify', 'streaming', 'iot', 'smart home', 'website', 'industr'],
+        keywords: ['built', 'domain', 'what have you', 'do you build', 'apps', 'retail', 'pos ', 'point of sale', 'warehouse', 'delivery', 'e-commerce', 'ecommerce', 'shopify', 'music', 'spotify', 'streaming', 'iot', 'smart home', 'website', 'android', 'ios', 'desktop', 'electron', 'cross-platform', 'industr'],
         answer:
-          'Retail POS, warehouse, delivery and e-commerce applications. A Spotify-style music streaming app. Websites. IoT apps for smart home appliances. And enterprise applications in healthcare and large organizations.',
+          'Retail POS, warehouse, delivery and e-commerce applications, including Shopify store customization (themes, sections and storefront tweaks). Cross-platform apps for Android, iOS and desktop (Windows/macOS) with Flutter, .NET (WPF) and Electron. A Spotify-style music streaming app. Websites. IoT apps for smart home appliances. And enterprise applications in healthcare and large organizations.',
       },
       {
         id: 'architecture',
@@ -1370,9 +1432,9 @@ export const profile = {
         id: 'stack',
         question: "What's your stack?",
         suggested: true,
-        keywords: ['stack', 'tech', 'tools', 'language', 'skills', '.net', 'dotnet', 'c#', 'azure', 'sql', 'flutter'],
+        keywords: ['stack', 'tech', 'tools', 'language', 'skills', '.net', 'dotnet', 'c#', 'azure', 'sql', 'flutter', 'shopify', 'android', 'ios', 'electron', 'desktop'],
         answer:
-          'AI and automation: n8n, LLM workflows, agent pipelines and local OCR models. Core: C#, ASP.NET Core, .NET, SQL Server and Azure. In production I have also used Angular, React, TypeScript, Flutter and SAP ABAP. The Stack section has the full list.',
+          'AI and automation: n8n, LLM workflows, agent pipelines and local OCR models. Core: C#, ASP.NET Core, .NET, SQL Server and Azure. In production I have also used Angular, React, TypeScript, Flutter (Android and iOS), desktop with WPF and Electron, Shopify store customization, and SAP ABAP. The Stack section has the full list.',
       },
       {
         id: 'holywhisper',
