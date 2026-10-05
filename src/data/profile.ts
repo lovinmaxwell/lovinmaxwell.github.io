@@ -1135,53 +1135,107 @@ export const profile = {
 
   openSource: {
     kicker: 'Open source',
-    title: 'Plugins for agent workflows.',
-    pluginsLabel: 'Cursor plugins',
-    frappe: {
-      title: 'Frappe & ERPNext',
-      text: 'I am an open-source contributor and builder on Frappe Framework and ERPNext.',
-      logos: ['frappe', 'erpnext'] satisfies LogoKey[],
-      links: [
-        { label: 'frappe_azure_storage', href: 'https://github.com/lovinmaxwell/frappe_azure_storage' },
-        { label: 'Frappe Framework', href: 'https://github.com/frappe/frappe' },
-        { label: 'ERPNext', href: 'https://github.com/frappe/erpnext' },
-      ],
-    },
-    repoLabel: 'Repo',
-    plugins: [
+    title: 'What I build on and contribute to.',
+    picksLabel: 'Top open-source ERP picks',
+    picksSubline: 'Platforms I build on. Custom apps, integrations and ERP solutions.',
+    maintainLabel: 'Projects I maintain',
+    contributedLabel: 'Contributed to',
+    officialLabel: 'Official site',
+    relatedLabel: 'My related work',
+    prLabel: 'Pull request',
+    issueLabel: 'Issue',
+    mergedLabel: 'Merged',
+    closedLabel: 'Closed',
+    picks: [
       {
-        name: 'antigravity-code',
-        href: 'https://github.com/lovinmaxwell/antigravity-code',
-        description:
-          'Cursor plugin to drive Google Antigravity CLI (agy) headless, with model selection and continue/resume.',
+        name: 'Frappe Framework',
+        logo: 'frappe',
+        text: 'I build custom Frappe apps and DocTypes: forms, workflows, permissions and integrations that sit cleanly on a Frappe bench.',
+        site: { label: 'frappe.io', href: 'https://frappe.io' },
+        related: [
+          { label: 'frappe_azure_storage', href: 'https://github.com/lovinmaxwell/frappe_azure_storage' },
+          { label: 'obarcode', href: 'https://github.com/lovinmaxwell/obarcode' },
+        ],
       },
       {
-        name: 'claude-code-cloud',
-        href: 'https://github.com/lovinmaxwell/claude-code-cloud',
-        description:
-          'Cursor plugin to drive Claude Code locally (claude -p) and Claude Cloud from agents.',
+        name: 'ERPNext',
+        logo: 'erpnext',
+        text: 'I customize and integrate ERPNext for retail, inventory and back-office workflows, and I have contributed upstream fixes to pricing rules.',
+        site: { label: 'erpnext.com', href: 'https://erpnext.com' },
+        related: [
+          { label: 'frappe_azure_storage', href: 'https://github.com/lovinmaxwell/frappe_azure_storage' },
+          { label: 'obarcode', href: 'https://github.com/lovinmaxwell/obarcode' },
+        ],
       },
       {
-        name: 'notebooklm-code',
-        href: 'https://github.com/lovinmaxwell/notebooklm-code',
-        description:
-          'Cursor plugin for Google NotebookLM: MCP setup, sources and grounded Q&A. Submitted to the Cursor marketplace.',
+        name: 'iDempiere',
+        mono: 'iD',
+        text: 'I deliver iDempiere and ADempiere ERP solutions: configuration, extensions and integrations across finance, inventory and operations.',
+        site: { label: 'idempiere.org', href: 'https://www.idempiere.org' },
+        related: [],
+      },
+    ],
+    maintain: [
+      ...plugins,
+      {
+        name: 'frappe_azure_storage',
+        href: 'https://github.com/lovinmaxwell/frappe_azure_storage',
+        description: 'Azure Storage integration for Frappe and ERPNext sites.',
       },
       {
-        name: 'dodo-payments-code',
-        href: 'https://github.com/lovinmaxwell/dodo-payments-code',
-        description:
-          'Cursor plugin for the Dodo Payments MCP: API Code Mode plus knowledge docs search.',
+        name: 'obarcode',
+        href: 'https://github.com/lovinmaxwell/obarcode',
+        description: 'Ox Barcode: a Frappe app adding barcode support to ERPNext retail workflows.',
       },
       {
-        name: 'omp-worker-code',
-        href: 'https://github.com/lovinmaxwell/omp-worker-code',
+        name: 'win_flutter_pos',
+        href: 'https://github.com/lovinmaxwell/win_flutter_pos',
+        description: 'A point-of-sale client in Flutter targeting Windows desktop.',
+      },
+      {
+        name: 'Nexus',
+        href: 'https://github.com/lovinmaxwell/Nexus',
         description:
-          'MCP worker plugin to delegate coding tasks from Claude/Cursor to local Oh My Pi workers on a Mac.',
+          'A native macOS download manager in Swift. Dynamic file segmentation, hybrid networking and a SwiftUI/AppKit interface.',
       },
     ] satisfies Repo[],
+    contributions: [
+      {
+        project: 'ERPNext',
+        title: 'Fix: Pricing Rule on Transaction Based on Coupon',
+        kind: 'pr',
+        status: 'merged',
+        href: 'https://github.com/frappe/erpnext/pull/26949',
+        date: 'Aug 2021',
+      },
+      {
+        project: 'ERPNext',
+        title: 'Discount Amount is not calculating proper for different UOMs',
+        kind: 'pr',
+        status: 'closed',
+        href: 'https://github.com/frappe/erpnext/pull/28763',
+        date: 'Dec 2021',
+      },
+      {
+        project: 'ERPNext',
+        title: 'Transaction Pricing Rule get applied even if it a based-on coupon',
+        kind: 'issue',
+        status: 'closed',
+        href: 'https://github.com/frappe/erpnext/issues/26948',
+        date: 'Aug 2021',
+      },
+      {
+        project: 'Harbor',
+        title: 'Add configurable download staging and existing destination file adoption',
+        kind: 'pr',
+        status: 'merged',
+        href: 'https://github.com/thsnkhn/harbor/pull/94',
+        date: 'Sep 2026',
+      },
+    ],
+    // Kept for older machine-file helpers during the transition.
+    plugins: plugins,
   },
-
   education: {
     kicker: 'Education & Certification',
     title: 'Paper trail.',
@@ -1329,6 +1383,13 @@ export const profile = {
         suggested: true,
         keywords: ['where', 'based', 'location', 'live', 'city', 'country', 'doha', 'qatar', 'timezone', 'time zone'],
         answer: 'Doha, Qatar. Local time is UTC+3.',
+      },
+      {
+        id: 'opensource',
+        question: 'What open source do you work on?',
+        keywords: ['open source', 'oss', 'contribute', 'contribution', 'upstream', 'github repos', 'maintain'],
+        answer:
+          'I maintain open-source Cursor plugins and Frappe apps (frappe_azure_storage, obarcode, win_flutter_pos, Nexus). My top open-source ERP picks are Frappe Framework, ERPNext and iDempiere. On ERPNext I opened and merged upstream pull requests for pricing-rule fixes. The Open source section has the links.',
       },
       {
         id: 'contact',

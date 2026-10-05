@@ -55,10 +55,27 @@ export function profileJson(site: URL | undefined) {
       ...(p.stack ? { stack: p.stack } : {}),
       ...(p.link ? { url: p.link.href } : {}),
     })),
-    frappe: {
-      title: profile.openSource.frappe.title,
-      text: profile.openSource.frappe.text,
-      links: profile.openSource.frappe.links.map((l) => ({ label: l.label, url: l.href })),
+    openSourceSection: {
+      title: profile.openSource.title,
+      picks: profile.openSource.picks.map((p) => ({
+        name: p.name,
+        text: p.text,
+        site: p.site.href,
+        related: p.related.map((l) => ({ label: l.label, url: l.href })),
+      })),
+      maintain: profile.openSource.maintain.map(({ name, href, description }) => ({
+        name,
+        url: href,
+        description,
+      })),
+      contributions: profile.openSource.contributions.map((c) => ({
+        project: c.project,
+        title: c.title,
+        kind: c.kind,
+        status: c.status,
+        url: c.href,
+        date: c.date,
+      })),
     },
     archive: archive.map(({ name, description, tags, stack, status, visibility, link }) => ({
       name,
@@ -71,7 +88,7 @@ export function profileJson(site: URL | undefined) {
       ...(link && visibility === 'public' ? { url: link.href } : {}),
       ...(link && visibility === 'private' ? { site: link.href } : {}),
     })),
-    openSource: profile.openSource.plugins.map(({ name, href, description }) => ({
+    openSource: profile.openSource.maintain.map(({ name, href, description }) => ({
       name,
       url: href,
       description,
@@ -108,8 +125,12 @@ const header = (data: Data) => [
   `Also known as ${data.alternateName}. ${profile.agents.notice} Last updated ${data.updated}.`,
 ];
 
-const frappeLine = (data: Data) =>
-  `- ${data.frappe.title}: ${data.frappe.text} ${data.frappe.links.map((l) => `[${l.label}](${l.url})`).join(', ')}`;
+const ossPicksLine = (data: Data) =>
+  data.openSourceSection.picks.map((p) => `- ${p.name}: ${p.text} ([site](${p.site}))`).join('\n');
+const ossContribLine = (data: Data) =>
+  data.openSourceSection.contributions
+    .map((c) => `- [${c.project}] ${c.title} (${c.kind}, ${c.status}, ${c.date}): ${c.url}`)
+    .join('\n');
 
 const contactLines = (data: Data) => [
   `- [Email](mailto:${data.contact.email}): ${data.contact.email}`,
@@ -159,8 +180,17 @@ export function llmsTxt(site: URL | undefined): string {
     '',
     '## Open source',
     '',
+    '### Top open-source ERP picks',
+    '',
+    ossPicksLine(data),
+    '',
+    '### Projects I maintain',
+    '',
     ...data.openSource.map((r) => `- [${r.name}](${r.url}): ${r.description}`),
-    `- [${data.frappe.title}](${data.frappe.links[0].url}): ${data.frappe.text}`,
+    '',
+    '### Contributed to',
+    '',
+    ossContribLine(data),
     '',
     '## Education and certification',
     '',
@@ -233,8 +263,17 @@ export function llmsFullTxt(site: URL | undefined): string {
     '',
     '## Open source',
     '',
+    '### Top open-source ERP picks',
+    '',
+    ossPicksLine(data),
+    '',
+    '### Projects I maintain',
+    '',
     ...data.openSource.map((r) => `- [${r.name}](${r.url}): ${r.description}`),
-    frappeLine(data),
+    '',
+    '### Contributed to',
+    '',
+    ossContribLine(data),
     '',
     '## Education and certification',
     '',
