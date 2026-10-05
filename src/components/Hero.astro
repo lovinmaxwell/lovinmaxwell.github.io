@@ -1,6 +1,7 @@
 ---
 import Availability from './Availability.astro';
 import Icon from './Icon.astro';
+import LocalTime from './LocalTime.astro';
 import Socials from './Socials.astro';
 import { profile } from '../data/profile';
 
@@ -11,13 +12,17 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
 
 <section id="top" class="relative overflow-hidden border-b border-line">
   <div class="hero-bg" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
 
   <div class="wrap relative grid items-center gap-10 pt-12 pb-14 sm:pt-16 sm:pb-16 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
     <div>
       <Availability />
 
-      <h1 class="mt-6 text-[clamp(3rem,11vw,6.5rem)] leading-[0.95] font-semibold tracking-[-0.045em]">
-        {profile.firstName} <span class="marker">{profile.lastName}</span>
+      <h1
+        class="mt-6 text-[clamp(2.5rem,12vw,4.75rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance lg:text-[clamp(4.75rem,6.4vw,5.25rem)]"
+      >
+        <span class="block">{profile.firstName} {profile.middleName}</span>
+        <span class="block"><span class="marker">{profile.lastName}</span></span>
       </h1>
 
       <p class="mt-6 max-w-2xl text-xl leading-snug font-medium tracking-tight sm:text-2xl">
@@ -69,6 +74,9 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
         </p>
         <p class="mt-1 text-[0.8125rem] leading-snug text-muted">{latest.statuses[0].label}</p>
       </a>
+      <div class="card col-span-2 px-5! py-4!">
+        <LocalTime />
+      </div>
     </div>
   </div>
 </section>

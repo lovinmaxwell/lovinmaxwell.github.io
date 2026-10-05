@@ -1,5 +1,7 @@
 ---
+import Ask from './Ask.astro';
 import Icon from './Icon.astro';
+import LocalTime from './LocalTime.astro';
 import { profile } from '../data/profile';
 
 const { contact } = profile;
@@ -36,6 +38,10 @@ const links = profile.socials.filter((s) => s.icon !== 'mail');
           ))
         }
       </div>
+
+      <LocalTime class="mt-8" />
     </div>
+
+    <Ask />
   </div>
 </section>

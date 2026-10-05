@@ -2,6 +2,9 @@
 import { profile } from '../data/profile';
 
 const { experience } = profile;
+
+// Bullets shown before the "More" disclosure.
+const shown = 3;
 ---
 
 <section id="experience" class="section border-t border-line" aria-labelledby="experience-title">
@@ -29,14 +32,54 @@ const { experience } = profile;
                   {experience.presentLabel}
                 </span>
               )}
+              {job.type === 'Contract' && (
+                <span class="rounded-full border border-line-strong px-2 py-0.5 text-[0.625rem] font-bold tracking-[0.12em] text-fg">
+                  {job.type}
+                </span>
+              )}
             </p>
             <h3 class="mt-2 text-lg leading-snug font-semibold tracking-tight sm:text-xl">{job.role}</h3>
             <p class="mt-1 text-muted">
-              {job.company}{job.location ? `, ${job.location}` : ''}
+              {job.company}, {job.location}
             </p>
+            <ul class="mt-4 grid gap-2 text-[0.9375rem] leading-relaxed text-muted">
+              {job.bullets.slice(0, shown).map((b) => (
+                <li class="flex gap-2.5">
+                  <span class="mt-[0.6em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+            {job.bullets.length > shown && (
+              <details class="more group mt-2">
+                <summary class="label inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
+                  <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">›</span>
+                  {experience.moreLabel}
+                  <span class="sr-only">: {job.role}, {job.company}</span>
+                </summary>
+                <ul class="mt-1 grid gap-2 text-[0.9375rem] leading-relaxed text-muted">
+                  {job.bullets.slice(shown).map((b) => (
+                    <li class="flex gap-2.5">
+                      <span class="mt-[0.6em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </li>
         ))
       }
     </ol>
   </div>
 </section>
+
+<style>
+  .more summary {
+    list-style: none;
+  }
+
+  .more summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

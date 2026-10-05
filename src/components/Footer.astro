@@ -1,15 +1,30 @@
 ---
 import Socials from './Socials.astro';
 import { profile } from '../data/profile';
+import { withBase } from '../lib/url';
 
 const year = new Date().getFullYear();
+const { agents } = profile;
 ---
 
 <footer class="border-t border-line">
   <div class="wrap flex flex-col items-start justify-between gap-4 py-8 sm:flex-row sm:items-center">
-    <p class="font-mono text-xs text-muted">
-      &copy; {year} {profile.name}. {profile.footer.builtWith}
-    </p>
+    <div class="space-y-2 font-mono text-xs text-muted">
+      <p>&copy; {year} {profile.name}. {profile.footer.builtWith}</p>
+      <p>
+        {agents.footerLabel}{' '}
+        {
+          agents.files.map((file, i) => (
+            <>
+              {i > 0 && <span aria-hidden="true"> · </span>}
+              <a href={withBase(file.path)} class="link-underline text-fg">
+                {file.label}
+              </a>
+            </>
+          ))
+        }
+      </p>
+    </div>
     <nav aria-label={profile.a11y.socialNav}>
       <Socials size="sm" />
     </nav>

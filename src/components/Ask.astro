@@ -1,0 +1,236 @@
+---
+import { profile } from '../data/profile';
+
+const { ask } = profile;
+const suggested = ask.faq.filter((f) => f.suggested);
+const data = {
+  faq: ask.faq.map(({ question, keywords, answer }) => ({ question, keywords, answer })),
+  help: ask.help,
+  fallback: ask.fallback,
+  intro: ask.intro,
+};
+---
+
+<div class="terminal mt-4" data-ask data-reveal>
+  <div class="flex items-center gap-2 border-b border-line px-4 py-3">
+    <span class="flex gap-1.5" aria-hidden="true">
+      <span class="size-2.5 rounded-full bg-line-strong"></span>
+      <span class="size-2.5 rounded-full bg-line-strong"></span>
+      <span class="size-2.5 rounded-full bg-line-strong"></span>
+    </span>
+    <h3 class="label ml-2">{ask.title}</h3>
+    <span class="label ml-auto hidden sm:block" aria-hidden="true">{ask.windowTitle}</span>
+  </div>
+
+  <div class="p-4 sm:p-5">
+    <!-- Without JS this is a plain list of questions and answers. The script swaps it for the log. -->
+    <dl class="terminal-static space-y-4 font-mono text-[0.8125rem] leading-relaxed">
+      {
+        suggested.map((f) => (
+          <div>
+            <dt>
+              <span class="text-muted">{ask.prompt}</span> {f.question}
+            </dt>
+            <dd class="mt-1 text-muted">{f.answer}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="terminal-live">
+      <div
+        class="terminal-log font-mono text-[0.8125rem] leading-relaxed"
+        data-ask-log
+        tabindex="0"
+        role="group"
+        aria-label={ask.title}
+      >
+        <p class="text-muted">{ask.intro}</p>
+      </div>
+      <p class="sr-only" aria-live="polite" data-ask-live></p>
+
+      <ul class="ask-chips mt-4" aria-label={ask.suggestionsLabel}>
+        {
+          suggested.map((f) => (
+            <li class="shrink-0">
+              <button type="button" class="chip cursor-pointer hover:border-line-strong" data-ask-chip>
+                {f.question}
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+
+      <form class="mt-4 flex items-center gap-2.5 border-t border-line pt-4 font-mono text-[0.8125rem]" data-ask-form>
+        <label for="ask-input" class="shrink-0 text-muted">{ask.prompt}</label>
+        <input
+          id="ask-input"
+          type="text"
+          class="h-9 min-w-0 flex-1 bg-transparent text-fg outline-none placeholder:text-muted/70"
+          placeholder={ask.placeholder}
+          aria-label={ask.inputLabel}
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="120"
+          enterkeyhint="send"
+        />
+        <button type="submit" class="kbd h-7! shrink-0 cursor-pointer px-2.5!">{ask.submitLabel}</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="application/json" data-ask-data set:html={JSON.stringify(data).replace(/</g, '\\u003c')} />
+</div>
+
+<script>
+  interface Entry {
+    question: string;
+    keywords: string[];
+    answer: string;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-ask]');
+  const log = root?.querySelector<HTMLElement>('[data-ask-log]');
+  const live = root?.querySelector<HTMLElement>('[data-ask-live]');
+  const form = root?.querySelector<HTMLFormElement>('[data-ask-form]');
+  const input = root?.querySelector<HTMLInputElement>('#ask-input');
+  const raw = root?.querySelector('[data-ask-data]')?.textContent;
+
+  if (root && log && live && form && input && raw) {
+    const data = JSON.parse(raw) as { faq: Entry[]; help: string; fallback: string; intro: string };
+    const prompt = form.querySelector('label')?.textContent ?? '';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const clean = (text: string) => ` ${text.toLowerCase().replace(/[^a-z0-9#.+-]+/g, ' ').trim()} `;
+    let typing = 0;
+
+    // Closest FAQ entry by keyword hits. Longer keywords count for more. No hit means no answer.
+    const answerFor = (question: string) => {
+      const q = clean(question);
+      let best: Entry | undefined;
+      let bestScore = 0;
+      for (const entry of data.faq) {
+        let score = clean(entry.question) === q ? 100 : 0;
+        for (const keyword of entry.keywords) {
+          if (q.includes(` ${keyword}`)) score += keyword.includes(' ') ? 3 : 2;
+        }
+        if (score > bestScore) {
+          best = entry;
+          bestScore = score;
+        }
+      }
+      return best ? best.answer : data.fallback;
+    };
+
+    const line = (text: string, className: string) => {
+      const p = document.createElement('p');
+      p.className = className;
+      p.textContent = text;
+      log.append(p);
+      log.scrollTop = log.scrollHeight;
+      return p;
+    };
+
+    const reply = (text: string) => {
+      // Screen readers get the whole answer once. The typed copy is visual only.
+      live.textContent = '';
+      window.setTimeout(() => (live.textContent = text), 50);
+      const p = line('', 'mt-1 text-muted');
+      const run = ++typing;
+      if (reduced.matches) {
+        p.textContent = text;
+        log.scrollTop = log.scrollHeight;
+        return;
+      }
+      p.setAttribute('aria-hidden', 'true');
+      let i = 0;
+      const step = () => {
+        // A newer answer or "clear" finishes this one straight away.
+        if (run !== typing) i = text.length;
+        i = Math.min(text.length, i + 2);
+        p.textContent = text.slice(0, i);
+        log.scrollTop = log.scrollHeight;
+        if (i < text.length) window.setTimeout(step, 14);
+        else p.removeAttribute('aria-hidden');
+      };
+      step();
+    };
+
+    const ask = (question: string) => {
+      const text = question.trim();
+      if (!text) return;
+      const command = text.toLowerCase();
+      if (command === 'clear') {
+        typing += 1;
+        log.replaceChildren();
+        line(data.intro, 'text-muted');
+        live.textContent = '';
+        return;
+      }
+      const q = line('', 'mt-3 first:mt-0');
+      const mark = document.createElement('span');
+      mark.className = 'text-muted';
+      mark.textContent = `${prompt} `;
+      q.append(mark, text);
+      reply(command === 'help' ? data.help : answerFor(text));
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      ask(input.value);
+      input.value = '';
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-ask-chip]').forEach((chip) => {
+      chip.addEventListener('click', () => ask(chip.textContent ?? ''));
+    });
+  }
+</script>
+
+<style>
+  .terminal {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--card);
+  }
+
+  .terminal-log {
+    max-height: 15rem;
+    min-height: 4.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .terminal-live,
+  :global(.js) .terminal-static {
+    display: none;
+  }
+
+  :global(.js) .terminal-live {
+    display: block;
+  }
+
+  /* Suggested questions: one scrollable row on phones, wrapping from sm up. */
+  .ask-chips {
+    display: flex;
+    gap: 0.5rem;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ask-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (width >= 40rem) {
+    .ask-chips {
+      flex-wrap: wrap;
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+  }
+</style>

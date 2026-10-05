@@ -1,0 +1,16 @@
+---
+import type { LogoKey } from '../data/profile';
+
+interface Props {
+  name: LogoKey;
+  size?: number;
+  class?: string;
+}
+
+// Points at a <symbol> in the sprite that Stack.astro renders once.
+const { name, size = 20, class: className } = Astro.props;
+---
+
+<svg width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false" class={className}>
+  <use href={`#logo-${name}`}></use>
+</svg>

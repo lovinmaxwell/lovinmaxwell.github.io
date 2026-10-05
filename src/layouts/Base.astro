@@ -13,10 +13,12 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: profile.name,
+  alternateName: profile.alternateName,
   url: canonical,
   image: ogImage,
   jobTitle: profile.jobTitle,
   description: seo.description,
+  knowsAbout: seo.knowsAbout,
   email: `mailto:${profile.email}`,
   address: {
     '@type': 'PostalAddress',
@@ -59,6 +61,8 @@ const jsonLd = {
 
     <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
     <link rel="sitemap" href={withBase('sitemap-index.xml')} />
+    <link rel="alternate" type="application/json" href={absoluteUrl('profile.json', Astro.site)} title="profile.json" />
+    <link rel="alternate" type="text/plain" href={absoluteUrl('llms.txt', Astro.site)} title="llms.txt" />
 
     <meta property="og:type" content="profile" />
     <meta property="og:site_name" content={profile.name} />
@@ -89,9 +93,12 @@ const jsonLd = {
 
     <slot />
 
+    <p id="toast" class="toast" role="status" aria-live="polite"></p>
+
     <script is:inline define:vars={{ dark: seo.themeColorDark, light: seo.themeColorLight }}>
       (function () {
         var root = document.documentElement;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         // Theme toggle
         var toggle = document.getElementById('theme-toggle');
@@ -102,16 +109,51 @@ const jsonLd = {
             m.setAttribute('content', theme === 'light' ? light : dark);
           });
         }
-        apply(root.dataset.theme || 'dark');
-        if (toggle) {
-          toggle.addEventListener('click', function () {
-            var next = root.dataset.theme === 'light' ? 'dark' : 'light';
+        function toggleTheme() {
+          var next = root.dataset.theme === 'light' ? 'dark' : 'light';
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {}
+
+          // Circular reveal from the toggle button, where view transitions exist and motion is allowed.
+          if (!document.startViewTransition || reduced || !toggle) return apply(next);
+          var r = toggle.getBoundingClientRect();
+          var x = r.left + r.width / 2;
+          var y = r.top + r.height / 2;
+          var radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+          root.classList.add('theme-vt');
+          var transition = document.startViewTransition(function () {
             apply(next);
-            try {
-              localStorage.setItem('theme', next);
-            } catch (e) {}
+          });
+          transition.ready
+            .then(function () {
+              root.animate(
+                { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + radius + 'px at ' + x + 'px ' + y + 'px)'] },
+                { duration: 480, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', pseudoElement: '::view-transition-new(root)' }
+              );
+            })
+            .catch(function () {});
+          transition.finished.finally(function () {
+            root.classList.remove('theme-vt');
           });
         }
+        apply(root.dataset.theme || 'dark');
+        if (toggle) toggle.addEventListener('click', toggleTheme);
+        // The command palette asks for a theme change with this event.
+        document.addEventListener('theme:toggle', toggleTheme);
+
+        // Toast, e.g. "Email copied"
+        var toast = document.getElementById('toast');
+        var toastTimer;
+        document.addEventListener('toast', function (e) {
+          if (!toast || !e.detail) return;
+          toast.textContent = e.detail;
+          toast.classList.add('is-on');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () {
+            toast.classList.remove('is-on');
+          }, 2400);
+        });
 
         // Close the mobile menu after picking a section, or on Escape
         var menu = document.getElementById('mobile-menu');
@@ -126,7 +168,6 @@ const jsonLd = {
 
         // Fade-up reveals. CSS only hides elements when motion is allowed.
         var items = document.querySelectorAll('[data-reveal]');
-        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduced || !('IntersectionObserver' in window)) {
           items.forEach(function (el) {
             el.classList.add('is-in');
@@ -148,15 +189,19 @@ const jsonLd = {
           });
         }
 
-        // Card spotlight follows the pointer
-        if (window.matchMedia('(hover: hover)').matches && !reduced) {
-          document.querySelectorAll('.card').forEach(function (card) {
-            card.addEventListener('pointermove', function (e) {
+        // Card spotlight follows the pointer. Mouse-like pointers only, and not under reduced motion.
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced) {
+          document.addEventListener(
+            'pointermove',
+            function (e) {
+              var card = e.target.closest && e.target.closest('.card');
+              if (!card) return;
               var r = card.getBoundingClientRect();
               card.style.setProperty('--mx', e.clientX - r.left + 'px');
               card.style.setProperty('--my', e.clientY - r.top + 'px');
-            });
-          });
+            },
+            { passive: true }
+          );
         }
       })();
     </script>

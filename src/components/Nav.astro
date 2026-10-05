@@ -20,7 +20,7 @@ import { profile } from '../data/profile';
             <li>
               <a
                 href={item.href}
-                class="rounded-lg px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-fg"
+                class="rounded-lg px-2 py-1.5 text-sm text-muted xl:px-2.5 transition-colors hover:bg-raised hover:text-fg"
               >
                 {item.label}
               </a>
@@ -31,6 +31,19 @@ import { profile } from '../data/profile';
     </nav>
 
     <div class="ml-auto flex items-center gap-2">
+      <button
+        type="button"
+        class="palette-open icon-link h-9 w-9 gap-2 rounded-lg sm:w-auto sm:px-2.5"
+        data-palette-open
+        aria-label={profile.a11y.palette}
+        aria-haspopup="dialog"
+        aria-keyshortcuts="Meta+K Control+K"
+      >
+        <Icon name="search" size={16} />
+        <span class="hidden text-sm sm:inline">{profile.palette.button}</span>
+        <kbd class="kbd hidden sm:inline-flex">⌘K</kbd>
+      </button>
+
       <button
         type="button"
         id="theme-toggle"
@@ -82,5 +95,10 @@ import { profile } from '../data/profile';
 
   :root[data-theme='light'] .theme-icon-moon {
     display: block;
+  }
+
+  /* The palette needs JS, so its button only shows once the script has run. */
+  :root:not(.js) .palette-open {
+    display: none;
   }
 </style>

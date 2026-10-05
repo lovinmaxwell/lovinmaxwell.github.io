@@ -26,10 +26,10 @@
     <text x="46" y="30" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#4ade80">Available for freelance &amp; hire</text>
   </g>
 
-  <text x="76" y="388" font-family="Helvetica, Arial, sans-serif" font-size="112" font-weight="700" letter-spacing="-4" fill="#fafafa">Lovin Maxwell</text>
+  <text x="76" y="388" font-family="Helvetica, Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-3" fill="#fafafa">Lovin Johnson Maxwell</text>
   <rect x="80" y="412" width="150" height="10" fill="#fcee0a"/>
 
-  <text x="80" y="486" font-family="Helvetica, Arial, sans-serif" font-size="36" font-weight="600" fill="#fafafa">Senior .NET &amp; Azure Engineer.</text>
-  <text x="80" y="534" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#a1a1aa">Enterprise Integration. Document AI Automation.</text>
+  <text x="80" y="486" font-family="Helvetica, Arial, sans-serif" font-size="36" font-weight="600" fill="#fafafa">Solution architect and full-stack engineer.</text>
+  <text x="80" y="534" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#a1a1aa">.NET and Azure by day, AI systems by obsession.</text>
   <text x="80" y="584" font-family="Menlo, Courier, monospace" font-size="20" letter-spacing="3" fill="#a1a1aa">BASED IN DOHA, QATAR</text>
 </svg>

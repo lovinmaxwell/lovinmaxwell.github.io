@@ -1,0 +1,39 @@
+---
+import { profile } from '../data/profile';
+
+const { now } = profile;
+---
+
+<section class="border-b border-line" aria-labelledby="now-title">
+  <div class="wrap flex flex-col gap-x-6 gap-y-3 py-4 lg:flex-row lg:items-center">
+    <h2 id="now-title" class="label flex shrink-0 items-center gap-2.5 text-fg!">
+      <span class="relative flex size-2" aria-hidden="true">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60"></span>
+        <span class="now-dot relative inline-flex size-2 rounded-full bg-accent"></span>
+      </span>
+      {now.title}
+    </h2>
+    <ul class="flex flex-col gap-x-3 gap-y-1.5 text-sm sm:flex-row sm:flex-wrap sm:items-center">
+      {
+        now.items.map((item, i) => (
+          <li class="flex items-center gap-3">
+            {i > 0 && (
+              <span class="hidden text-muted sm:inline" aria-hidden="true">
+                ·
+              </span>
+            )}
+            {item}
+          </li>
+        ))
+      }
+    </ul>
+    <p class="label shrink-0 lg:ml-auto">{now.updatedLabel} {now.updated}</p>
+  </div>
+</section>
+
+<style>
+  /* Keeps the yellow dot visible on the light theme. */
+  .now-dot {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent);
+  }
+</style>

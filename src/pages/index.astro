@@ -2,29 +2,37 @@
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
+import Now from '../components/Now.astro';
 import About from '../components/About.astro';
 import Highlights from '../components/Highlights.astro';
+import Domains from '../components/Domains.astro';
 import Stack from '../components/Stack.astro';
 import Experience from '../components/Experience.astro';
 import Projects from '../components/Projects.astro';
+import Archive from '../components/Archive.astro';
 import OpenSource from '../components/OpenSource.astro';
 import Education from '../components/Education.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
+import CommandPalette from '../components/CommandPalette.astro';
 ---
 
 <Base>
   <Nav />
   <main id="main">
     <Hero />
+    <Now />
     <About />
     <Highlights />
+    <Domains />
     <Stack />
     <Experience />
     <Projects />
+    <Archive />
     <OpenSource />
     <Education />
     <Contact />
   </main>
   <Footer />
+  <CommandPalette />
 </Base>

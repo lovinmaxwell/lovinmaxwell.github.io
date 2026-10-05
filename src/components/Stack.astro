@@ -1,35 +1,305 @@
 ---
+import Logo from './Logo.astro';
 import { profile } from '../data/profile';
+import { logos } from '../lib/logos';
 
 const { stack } = profile;
+const { items } = stack;
 
-// Bento rhythm on a 6-column grid: 4+2, 3+3, 3+3, 2+4.
-const spans = ['lg:col-span-4', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-3', 'lg:col-span-3', 'lg:col-span-3', 'lg:col-span-2', 'lg:col-span-4'];
+const tierLabel = Object.fromEntries(stack.tiers.map((t) => [t.id, t.label]));
+const withLogo = items.filter((i) => i.marquee && i.logo);
+const half = Math.ceil(withLogo.length / 2);
+const rows = [withLogo.slice(0, half), withLogo.slice(half)];
+
+const filters = [
+  { value: 'all', label: stack.allLabel, count: items.length },
+  ...stack.tiers.map((t) => ({
+    value: `tier:${t.id}`,
+    label: t.label,
+    count: items.filter((i) => i.tier === t.id).length,
+  })),
+  // A category that is also a tier already has its chip.
+  ...stack.categories
+    .filter((c) => !stack.tiers.some((t) => t.label === c))
+    .map((c) => ({
+      value: `cat:${c}`,
+      label: c,
+      count: items.filter((i) => i.category === c).length,
+    })),
+];
+const countText = (n: number) => stack.countLabel.replace('{n}', String(n)).replace('{total}', String(items.length));
 ---
 
 <section id="stack" class="section border-t border-line" aria-labelledby="stack-title">
+  <svg width="0" height="0" class="absolute" aria-hidden="true" focusable="false">
+    {
+      Object.entries(logos).map(([key, logo]) => (
+        <symbol id={`logo-${key}`} viewBox={logo.viewBox} set:html={logo.body} />
+      ))
+    }
+  </svg>
+
   <div class="wrap">
     <div data-reveal>
       <p class="kicker">{stack.kicker}</p>
       <h2 id="stack-title" class="section-title">{stack.title}</h2>
     </div>
+  </div>
 
-    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+  <div class="marquee mt-10" role="group" aria-label={stack.marqueeLabel} tabindex="0" data-reveal>
+    {
+      rows.map((row, r) => (
+        <div class:list={['marquee-row', r === 1 && 'marquee-row-alt']}>
+          <div class="marquee-track">
+            {[false, true].map((copy) => (
+              <ul class="marquee-list" aria-hidden={copy ? 'true' : undefined}>
+                {row.map((item) => (
+                  <li class="marquee-item">
+                    <Logo name={item.logo!} size={22} />
+                    <span>{item.name}</span>
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="wrap">
+    <div class="mt-10 grid gap-4 lg:grid-cols-3">
       {
-        stack.categories.map((cat, i) => (
-          <article class:list={['card', spans[i % spans.length]]} data-reveal style={`--d: ${(i % 2) * 70}ms`}>
-            <h3 class="flex items-baseline justify-between gap-3">
-              <span class="text-lg font-semibold tracking-tight">{cat.name}</span>
-              <span class="label" aria-hidden="true">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-            </h3>
-            <ul class="mt-5 flex flex-wrap gap-2">
-              {cat.chips.map((chip) => <li class="chip">{chip}</li>)}
-            </ul>
+        stack.features.map((f, i) => (
+          <article class:list={['card feature', i === 0 && 'lg:col-span-2']} data-reveal style={`--d: ${i * 70}ms`}>
+            <div class="feature-dots" aria-hidden="true" />
+            <p class="label">{tierLabel[f.tier]}</p>
+            <div class="mt-5 flex flex-wrap gap-3">
+              {f.logos.map((key) => (
+                <span class:list={['logo-tile', i === 0 ? 'size-14 sm:size-16' : 'size-12']}>
+                  <Logo name={key} size={i === 0 ? 30 : 24} />
+                </span>
+              ))}
+            </div>
+            <h3 class="mt-6 text-xl font-semibold tracking-tight sm:text-2xl">{f.title}</h3>
+            <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted">{f.text}</p>
           </article>
         ))
       }
     </div>
+
+    <div class="filters mt-8" role="group" aria-label={stack.filterLabel}>
+      {
+        filters.map((f) => (
+          <button
+            type="button"
+            class="filter-chip"
+            data-filter={f.value}
+            aria-pressed={f.value === 'all' ? 'true' : 'false'}
+          >
+            {f.label}
+            <span class="filter-count" aria-hidden="true">
+              {f.count}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+    <p class="sr-only" aria-live="polite" data-stack-count data-template={stack.countLabel}>{countText(items.length)}</p>
+
+    <ul class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-stack-grid data-reveal>
+      {
+        items.map((item) => (
+          <li class="card tool filter-card" data-tier={item.tier} data-category={item.category}>
+            <div class="flex items-center gap-3">
+              <span class="logo-tile size-10 shrink-0">
+                {item.logo ? (
+                  <Logo name={item.logo} size={20} />
+                ) : (
+                  <span class="font-mono text-xs font-semibold tracking-wide" aria-hidden="true">
+                    {item.mono}
+                  </span>
+                )}
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[0.9375rem] leading-snug font-medium">{item.name}</p>
+                {item.detail && <p class="text-xs leading-snug text-muted">{item.detail}</p>}
+              </div>
+              <span class="label shrink-0 self-start text-[0.625rem]!">{item.category}</span>
+            </div>
+            {item.note && <p class="mt-3 text-[0.8125rem] leading-snug text-muted">{item.note}</p>}
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
+
+<script>
+  // Filter chips. Without JS the chips stay hidden and every card shows.
+  const grid = document.querySelector<HTMLElement>('[data-stack-grid]');
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+  const count = document.querySelector<HTMLElement>('[data-stack-count]');
+
+  if (grid && chips.length) {
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('.tool'));
+
+    const apply = (filter: string) => {
+      const [kind, value] = filter === 'all' ? ['all', ''] : [filter.slice(0, filter.indexOf(':')), filter.slice(filter.indexOf(':') + 1)];
+      let shown = 0;
+      cards.forEach((card) => {
+        const match =
+          kind === 'all' || (kind === 'tier' ? card.dataset.tier === value : card.dataset.category === value);
+        card.hidden = !match;
+        card.classList.remove('filter-in');
+        if (match) {
+          card.style.setProperty('--i', String(Math.min(shown, 12)));
+          shown += 1;
+        }
+      });
+      // Restart the soft fade on the cards that stay.
+      void grid.offsetWidth;
+      cards.forEach((card) => !card.hidden && card.classList.add('filter-in'));
+      chips.forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.filter === filter)));
+      if (count) {
+        count.textContent = (count.dataset.template ?? '')
+          .replace('{n}', String(shown))
+          .replace('{total}', String(cards.length));
+      }
+    };
+
+    chips.forEach((chip) => chip.addEventListener('click', () => apply(chip.dataset.filter ?? 'all')));
+  }
+</script>
+
+<style>
+  /* Logo marquee. Each track holds the list twice and slides by half its width. */
+  .marquee {
+    display: grid;
+    gap: 0.75rem;
+    overflow: hidden;
+    padding-block: 0.25rem;
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .marquee:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 70s linear infinite;
+  }
+
+  .marquee-row-alt {
+    display: none;
+  }
+
+  .marquee-row-alt .marquee-track {
+    animation-direction: reverse;
+  }
+
+  @media (width >= 64rem) {
+    .marquee-row-alt {
+      display: block;
+    }
+  }
+
+  .marquee:hover .marquee-track,
+  .marquee:focus-within .marquee-track {
+    animation-play-state: paused;
+  }
+
+  .marquee-list {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2.75rem;
+    padding-right: 2.75rem;
+  }
+
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+
+  .marquee-item:hover {
+    color: var(--logo-hover);
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* No motion: one static wrapped row, no duplicates. */
+  @media (prefers-reduced-motion: reduce) {
+    .marquee {
+      mask-image: none;
+      padding-inline: 1.25rem;
+    }
+
+    .marquee-row-alt {
+      display: block;
+    }
+
+    .marquee-track {
+      width: auto;
+    }
+
+    .marquee-list {
+      flex-shrink: 1;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.875rem 1.75rem;
+      padding-right: 0;
+    }
+
+    .marquee-list[aria-hidden='true'] {
+      display: none;
+    }
+  }
+
+  .logo-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: var(--raised);
+    color: var(--muted);
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .tool:hover .logo-tile,
+    .feature .logo-tile:hover {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+  }
+
+  .feature-dots {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+    background-size: 14px 14px;
+    mask-image: linear-gradient(to bottom left, #000, transparent 70%);
+  }
+
+  .tool {
+    padding: 1rem;
+  }
+</style>

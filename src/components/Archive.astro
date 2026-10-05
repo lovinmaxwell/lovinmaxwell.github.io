@@ -1,0 +1,150 @@
+---
+import Icon from './Icon.astro';
+import { profile, type ArchiveItem } from '../data/profile';
+
+const { archive } = profile;
+const items: ArchiveItem[] = archive.items;
+
+const groups = [
+  { id: 'rest', label: archive.restLabel, items: items.filter((i) => !i.group) },
+  { id: 'plugins', label: archive.pluginsLabel, items: items.filter((i) => i.group === 'plugins') },
+];
+
+const filters = [
+  { value: 'all', label: archive.allLabel, count: items.length },
+  ...archive.tags.map((tag) => ({
+    value: tag,
+    label: tag,
+    count: items.filter((i) => i.tags.includes(tag)).length,
+  })),
+];
+const countText = (n: number) => archive.countLabel.replace('{n}', String(n)).replace('{total}', String(items.length));
+---
+
+<section id="archive" class="section border-t border-line" aria-labelledby="archive-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{archive.kicker}</p>
+      <h2 id="archive-title" class="section-title">{archive.title}</h2>
+    </div>
+
+    <div class="filters mt-8" role="group" aria-label={archive.filterLabel}>
+      {
+        filters.map((f) => (
+          <button
+            type="button"
+            class="filter-chip"
+            data-archive-filter={f.value}
+            aria-pressed={f.value === 'all' ? 'true' : 'false'}
+          >
+            {f.label}
+            <span class="filter-count" aria-hidden="true">
+              {f.count}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+    <p class="sr-only" aria-live="polite" data-archive-count data-template={archive.countLabel}>{countText(items.length)}</p>
+
+    <div data-archive-grid>
+      {
+        groups.map((group) => (
+          <div class="filter-group" data-archive-group>
+            <h3 class="label mt-8" data-reveal>
+              {group.label}
+            </h3>
+            <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+              {group.items.map((item) => (
+                <li class="card work filter-card flex flex-col" data-tags={item.tags.join('|')}>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <h4 class:list={['min-w-0 text-base font-semibold break-words', item.group && 'font-mono text-[0.9375rem]']}>
+                      {item.name}
+                    </h4>
+                    {item.status && (
+                      <span class="status ml-auto" data-tone={item.status.tone}>
+                        {item.status.label}
+                      </span>
+                    )}
+                  </div>
+                  <p class="mt-2 text-sm leading-relaxed text-muted">{item.description}</p>
+                  <p class="label mt-4 text-[0.625rem]!">{item.tags.join(' / ')}</p>
+                  <div class="mt-auto flex flex-wrap items-center gap-2 pt-4">
+                    {item.stack.map((t) => (
+                      <span class="chip text-xs!">{t}</span>
+                    ))}
+                    {item.visibility === 'private' && <span class="chip private text-xs!">{archive.privateLabel}</span>}
+                    {item.link && (
+                      <a
+                        href={item.link.href}
+                        class="link-underline ml-auto inline-flex items-center gap-1.5 text-sm font-medium"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {item.visibility === 'public' && <Icon name="github" size={14} />}
+                        {item.link.label}
+                        <span class="sr-only">
+                          : {item.name} {profile.a11y.newTab}
+                        </span>
+                        <Icon name="arrow-up-right" size={14} />
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  // Filter chips. Without JS the chips stay hidden and every card shows.
+  const grid = document.querySelector<HTMLElement>('[data-archive-grid]');
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-archive-filter]'));
+  const count = document.querySelector<HTMLElement>('[data-archive-count]');
+
+  if (grid && chips.length) {
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('.work'));
+    const groups = Array.from(grid.querySelectorAll<HTMLElement>('[data-archive-group]'));
+
+    const apply = (filter: string) => {
+      let shown = 0;
+      cards.forEach((card) => {
+        const match = filter === 'all' || (card.dataset.tags ?? '').split('|').includes(filter);
+        card.hidden = !match;
+        card.classList.remove('filter-in');
+        if (match) {
+          card.style.setProperty('--i', String(Math.min(shown, 12)));
+          shown += 1;
+        }
+      });
+      // A group with nothing left loses its heading too.
+      groups.forEach((group) => (group.hidden = !group.querySelector('.work:not([hidden])')));
+      // Restart the soft fade on the cards that stay.
+      void grid.offsetWidth;
+      cards.forEach((card) => !card.hidden && card.classList.add('filter-in'));
+      chips.forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.archiveFilter === filter)));
+      if (count) {
+        count.textContent = (count.dataset.template ?? '')
+          .replace('{n}', String(shown))
+          .replace('{total}', String(cards.length));
+      }
+    };
+
+    chips.forEach((chip) => chip.addEventListener('click', () => apply(chip.dataset.archiveFilter ?? 'all')));
+  }
+</script>
+
+<style>
+  .work {
+    padding: 1.125rem;
+  }
+
+  .private {
+    border-style: dashed;
+    color: var(--muted);
+  }
+</style>

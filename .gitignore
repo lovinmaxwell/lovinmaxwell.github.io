@@ -3,3 +3,4 @@ dist
 .astro
 .fable-*.log
 .DS_Store
+notes/

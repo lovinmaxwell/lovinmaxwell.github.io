@@ -1,0 +1,63 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+
+const { domains } = profile;
+---
+
+<section id="domains" class="section border-t border-line" aria-labelledby="domains-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{domains.kicker}</p>
+      <h2 id="domains-title" class="section-title">{domains.title}</h2>
+    </div>
+
+    <ul class="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {
+        domains.items.map((item, i) => (
+          <li
+            class:list={['card domain flex flex-col p-4! sm:p-6!', item.wide && 'col-span-2']}
+            data-reveal
+            style={`--d: ${(i % 4) * 70}ms`}
+          >
+            <span class="domain-icon">
+              <Icon name={item.icon} size={20} />
+            </span>
+            <h3 class="mt-5 text-base leading-snug font-semibold tracking-tight sm:text-lg">{item.title}</h3>
+            <p class="mt-1.5 text-[0.8125rem] leading-snug text-muted sm:text-[0.9375rem]">{item.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .domain {
+    min-height: 9.5rem;
+  }
+
+  .domain-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: var(--raised);
+    color: var(--muted);
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .domain:hover .domain-icon {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+  }
+</style>
