@@ -28,6 +28,8 @@ const filters = [
     })),
 ];
 const countText = (n: number) => stack.countLabel.replace('{n}', String(n)).replace('{total}', String(items.length));
+const showAllLabel = stack.showAllLabel;
+const showLessLabel = stack.showLessLabel;
 ---
 
 <section id="stack" class="section border-t border-line" aria-labelledby="stack-title">
@@ -110,7 +112,13 @@ const countText = (n: number) => stack.countLabel.replace('{n}', String(n)).repl
     <ul class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-stack-grid data-reveal>
       {
         items.map((item) => (
-          <li class="card tool filter-card" data-tier={item.tier} data-category={item.category}>
+          <li
+            class="card tool filter-card"
+            data-tier={item.tier}
+            data-category={item.category}
+            data-featured={item.featured ? '1' : undefined}
+            data-top={item.top || item.featured ? '1' : undefined}
+          >
             <div class="flex items-center gap-3">
               <span class="logo-tile size-10 shrink-0">
                 {item.logo ? (
@@ -132,43 +140,83 @@ const countText = (n: number) => stack.countLabel.replace('{n}', String(n)).repl
         ))
       }
     </ul>
+    <p class="mt-5">
+      <button type="button" class="filter-chip" data-stack-more data-show-all={showAllLabel} data-show-less={showLessLabel} hidden aria-expanded="false"></button>
+    </p>
   </div>
 </section>
 
 <script>
-  // Filter chips. Without JS the chips stay hidden and every card shows.
+  // Filter chips + curated "Show all". Without JS every card shows and the chips stay hidden via CSS.
   const grid = document.querySelector<HTMLElement>('[data-stack-grid]');
-  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.filters [data-filter]'));
   const count = document.querySelector<HTMLElement>('[data-stack-count]');
+  const more = document.querySelector<HTMLButtonElement>('[data-stack-more]');
+  const showAllLabel = more?.dataset.showAll ?? 'Show all ({n})';
+  const showLessLabel = more?.dataset.showLess ?? 'Show fewer';
 
   if (grid && chips.length) {
     const cards = Array.from(grid.querySelectorAll<HTMLElement>('.tool'));
+    let expanded = false;
+    let current = 'all';
 
-    const apply = (filter: string) => {
-      const [kind, value] = filter === 'all' ? ['all', ''] : [filter.slice(0, filter.indexOf(':')), filter.slice(filter.indexOf(':') + 1)];
+    const apply = (filter: string, forceExpand?: boolean) => {
+      current = filter;
+      if (forceExpand !== undefined) expanded = forceExpand;
+      const [kind, value] =
+        filter === 'all'
+          ? ['all', '']
+          : [filter.slice(0, filter.indexOf(':')), filter.slice(filter.indexOf(':') + 1)];
+
+      const matches = cards.filter((card) => {
+        if (kind === 'all') return true;
+        if (kind === 'tier') return card.dataset.tier === value;
+        return card.dataset.category === value;
+      });
+
+      const curated = matches.filter((card) =>
+        kind === 'all' ? card.dataset.featured === '1' : card.dataset.top === '1' || card.dataset.featured === '1',
+      );
+      const top = curated.length >= 6 ? curated : matches.slice(0, 12);
+      const remainder = matches.length - top.length;
+      const showSet = new Set(expanded || remainder <= 0 ? matches : top);
+
       let shown = 0;
       cards.forEach((card) => {
-        const match =
-          kind === 'all' || (kind === 'tier' ? card.dataset.tier === value : card.dataset.category === value);
-        card.hidden = !match;
+        const visible = showSet.has(card);
+        card.hidden = !visible;
         card.classList.remove('filter-in');
-        if (match) {
+        if (visible) {
           card.style.setProperty('--i', String(Math.min(shown, 12)));
           shown += 1;
         }
       });
-      // Restart the soft fade on the cards that stay.
       void grid.offsetWidth;
       cards.forEach((card) => !card.hidden && card.classList.add('filter-in'));
       chips.forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.filter === filter)));
       if (count) {
         count.textContent = (count.dataset.template ?? '')
           .replace('{n}', String(shown))
-          .replace('{total}', String(cards.length));
+          .replace('{total}', String(matches.length));
+      }
+      if (more) {
+        if (remainder > 0 && !expanded) {
+          more.hidden = false;
+          more.setAttribute('aria-expanded', 'false');
+          more.textContent = showAllLabel.replace('{n}', String(matches.length));
+        } else if (expanded && remainder > 0) {
+          more.hidden = false;
+          more.setAttribute('aria-expanded', 'true');
+          more.textContent = showLessLabel;
+        } else {
+          more.hidden = true;
+        }
       }
     };
 
-    chips.forEach((chip) => chip.addEventListener('click', () => apply(chip.dataset.filter ?? 'all')));
+    chips.forEach((chip) => chip.addEventListener('click', () => apply(chip.dataset.filter ?? 'all', false)));
+    more?.addEventListener('click', () => apply(current, !expanded));
+    apply('all', false);
   }
 </script>
 

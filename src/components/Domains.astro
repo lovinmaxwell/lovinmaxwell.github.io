@@ -3,28 +3,43 @@ import Icon from './Icon.astro';
 import { profile } from '../data/profile';
 
 const { domains } = profile;
+
+const spanClass = {
+  wide: 'col-span-2',
+  full: 'col-span-2 lg:col-span-4',
+} as const;
 ---
 
 <section id="domains" class="section border-t border-line" aria-labelledby="domains-title">
   <div class="wrap">
     <div data-reveal>
       <p class="kicker">{domains.kicker}</p>
-      <h2 id="domains-title" class="section-title">{domains.title}</h2>
+      <h2 id="domains-title" class="section-title max-w-2xl">{domains.title}</h2>
     </div>
 
-    <ul class="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <ul class="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
       {
         domains.items.map((item, i) => (
           <li
-            class:list={['card domain flex flex-col p-4! sm:p-6!', item.wide && 'col-span-2']}
+            class:list={[
+              'card domain flex flex-col p-5! sm:p-6!',
+              item.span ? spanClass[item.span] : '',
+            ]}
             data-reveal
             style={`--d: ${(i % 4) * 70}ms`}
           >
             <span class="domain-icon">
               <Icon name={item.icon} size={20} />
             </span>
-            <h3 class="mt-5 text-base leading-snug font-semibold tracking-tight sm:text-lg">{item.title}</h3>
-            <p class="mt-1.5 text-[0.8125rem] leading-snug text-muted sm:text-[0.9375rem]">{item.text}</p>
+            <h3 class="mt-5 text-lg leading-snug font-semibold tracking-tight sm:text-xl">{item.title}</h3>
+            <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted sm:text-base">{item.text}</p>
+            {item.chips && item.chips.length > 0 && (
+              <ul class="mt-auto flex flex-wrap gap-2 pt-5" aria-label={`Tech for ${item.title}`}>
+                {item.chips.map((c) => (
+                  <li class="chip text-xs!">{c}</li>
+                ))}
+              </ul>
+            )}
           </li>
         ))
       }
@@ -34,7 +49,7 @@ const { domains } = profile;
 
 <style>
   .domain {
-    min-height: 9.5rem;
+    min-height: 12rem;
   }
 
   .domain-icon {

@@ -6,9 +6,10 @@ import { withBase } from '../lib/url';
 const { projects } = profile;
 const featured = projects.items.filter((p) => p.featured);
 const others = projects.items.filter((p) => !p.featured);
+const keyCount = projects.keyStackCount ?? 4;
 
-// Fan the phone screenshots a little on larger screens.
 const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rotate-3 sm:translate-y-4'];
+
 ---
 
 <section id="projects" class="section border-t border-line" aria-labelledby="projects-title">
@@ -18,13 +19,13 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
       <h2 id="projects-title" class="section-title">{projects.title}</h2>
     </div>
 
-    <div class="mt-10 grid gap-4 lg:grid-cols-3">
+    <div class="mt-10 grid gap-4 lg:grid-cols-2">
       {
         featured.map((p) => (
-          <article class="card grid gap-10 p-6! sm:p-9! lg:col-span-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12" data-reveal>
+          <article class="card grid gap-8 p-6! sm:p-9! lg:col-span-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12" data-reveal>
             <div class="flex flex-col">
               <p class="label">{projects.featuredLabel}</p>
-              <h3 class="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{p.name}</h3>
+              <h3 class="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">{p.name}</h3>
               <ul class="mt-4 flex flex-wrap gap-2">
                 {p.statuses.map((s) => (
                   <li class="status" data-tone={s.tone}>
@@ -33,34 +34,15 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                 ))}
               </ul>
               <p class="mt-5 text-lg leading-relaxed">{p.description}</p>
-
-              {p.features && (
-                <>
-                  <h4 class="label mt-8">{projects.featuresLabel}</h4>
-                  <ul class="mt-3 grid gap-x-6 gap-y-2 text-[0.9375rem] leading-snug text-muted sm:grid-cols-2">
-                    {p.features.map((f) => (
-                      <li class="flex gap-2.5">
-                        <span class="mt-[0.55em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
               {p.stack && (
-                <>
-                  <h4 class="label mt-8">{projects.stackLabel}</h4>
-                  <ul class="mt-3 flex flex-wrap gap-2">
-                    {p.stack.map((t) => (
-                      <li class="chip">{t}</li>
-                    ))}
-                  </ul>
-                </>
+                <ul class="mt-5 flex flex-wrap gap-2">
+                  {p.stack.slice(0, keyCount).map((t) => (
+                    <li class="chip">{t}</li>
+                  ))}
+                </ul>
               )}
-
               {p.link && (
-                <p class="mt-8 lg:mt-auto lg:pt-8">
+                <p class="mt-6">
                   <a href={p.link.href} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
                     {p.link.label}
                     <Icon name="arrow-up-right" size={16} />
@@ -68,6 +50,62 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                   </a>
                 </p>
               )}
+              <details class="case mt-8">
+                <summary class="label inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
+                  <span class="chevron inline-block transition-transform" aria-hidden="true">›</span>
+                  {projects.caseStudyLabel}
+                </summary>
+                <div class="mt-5 grid gap-6 border-t border-line pt-5">
+                  <div>
+                    <h4 class="label">{projects.problemLabel}</h4>
+                    <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted sm:text-base">{p.problem}</p>
+                  </div>
+                  <div>
+                    <h4 class="label">{projects.approachLabel}</h4>
+                    <ul class="mt-2 grid gap-2 text-[0.9375rem] leading-relaxed text-muted">
+                      {p.approach.map((a) => (
+                        <li class="flex gap-2.5">
+                          <span class="mt-[0.65em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                          <span>{a}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {p.features && (
+                    <div>
+                      <h4 class="label">{projects.featuresLabel}</h4>
+                      <ul class="mt-2 grid gap-x-6 gap-y-2 text-[0.9375rem] leading-snug text-muted sm:grid-cols-2">
+                        {p.features.map((f) => (
+                          <li class="flex gap-2.5">
+                            <span class="mt-[0.55em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {p.stack && (
+                    <div>
+                      <h4 class="label">{projects.stackLabel}</h4>
+                      <ul class="mt-3 flex flex-wrap gap-2">
+                        {p.stack.map((t) => (
+                          <li class="chip">{t}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div>
+                    <h4 class="label">{projects.statusLabel}</h4>
+                    <ul class="mt-3 flex flex-wrap gap-2">
+                      {p.statuses.map((s) => (
+                        <li class="status" data-tone={s.tone}>
+                          {s.label}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </details>
             </div>
 
             {p.images && (
@@ -94,7 +132,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
 
       {
         others.map((p, i) => (
-          <article class="card flex flex-col" data-reveal style={`--d: ${i * 70}ms`}>
+          <article class="card flex flex-col p-6! sm:p-7!" data-reveal style={`--d: ${i * 70}ms`}>
             <ul class="flex flex-wrap gap-2">
               {p.statuses.map((s) => (
                 <li class="status" data-tone={s.tone}>
@@ -104,16 +142,15 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
             </ul>
             <h3 class="mt-5 text-2xl font-semibold tracking-tight">{p.name}</h3>
             <p class="mt-3 leading-relaxed">{p.description}</p>
-            {p.details && <p class="mt-3 text-[0.9375rem] leading-relaxed text-muted">{p.details}</p>}
             {p.stack && (
-              <ul class="mt-6 flex flex-wrap gap-2">
-                {p.stack.map((t) => (
+              <ul class="mt-5 flex flex-wrap gap-2">
+                {p.stack.slice(0, keyCount).map((t) => (
                   <li class="chip">{t}</li>
                 ))}
               </ul>
             )}
             {p.link && (
-              <p class="mt-auto pt-6">
+              <p class="mt-5">
                 <a
                   href={p.link.href}
                   class="link-underline inline-flex items-center gap-1.5 font-medium"
@@ -126,6 +163,83 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                 </a>
               </p>
             )}
+            <details class="case mt-auto pt-5">
+              <summary class="label inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
+                <span class="chevron inline-block transition-transform" aria-hidden="true">›</span>
+                {projects.caseStudyLabel}
+              </summary>
+              <div class="mt-5 grid gap-5 border-t border-line pt-5">
+                <div>
+                  <h4 class="label">{projects.problemLabel}</h4>
+                  <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted">{p.problem}</p>
+                </div>
+                <div>
+                  <h4 class="label">{projects.approachLabel}</h4>
+                  <ul class="mt-2 grid gap-2 text-[0.9375rem] leading-relaxed text-muted">
+                    {p.approach.map((a) => (
+                      <li class="flex gap-2.5">
+                        <span class="mt-[0.65em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                        <span>{a}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {p.features && (
+                  <div>
+                    <h4 class="label">{projects.featuresLabel}</h4>
+                    <ul class="mt-2 grid gap-2 text-[0.9375rem] leading-snug text-muted">
+                      {p.features.map((f) => (
+                        <li class="flex gap-2.5">
+                          <span class="mt-[0.55em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {p.repos && (
+                  <div>
+                    <h4 class="label">{projects.reposLabel}</h4>
+                    <ul class="mt-3 grid gap-3">
+                      {p.repos.map((r) => (
+                        <li>
+                          <a
+                            href={r.href}
+                            class="link-underline font-medium"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {r.name}
+                            <span class="sr-only">{profile.a11y.newTab}</span>
+                          </a>
+                          <p class="mt-1 text-[0.875rem] leading-snug text-muted">{r.description}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {p.stack && (
+                  <div>
+                    <h4 class="label">{projects.stackLabel}</h4>
+                    <ul class="mt-3 flex flex-wrap gap-2">
+                      {p.stack.map((t) => (
+                        <li class="chip">{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div>
+                  <h4 class="label">{projects.statusLabel}</h4>
+                  <ul class="mt-3 flex flex-wrap gap-2">
+                    {p.statuses.map((s) => (
+                      <li class="status" data-tone={s.tone}>
+                        {s.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </details>
           </article>
         ))
       }
@@ -134,7 +248,18 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
 </section>
 
 <style>
-  /* Small screens: screenshots become a swipeable snap row that bleeds to the card edges. */
+  .case summary {
+    list-style: none;
+  }
+
+  .case summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .case[open] .chevron {
+    transform: rotate(90deg);
+  }
+
   @media (width < 40rem) {
     .shots {
       margin-inline: -1.5rem;

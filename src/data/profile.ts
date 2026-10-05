@@ -75,6 +75,10 @@ export interface StackItem {
   note?: string;
   /** Show in the logo marquee. */
   marquee?: boolean;
+  /** Part of the curated top set shown under "All". */
+  featured?: boolean;
+  /** Part of the curated top set for its tier. Featured items always are. */
+  top?: boolean;
 }
 
 export interface Faq {
@@ -95,26 +99,34 @@ export type DomainIcon =
   | 'music'
   | 'globe'
   | 'home'
-  | 'building';
+  | 'building'
+  | 'plug'
+  | 'scan';
 
 export interface Domain {
   title: string;
-  /** One short plain line. */
+  /** One or two sentences on the kind of system and what it does. */
   text: string;
   icon: DomainIcon;
-  /** Larger tile in the bento grid. */
-  wide?: boolean;
+  /** Tech chips, only where the stack is known. */
+  chips?: string[];
+  /** Larger tile in the bento grid: two columns, or the full row. */
+  span?: 'wide' | 'full';
 }
 
 export interface Job {
   role: string;
   company: string;
-  type: 'Contract' | 'Full-time';
+  type?: 'Full-time';
   location: string;
   period: string;
   current?: boolean;
-  /** Three to five short lines. The first three show, the rest sit behind "More". */
+  /** One line on scope and ownership. */
+  summary: string;
+  /** Three to five outcome-led lines. The first four show, a fifth sits behind "More". */
   bullets: string[];
+  /** Stack chips. */
+  stack: string[];
 }
 
 export interface EducationItem {
@@ -142,22 +154,29 @@ export interface ProjectImage {
   height: number;
 }
 
-export interface Project {
-  name: string;
-  featured?: boolean;
-  statuses: { label: string; tone: StatusTone }[];
-  description: string;
-  details?: string;
-  features?: string[];
-  stack?: string[];
-  link?: { label: string; href: string };
-  images?: ProjectImage[];
-}
-
 export interface Repo {
   name: string;
   href: string;
   description: string;
+}
+
+/** A case study. The card shows the pitch; the rest opens in a panel. */
+export interface Project {
+  name: string;
+  featured?: boolean;
+  statuses: { label: string; tone: StatusTone }[];
+  /** One-line pitch. */
+  description: string;
+  problem: string;
+  /** Approach and architecture, one point per line. */
+  approach: string[];
+  features?: string[];
+  /** The first few show on the closed card. */
+  stack?: string[];
+  /** Repos that make up the project, for grouped open-source work. */
+  repos?: Repo[];
+  link?: { label: string; href: string };
+  images?: ProjectImage[];
 }
 
 export type ArchiveTag = 'AI' | 'Mobile' | 'Web' | 'ERP' | 'Desktop' | 'Dev tools' | 'Open source';
@@ -180,6 +199,40 @@ export interface ArchiveItem {
 
 const email = 'lovinmaxwell@gmail.com';
 
+// Cursor plugins. Shared by the case study, the archive and the open-source section.
+const plugins: Repo[] = [
+  {
+    name: 'antigravity-code',
+    href: 'https://github.com/lovinmaxwell/antigravity-code',
+    description:
+      'Cursor plugin that drives the Google Antigravity CLI headless, with model selection and continue/resume.',
+  },
+  {
+    name: 'claude-code-cloud',
+    href: 'https://github.com/lovinmaxwell/claude-code-cloud',
+    description:
+      'Cursor plugin that drives Claude Code locally with claude -p and runs Claude Code Cloud sessions from an agent.',
+  },
+  {
+    name: 'notebooklm-code',
+    href: 'https://github.com/lovinmaxwell/notebooklm-code',
+    description:
+      'Cursor plugin for consumer NotebookLM through a community MCP: add sources and ask grounded questions. Submitted to the Cursor marketplace.',
+  },
+  {
+    name: 'dodo-payments-code',
+    href: 'https://github.com/lovinmaxwell/dodo-payments-code',
+    description:
+      'Cursor plugin for the official Dodo Payments remote MCP servers: API Code Mode plus documentation search.',
+  },
+  {
+    name: 'omp-worker-code',
+    href: 'https://github.com/lovinmaxwell/omp-worker-code',
+    description:
+      'Lets Claude Desktop, Claude Code or Cursor on macOS delegate coding tasks to local Oh My Pi workers through omp-worker-mcp.',
+  },
+];
+
 export const profile = {
   name: 'Lovin Johnson Maxwell',
   alternateName: 'Lovin Maxwell',
@@ -194,7 +247,7 @@ export const profile = {
   country: 'Qatar',
   // DRAFT: pending Lovin's approval. Alt: "Shipping real AI: tools, agents, products."
   tagline: 'I build with AI and show you what actually works.',
-  availability: 'Available for freelance & hire',
+  availability: 'Available for hire',
   email,
   /** Date this file was last reviewed. Shown in profile.json and llms.txt. */
   updated: '2026-10-05',
@@ -202,7 +255,7 @@ export const profile = {
   seo: {
     title: 'Lovin Johnson Maxwell | Solution Architect & Full-Stack Engineer',
     description:
-      'Lovin Johnson Maxwell is a solution architect and full-stack engineer based in Doha, Qatar. .NET and Azure by day, AI systems by obsession. Available for freelance and hire.',
+      'Lovin Johnson Maxwell is a solution architect and full-stack engineer based in Doha, Qatar. .NET and Azure by day, AI systems by obsession. Available for hire.',
     ogImage: 'og.png',
     ogImageAlt:
       'Lovin Johnson Maxwell. Solution architect and full-stack engineer. .NET and Azure by day, AI systems by obsession.',
@@ -274,19 +327,74 @@ export const profile = {
     kicker: 'Domains',
     title: "What I've built",
     items: [
-      { title: 'Solution architecture', text: 'I design and architect end-to-end solutions.', icon: 'layers', wide: true },
-      { title: 'Retail & POS', text: 'Point-of-sale applications for retail.', icon: 'cart' },
-      { title: 'Warehouse', text: 'Warehouse applications.', icon: 'package' },
-      { title: 'Delivery', text: 'Delivery applications.', icon: 'truck' },
-      { title: 'E-commerce', text: 'E-commerce applications.', icon: 'bag' },
-      { title: 'Music streaming', text: 'A Spotify-style streaming app.', icon: 'music' },
-      { title: 'Websites', text: 'Including the HolyWhisper landing site.', icon: 'globe' },
-      { title: 'IoT & smart home', text: 'Apps for smart home appliances.', icon: 'home', wide: true },
+      {
+        title: 'Solution architecture',
+        text: 'I design end-to-end solutions: system boundaries, integrations, data flow and delivery, from the database to the mobile app.',
+        icon: 'layers',
+        chips: ['Azure', 'APIs', 'Integration'],
+        span: 'full',
+      },
+      {
+        title: 'Retail & POS',
+        text: 'Retail point-of-sale systems built on a layered .NET architecture (MVVM, DI, WCF) covering billing, inventory and store operations.',
+        icon: 'cart',
+        chips: ['C#', '.NET', 'WCF', 'WPF', 'Flutter'],
+      },
+      {
+        title: 'Warehouse',
+        text: 'Inventory and warehouse operations apps: stock movements, barcode-driven receiving and picking, and real-time sync with ERP back ends.',
+        icon: 'package',
+        chips: ['Flutter', 'ERPNext/Frappe', 'REST'],
+      },
       {
         title: 'Healthcare & enterprise',
-        text: 'Enterprise applications in healthcare and large organizations.',
+        text: 'Enterprise project, asset and operational systems for healthcare and large organizations, with portals, dashboards, reporting and mobile approvals.',
         icon: 'building',
-        wide: true,
+        chips: ['ASP.NET Core', 'PMWeb', 'SQL Server', 'Flutter'],
+        span: 'wide',
+      },
+      {
+        title: 'Delivery',
+        text: 'Delivery and dispatch apps with order tracking, driver workflows and status updates wired to back-office systems.',
+        icon: 'truck',
+        chips: ['Flutter', 'REST APIs'],
+      },
+      {
+        title: 'E-commerce',
+        text: 'Storefronts and commerce apps with catalog, cart, checkout and order management, connected to back-office and ERP systems.',
+        icon: 'bag',
+        chips: ['Flutter', 'React', 'REST'],
+      },
+      {
+        title: 'Music streaming',
+        text: 'A Spotify-style streaming app with a browsable catalog, playback and playlists.',
+        icon: 'music',
+        chips: ['Flutter'],
+      },
+      {
+        title: 'Websites',
+        text: 'Marketing and product websites built for speed and SEO, from static sites to app landing pages.',
+        icon: 'globe',
+        chips: ['Next.js', 'Astro', 'Cloudflare Workers'],
+      },
+      {
+        title: 'IoT & smart home',
+        text: 'Control and monitoring apps for smart home appliances, connecting mobile interfaces to connected devices.',
+        icon: 'home',
+        chips: ['Flutter'],
+      },
+      {
+        title: 'Document AI & OCR',
+        text: 'Document extraction with Azure Document Intelligence, cutting manual processing by up to 60%, plus local OCR and vision-language pipelines.',
+        icon: 'scan',
+        chips: ['Azure Document Intelligence', 'Qwen2.5-VL', 'PaddleOCR'],
+      },
+      {
+        title: 'Enterprise integration',
+        text: 'ERP and SAP integrations: SAP RFC with ABAP function modules and .NET middleware, Oracle stored procedures, Microsoft Graph, ERPNext/Frappe, ADempiere and iDempiere.',
+        icon: 'plug',
+        chips: ['SAP RFC', 'ABAP', 'ERPNext', 'Microsoft Graph'],
+        span: 'wide',
       },
     ] satisfies Domain[],
   },
@@ -331,6 +439,8 @@ export const profile = {
     filterLabel: 'Filter the stack',
     allLabel: 'All',
     countLabel: 'Showing {n} of {total}',
+    showAllLabel: 'Show all ({n})',
+    showLessLabel: 'Show fewer',
     // Tiering is a draft for Lovin to confirm.
     tiers: [
       { id: 'ai', label: 'AI & Automation' },
@@ -364,9 +474,17 @@ export const profile = {
     ] satisfies { tier: StackTier; title: string; text: string; logos: LogoKey[] }[],
     items: [
       // AI & Automation
-      { name: 'n8n', detail: 'workflow automation', category: 'AI & Automation', tier: 'ai', logo: 'n8n', marquee: true },
-      { name: 'LLM workflows', category: 'AI & Automation', tier: 'ai', mono: 'LW' },
-      { name: 'Agent pipelines', category: 'AI & Automation', tier: 'ai', mono: 'PL' },
+      {
+        name: 'n8n',
+        detail: 'workflow automation',
+        category: 'AI & Automation',
+        tier: 'ai',
+        logo: 'n8n',
+        marquee: true,
+        featured: true,
+      },
+      { name: 'LLM workflows', category: 'AI & Automation', tier: 'ai', mono: 'LW', featured: true },
+      { name: 'Agent pipelines', category: 'AI & Automation', tier: 'ai', mono: 'PL', featured: true },
       {
         name: 'Agents & MCP',
         category: 'AI & Automation',
@@ -374,6 +492,7 @@ export const profile = {
         logo: 'mcp',
         note: 'Open-source Cursor plugins',
         marquee: true,
+        featured: true,
       },
       {
         name: 'Claude / Cursor agent tooling',
@@ -382,7 +501,7 @@ export const profile = {
         logo: 'claude',
         note: 'Open-source Cursor plugins',
         marquee: true,
-      },
+       top: true },
       {
         name: 'Custom OCR model research',
         detail: 'fine-tuning open-source OCR and VLMs',
@@ -390,6 +509,7 @@ export const profile = {
         tier: 'ai',
         mono: 'OC',
         note: 'Local ID OCR in AccessFlow',
+        featured: true,
       },
       {
         name: 'Qwen2.5-VL',
@@ -399,7 +519,7 @@ export const profile = {
         logo: 'qwen',
         note: 'Local ID OCR in AccessFlow',
         marquee: true,
-      },
+       top: true },
       {
         name: 'PaddleOCR / RapidOCR',
         category: 'AI & Automation',
@@ -407,7 +527,7 @@ export const profile = {
         logo: 'paddle',
         note: 'Local ID OCR in AccessFlow',
         marquee: true,
-      },
+       top: true },
       {
         name: 'ONNX Runtime',
         category: 'AI & Automation',
@@ -415,7 +535,7 @@ export const profile = {
         logo: 'onnx',
         note: 'Runs the OCR models in AccessFlow',
         marquee: true,
-      },
+       top: true },
       {
         name: 'Ollama / vLLM',
         category: 'AI & Automation',
@@ -423,13 +543,14 @@ export const profile = {
         logo: 'ollama',
         note: 'Used in AccessFlow',
         marquee: true,
-      },
+       top: true },
       {
         name: 'Azure Document Intelligence',
         category: 'AI & Automation',
         tier: 'ai',
         logo: 'azure',
         note: 'Cut manual document processing by up to 60%',
+        featured: true,
       },
       {
         name: 'Python FastAPI',
@@ -438,18 +559,25 @@ export const profile = {
         logo: 'fastapi',
         note: 'Used in AccessFlow',
         marquee: true,
-      },
+       top: true },
       // Architecture
-      { name: 'Solution architecture', category: 'Architecture', tier: 'core', mono: 'SA' },
-      { name: 'Enterprise architecture', category: 'Architecture', tier: 'core', mono: 'EA' },
+      { name: 'Solution architecture', category: 'Architecture', tier: 'core', mono: 'SA', featured: true },
+      { name: 'Enterprise architecture', category: 'Architecture', tier: 'core', mono: 'EA', top: true },
       // Backend
-      { name: 'C#', category: 'Backend', tier: 'core', logo: 'csharp', marquee: true },
-      { name: 'ASP.NET Core', category: 'Backend', tier: 'core', logo: 'dotnet', note: 'Qatar SME Compliance OS' },
+      { name: 'C#', category: 'Backend', tier: 'core', logo: 'csharp', marquee: true, featured: true },
+      {
+        name: 'ASP.NET Core',
+        category: 'Backend',
+        tier: 'core',
+        logo: 'dotnet',
+        note: 'Qatar SME Compliance OS',
+        featured: true,
+      },
       { name: '.NET', category: 'Backend', tier: 'core', logo: 'dotnet', note: 'CRM and retail POS', marquee: true },
-      { name: 'Web API', category: 'Backend', tier: 'core', mono: 'AP' },
+      { name: 'Web API', category: 'Backend', tier: 'core', mono: 'AP', top: true },
       { name: 'REST', category: 'Backend', tier: 'core', mono: 'RE', note: 'PMWeb APIs for Flutter apps' },
       { name: 'WCF', category: 'Backend', tier: 'core', mono: 'WC', note: 'Retail POS services' },
-      { name: 'Microservices', category: 'Backend', tier: 'core', mono: 'MS' },
+      { name: 'Microservices', category: 'Backend', tier: 'core', mono: 'MS', top: true },
       { name: 'Middleware', category: 'Backend', tier: 'core', mono: 'MW', note: 'SAP RE-FX leasing uploads over RFC' },
       {
         name: 'System integration',
@@ -457,23 +585,40 @@ export const profile = {
         category: 'Backend',
         tier: 'core',
         mono: 'SI',
+        top: true,
       },
       { name: 'MVVM', category: 'Backend', tier: 'core', mono: 'MV', note: 'Retail POS' },
       { name: 'Dependency injection', category: 'Backend', tier: 'core', mono: 'DI', note: 'Retail POS' },
       { name: 'Data structures', category: 'Backend', tier: 'core', mono: 'DS' },
       // Azure
-      { name: 'App Services', category: 'Azure', tier: 'core', logo: 'azure', marquee: true },
+      { name: 'App Services', category: 'Azure', tier: 'core', logo: 'azure', marquee: true, top: true },
       { name: 'API Management', category: 'Azure', tier: 'core', logo: 'azure' },
-      { name: 'Service Bus', category: 'Azure', tier: 'core', logo: 'azure' },
+      { name: 'Service Bus', category: 'Azure', tier: 'core', logo: 'azure', top: true },
       { name: 'Logic Apps', category: 'Azure', tier: 'core', logo: 'azure' },
       { name: 'WebJobs', category: 'Azure', tier: 'core', logo: 'azure' },
       { name: 'Storage', category: 'Azure', tier: 'core', logo: 'azure' },
-      { name: 'Entra ID', category: 'Azure', tier: 'core', logo: 'azure' },
+      { name: 'Entra ID', category: 'Azure', tier: 'core', logo: 'azure', top: true },
       // Frontend
-      { name: 'Angular', category: 'Frontend', tier: 'production', logo: 'angular', note: 'CRM delivery', marquee: true },
+      {
+        name: 'Angular',
+        category: 'Frontend',
+        tier: 'production',
+        logo: 'angular',
+        note: 'CRM delivery',
+        marquee: true,
+        top: true,
+      },
       { name: 'ASP.NET MVC', category: 'Frontend', tier: 'production', logo: 'dotnet' },
       { name: 'WPF', category: 'Frontend', tier: 'production', mono: 'WP' },
-      { name: 'React', category: 'Frontend', tier: 'production', logo: 'react', note: 'Used in AccessFlow', marquee: true },
+      {
+        name: 'React',
+        category: 'Frontend',
+        tier: 'production',
+        logo: 'react',
+        note: 'Used in AccessFlow',
+        marquee: true,
+        top: true,
+      },
       {
         name: 'TypeScript',
         category: 'Frontend',
@@ -481,6 +626,7 @@ export const profile = {
         logo: 'typescript',
         note: 'Used in AccessFlow',
         marquee: true,
+        top: true,
       },
       // Mobile
       {
@@ -491,6 +637,7 @@ export const profile = {
         logo: 'flutter',
         note: 'Tenant apps, CRM and PMWeb mobile apps',
         marquee: true,
+        featured: true,
       },
       { name: 'Dart', category: 'Mobile', tier: 'production', logo: 'dart', note: 'HolyWhisper', marquee: true },
       // Data
@@ -502,12 +649,13 @@ export const profile = {
         logo: 'sqlserver',
         note: 'CRM delivery',
         marquee: true,
+        featured: true,
       },
-      { name: 'Entity Framework', category: 'Data', tier: 'core', logo: 'ef', marquee: true },
+      { name: 'Entity Framework', category: 'Data', tier: 'core', logo: 'ef', marquee: true, top: true },
       { name: 'LINQ', category: 'Data', tier: 'core', mono: 'LQ' },
-      { name: 'PostgreSQL', category: 'Data', tier: 'production', logo: 'postgresql', marquee: true },
+      { name: 'PostgreSQL', category: 'Data', tier: 'production', logo: 'postgresql', marquee: true, top: true },
       { name: 'MySQL', category: 'Data', tier: 'production', logo: 'mysql', marquee: true },
-      { name: 'Power BI', category: 'Data', tier: 'production', mono: 'BI' },
+      { name: 'Power BI', category: 'Data', tier: 'production', mono: 'BI', top: true },
       {
         name: 'Firebase',
         category: 'Data',
@@ -519,19 +667,13 @@ export const profile = {
       { name: 'ObjectBox', category: 'Data', tier: 'production', mono: 'OB', note: 'Offline storage in HolyWhisper' },
       // ERP / Integration
       {
-        name: 'ERP',
-        detail: 'ERPNext/Frappe, ADempiere, iDempiere',
-        category: 'ERP / Integration',
-        tier: 'production',
-        mono: 'ER',
-      },
-      {
         name: 'SAP RFC',
         category: 'ERP / Integration',
         tier: 'production',
         logo: 'sap',
         note: 'ABAP RFC function modules and the .NET middleware that cut RE-FX upload effort by about 90%',
         marquee: true,
+        featured: true,
       },
       {
         name: 'SAP ABAP',
@@ -539,6 +681,7 @@ export const profile = {
         category: 'ERP / Integration',
         tier: 'production',
         logo: 'sap',
+        top: true,
       },
       {
         name: 'PMWeb',
@@ -546,6 +689,7 @@ export const profile = {
         tier: 'production',
         mono: 'PM',
         note: '.NET portals, dashboards and REST APIs',
+        top: true,
       },
       {
         name: 'ERPNext/Frappe',
@@ -554,10 +698,11 @@ export const profile = {
         logo: 'erpnext',
         note: 'Open-source contributor and builder',
         marquee: true,
+        top: true,
       },
       { name: 'ADempiere', category: 'ERP / Integration', tier: 'production', mono: 'AD' },
       { name: 'iDempiere', category: 'ERP / Integration', tier: 'production', mono: 'iD' },
-      { name: 'Microsoft Graph', category: 'ERP / Integration', tier: 'production', mono: 'MG' },
+      { name: 'Microsoft Graph', category: 'ERP / Integration', tier: 'production', mono: 'MG', top: true },
       // Delivery
       { name: 'Git', category: 'Delivery', tier: 'production', logo: 'git', marquee: true },
       { name: 'Agile/Scrum', category: 'Delivery', tier: 'production', mono: 'AG' },
@@ -579,20 +724,32 @@ export const profile = {
     title: 'Where I have worked.',
     presentLabel: 'Current',
     moreLabel: 'More',
+    stackLabel: 'Stack',
     jobs: [
       {
         role: 'Senior Software Engineer, Enterprise Applications',
         company: 'Hamad Medical Corporation',
-        type: 'Contract',
         location: 'Doha, Qatar',
         period: 'Dec 2024 to present',
         current: true,
+        summary:
+          'Builds and extends enterprise project and asset systems in a large healthcare organization, from database to mobile.',
         bullets: [
-          'Design and build custom .NET Core MVC applications and extensions on PMWeb for enterprise project workflows, including portals and interactive dashboards.',
-          'Build REST APIs that connect PMWeb to Flutter mobile apps for real-time asset management and workflow approvals.',
-          'Build reporting and data visibility features for project, asset and operational information.',
-          'Build SQL-based integration that consumes Oracle stored procedures and maps the results into PMWeb workflows. Design and tune SQL Server queries, stored procedures, triggers and sync logic.',
-          'Work with stakeholders to turn operational needs into application and integration solutions in a large healthcare environment.',
+          'Design and build custom ASP.NET Core MVC applications and extensions on PMWeb for enterprise project workflows, including portals and interactive dashboards, with a focus on maintainability, security and performance.',
+          'Build the REST APIs that connect PMWeb to Flutter mobile apps for real-time asset management and workflow approvals.',
+          'Build SQL-based integration that consumes Oracle stored procedures and maps the results into PMWeb workflows.',
+          'Design and tune SQL Server queries, stored procedures, triggers and sync logic for performance, data integrity and reporting.',
+          'Deliver reporting and data visibility for project, asset and operational information, working with stakeholders to turn operational needs into application and integration solutions.',
+        ],
+        stack: [
+          'ASP.NET Core MVC',
+          'PMWeb',
+          'REST APIs',
+          'Flutter',
+          'SQL Server',
+          'Oracle stored procedures',
+          'Entra ID',
+          'Azure',
         ],
       },
       {
@@ -601,12 +758,30 @@ export const profile = {
         type: 'Full-time',
         location: 'Lusail, Qatar',
         period: 'Jan 2022 to Nov 2024',
+        summary:
+          'Built and led delivery of internal business systems on .NET and Azure, spanning CRM, SAP integration, document automation and tenant-facing mobile apps.',
         bullets: [
-          'Led CRM delivery end to end with ASP.NET Core Web APIs, Angular, Flutter, SQL Server and Entity Framework. Owned sprint milestones, code reviews and delivery quality.',
-          'Built Azure Document Intelligence models and ASP.NET APIs for document upload and structured extraction. Cut manual document processing by up to 60%.',
-          'Built custom middleware that migrates leasing data into SAP RE-FX over RFC. Wrote the ABAP RFC function modules and the .NET side. Cut manual upload effort by about 90%.',
-          'Built backend apps and microservices with ASP.NET Core Web APIs, C# and WCF, and tenant-facing Flutter apps with BLoC, responsive UI and secure API integration.',
-          'Used Azure App Services, API Management, Storage, Logic Apps, WebJobs, Service Bus and Entra ID, with Microsoft Graph integration and Power BI reporting inside business apps.',
+          'Led CRM delivery end to end across ASP.NET Core Web APIs, Angular, Flutter, SQL Server and Entity Framework, owning sprint milestones, code reviews and delivery quality.',
+          'Designed custom middleware that migrates leasing data into SAP RE-FX over RFC, writing both the ABAP RFC function modules and the .NET side. Cut manual upload effort by about 90%.',
+          'Built Azure Document Intelligence models and ASP.NET APIs for document upload and structured data extraction, cutting manual document processing by up to 60%.',
+          'Built backend applications and microservices with ASP.NET Core Web APIs, C# and WCF for internal business systems, plus tenant-facing Flutter apps with BLoC, responsive UI and secure API integration.',
+          'Worked across Azure App Services, API Management, Storage, Logic Apps, WebJobs, Service Bus, scheduling and Entra ID, with Microsoft Graph and Power BI reporting inside business apps. Built an internal IT support tool and worked with vendors and business teams to align solutions with operations.',
+        ],
+        stack: [
+          'C#',
+          'ASP.NET Core',
+          'WCF',
+          'Microservices',
+          'Angular',
+          'Flutter (BLoC)',
+          'SQL Server',
+          'Entity Framework',
+          'Azure Document Intelligence',
+          'SAP RFC',
+          'ABAP',
+          'Microsoft Graph',
+          'Power BI',
+          'Azure (App Services, APIM, Service Bus, Logic Apps)',
         ],
       },
       {
@@ -615,12 +790,15 @@ export const profile = {
         type: 'Full-time',
         location: 'Doha, Qatar',
         period: 'Mar 2021 to Dec 2021',
+        summary:
+          'Delivered business application modules and dashboards for procurement, budgeting and operations, from requirements to handover.',
         bullets: [
-          'Built business modules and workflows for procurement, budgeting and operations.',
+          'Built business application modules and workflows for procurement, budgeting and operations.',
+          'Wrote the business logic behind them with a focus on process control, efficiency and reliability.',
           'Built interactive dashboards for profitability and operational analysis across web and mobile.',
-          'Wrote business logic focused on process control and reliability.',
-          'Worked in C#, .NET Core, APIs and SQL through the full delivery cycle, from requirements to handover.',
+          'Worked in C#, .NET Core, APIs and SQL through the full delivery cycle, from requirements to testing support and handover.',
         ],
+        stack: ['C#', '.NET Core', 'REST APIs', 'SQL', 'Dashboards'],
       },
       {
         role: 'Software Engineer',
@@ -628,13 +806,16 @@ export const profile = {
         type: 'Full-time',
         location: 'Al Wakrah, Qatar',
         period: 'Sep 2018 to Mar 2021',
+        summary:
+          'Built a retail POS and the business modules around it, from application architecture to database performance.',
         bullets: [
-          'Primary developer on a retail POS, owning core modules under tight timelines.',
-          'Used MVVM, dependency injection and separate BL and DAL layers.',
-          'Built backend services with C#, .NET Core, WCF and REST/JSON.',
-          'Built modules across inventory, accounting, HR, projects, procurement and sales.',
-          'Tuned PostgreSQL and MySQL with indexing, query analysis and partitioning.',
+          'Primary developer for a retail POS, owning its core modules under tight timelines.',
+          'Structured the application with MVVM, dependency injection and separate business logic and data access layers.',
+          'Built backend services and integrations with C#, .NET Core, WCF and REST/JSON.',
+          'Delivered modules across inventory, accounting, HR, projects, procurement and sales.',
+          'Improved PostgreSQL and MySQL performance through indexing, query analysis and partitioning, working in Agile/Scrum with client requirement sessions and iterative releases.',
         ],
+        stack: ['C#', '.NET Core', 'WCF', 'WPF', 'MVVM', 'PostgreSQL', 'MySQL', 'REST'],
       },
       {
         role: 'Software Engineer',
@@ -642,13 +823,16 @@ export const profile = {
         type: 'Full-time',
         location: 'Bangalore, India',
         period: 'Aug 2016 to Aug 2018',
+        summary:
+          'Backend lead on production web and API modules, with prototype work in IoT, location tracking and chatbots.',
         bullets: [
-          'Backend lead on production modules with ASP.NET, Web API and SQL Server.',
-          'Built data access with Entity Framework, LINQ, stored procedures, triggers and views.',
-          'Built secure web and API features, including authentication flows and endpoints for web and mobile.',
+          'Backend lead on production modules built with ASP.NET, Web API and SQL Server.',
+          'Built the data access layer with Entity Framework, LINQ, stored procedures, triggers, tables and views.',
+          'Delivered secure web and API features, including authentication flows and endpoints for web and mobile clients.',
           'Worked on a customer dashboard and REST APIs.',
           'Built prototypes in IoT and location tracking, and chatbot integrations.',
         ],
+        stack: ['ASP.NET MVC', 'Web API', 'SQL Server', 'Entity Framework', 'LINQ'],
       },
     ] satisfies Job[],
   },
@@ -657,8 +841,15 @@ export const profile = {
     kicker: 'Projects',
     title: 'Things I build.',
     featuredLabel: 'Featured',
-    featuresLabel: 'What it does',
-    stackLabel: 'Built with',
+    caseStudyLabel: 'Case study',
+    problemLabel: 'Problem',
+    approachLabel: 'Approach & architecture',
+    featuresLabel: 'Key features',
+    reposLabel: 'Plugins',
+    stackLabel: 'Stack',
+    statusLabel: 'Status',
+    /** Stack chips shown on the closed card. */
+    keyStackCount: 4,
     items: [
       {
         name: 'HolyWhisper',
@@ -668,7 +859,15 @@ export const profile = {
           { label: 'In App Store review', tone: 'soon' },
         ],
         description:
-          'An offline-first Catholic companion. Pick how you feel and get a fitting verse, then pray, read and keep a gentle daily rhythm.',
+          'An offline-first Catholic companion for prayer, Scripture and a gentle daily rhythm. Pick how you feel and get a fitting verse.',
+        problem:
+          'People want a calm way to pray, read Scripture and keep a daily rhythm, without needing a connection.',
+        approach: [
+          'An offline-first Flutter app with local storage in ObjectBox. Firebase is optional.',
+          'Mood-to-verse scoring runs on the device across 7 moods.',
+          'Audio through flutter_tts and just_audio, navigation with go_router and state with Riverpod.',
+          'The landing site runs on Next.js and Cloudflare Workers.',
+        ],
         features: [
           'Mood-to-verse across 7 moods, scored on device',
           'Bible reader with search, bookmarks, notes, highlights and audio (Douay-Rheims (public domain) and Latin)',
@@ -716,8 +915,24 @@ export const profile = {
         statuses: [{ label: 'In development', tone: 'progress' }],
         description:
           "A privacy-first smart front desk for Gulf offices and residential compounds. Scan a visitor's ID with a camera and the check-in form fills itself, on the device.",
-        details:
-          'Local-first OCR pipeline: OpenCV crop and deskew, passport MRZ parsing with check digits, GCC ID OCR plus a small vision-language model, and a human confirm step for low-confidence fields. Bilingual Arabic/English. Runs on ordinary 16GB machines.',
+        problem:
+          'Front desks at Gulf offices and residential compounds re-type visitor ID details by hand, and sending ID images to the cloud is a privacy concern.',
+        approach: [
+          'A local-first pipeline that runs on the device.',
+          'OpenCV crops and deskews the capture.',
+          'Passport MRZ parsing with check-digit validation.',
+          'GCC ID OCR, plus a small vision-language model for hard fields.',
+          'A human confirm step for low-confidence fields.',
+          'Bilingual Arabic and English, running on ordinary 16GB machines.',
+          'Includes custom OCR model research: fine-tuning and adapting open-source OCR and vision-language models.',
+        ],
+        features: [
+          'Camera ID scan',
+          'Auto-filled check-in form',
+          'On-device processing',
+          'Confidence-aware review',
+          'Arabic and English',
+        ],
         stack: [
           'Python FastAPI',
           'React + Vite + TypeScript',
@@ -732,14 +947,46 @@ export const profile = {
         statuses: [{ label: 'Building', tone: 'progress' }],
         description:
           'A compliance workspace for Qatar SMEs, starting with WPS and Labour Law payroll compliance.',
+        problem: 'Qatar SMEs need to stay on top of WPS and Labour Law payroll compliance.',
+        approach: [
+          'A compliance workspace that sits as a layer over existing payroll rather than replacing it.',
+          'Starts with WPS and Labour Law checks.',
+        ],
         stack: ['ASP.NET Core', 'EF Core', 'Azure SQL', 'Blob Storage'],
       },
       {
         name: 'DiskManager Pro',
         statuses: [{ label: 'Live', tone: 'live' }],
         description:
-          'Local-first macOS disk cleanup, duplicate finder, uninstaller and storage visualizer. Every scan runs on your Mac.',
+          'A local-first macOS app for disk cleanup, duplicates, uninstalling and storage visualization. Every scan runs on your Mac.',
+        problem:
+          'Macs fill up with caches, duplicates and forgotten files, and it is hard to know what is safe to remove.',
+        approach: [
+          'A local-first macOS app. Every scan runs on the Mac and nothing leaves the machine.',
+          'Deletions are reversible.',
+        ],
+        features: [
+          'Disk cleanup',
+          'Duplicate finder',
+          'Uninstaller',
+          'Storage visualizer',
+          'Clear guidance on what is safe to let go',
+        ],
         link: { label: 'diskmanager.pro', href: 'https://diskmanager.pro' },
+      },
+      {
+        name: 'Cursor plugins',
+        statuses: [{ label: 'Open source', tone: 'live' }],
+        description:
+          'Open-source Cursor plugins that let an agent install, authenticate and run other CLIs and services headlessly.',
+        problem:
+          'Agent work often needs other CLIs and services, such as Claude Code, Google Antigravity, NotebookLM, payments APIs and local workers, that Cursor does not drive out of the box.',
+        approach: [
+          'Each tool is packaged as a Cursor plugin that bundles MCP configuration and agent skills.',
+          'An agent can then install, authenticate and run the tool headlessly.',
+        ],
+        stack: ['Cursor plugins', 'MCP', 'Agent skills'],
+        repos: plugins,
       },
     ] satisfies Project[],
   },
@@ -757,7 +1004,7 @@ export const profile = {
     items: [
       {
         name: 'HolyWhisper',
-        description: 'Offline-first Catholic companion app.',
+        description: 'An offline-first Catholic companion for prayer, Scripture and a gentle daily rhythm. Works without internet.',
         tags: ['Mobile'],
         stack: ['Flutter'],
         visibility: 'private',
@@ -765,7 +1012,7 @@ export const profile = {
       },
       {
         name: 'AccessFlow',
-        description: 'Privacy-first smart front desk with local ID OCR.',
+        description: 'A privacy-first smart front desk that scans visitor IDs on the device and fills the check-in form. Local OCR and vision-language models, no cloud upload of ID images.',
         tags: ['AI', 'Desktop', 'Web'],
         stack: ['Python', 'React', 'Electron'],
         status: { label: 'In development', tone: 'progress' },
@@ -773,7 +1020,7 @@ export const profile = {
       },
       {
         name: 'Qatar SME Compliance OS',
-        description: 'Compliance workspace for Qatar SMEs, starting with WPS.',
+        description: 'A compliance workspace for Qatar SMEs that sits over existing payroll, starting with WPS and Labour Law checks.',
         tags: ['Web'],
         stack: ['ASP.NET Core'],
         status: { label: 'Building', tone: 'progress' },
@@ -781,7 +1028,7 @@ export const profile = {
       },
       {
         name: 'DiskManager Pro',
-        description: 'Local-first macOS disk cleanup, duplicate finder, uninstaller and storage visualizer.',
+        description: 'Local-first macOS disk cleanup, duplicate finder, uninstaller and storage visualizer. Every scan runs on the Mac; deletions are reversible.',
         tags: ['Desktop'],
         stack: ['macOS'],
         status: { label: 'Live', tone: 'live' },
@@ -791,7 +1038,7 @@ export const profile = {
       {
         name: 'antigravity-code',
         description:
-          'Cursor plugin to drive Google Antigravity CLI (agy) headless, with model selection and continue/resume.',
+          'Cursor plugin that drives the Google Antigravity CLI headless, with model selection and continue/resume.',
         tags: ['Dev tools', 'AI', 'Open source'],
         stack: [],
         visibility: 'public',
@@ -800,7 +1047,7 @@ export const profile = {
       },
       {
         name: 'claude-code-cloud',
-        description: 'Cursor plugin to drive Claude Code locally (claude -p) and Claude Cloud from agents.',
+        description: 'Cursor plugin that drives Claude Code locally with claude -p and runs Claude Code Cloud sessions from an agent.',
         tags: ['Dev tools', 'AI', 'Open source'],
         stack: [],
         visibility: 'public',
@@ -810,7 +1057,7 @@ export const profile = {
       {
         name: 'notebooklm-code',
         description:
-          'Cursor plugin for Google NotebookLM: MCP setup, sources and grounded Q&A. Submitted to the Cursor marketplace.',
+          'Cursor plugin for consumer NotebookLM through a community MCP: add sources and ask grounded questions. Submitted to the Cursor marketplace.',
         tags: ['Dev tools', 'AI', 'Open source'],
         stack: [],
         visibility: 'public',
@@ -819,7 +1066,7 @@ export const profile = {
       },
       {
         name: 'dodo-payments-code',
-        description: 'Cursor plugin for the Dodo Payments MCP: API Code Mode plus knowledge docs search.',
+        description: 'Cursor plugin for the official Dodo Payments remote MCP servers: API Code Mode plus documentation search.',
         tags: ['Dev tools', 'AI', 'Open source'],
         stack: [],
         visibility: 'public',
@@ -828,7 +1075,7 @@ export const profile = {
       },
       {
         name: 'omp-worker-code',
-        description: 'Cursor / Claude plugin to delegate coding tasks to local Oh My Pi workers.',
+        description: 'Lets Claude Desktop, Claude Code or Cursor on macOS delegate coding tasks to local Oh My Pi workers through omp-worker-mcp.',
         tags: ['Dev tools', 'AI', 'Open source'],
         stack: [],
         visibility: 'public',
@@ -837,7 +1084,7 @@ export const profile = {
       },
       {
         name: 'Nexus',
-        description: 'Project Nexus: a native macOS internet download manager.',
+        description: 'A native macOS download manager in Swift. Dynamic file segmentation, a hybrid URLSession and libcurl networking stack, robust resume, browser integration and APFS sparse files, with a SwiftUI/AppKit interface.',
         tags: ['Desktop', 'Open source'],
         stack: ['Swift'],
         status: { label: 'In progress', tone: 'progress' },
@@ -846,7 +1093,7 @@ export const profile = {
       },
       {
         name: 'frappe_azure_storage',
-        description: 'Azure Storage for Frappe.',
+        description: 'Azure Storage integration for Frappe and ERPNext sites.',
         tags: ['ERP', 'Open source'],
         stack: ['Python', 'Frappe'],
         visibility: 'public',
@@ -854,7 +1101,7 @@ export const profile = {
       },
       {
         name: 'obarcode',
-        description: 'Ox Barcode: barcode support for retail apps on ERPNext.',
+        description: 'Ox Barcode: a Frappe app adding barcode support to ERPNext retail workflows, based on ERPNext Barcode Integration.',
         tags: ['ERP', 'Open source'],
         stack: ['Python', 'Frappe'],
         visibility: 'public',
@@ -862,7 +1109,7 @@ export const profile = {
       },
       {
         name: 'win_flutter_pos',
-        description: 'Flutter POS for Windows.',
+        description: 'A point-of-sale client in Flutter targeting Windows desktop.',
         tags: ['Mobile', 'Desktop', 'Open source'],
         stack: ['Flutter'],
         visibility: 'public',
@@ -870,7 +1117,7 @@ export const profile = {
       },
       {
         name: 'lovinmaxwell.github.io',
-        description: 'This site. Astro, Tailwind, a command palette and an AI-readable profile.',
+        description: 'This site. Astro and Tailwind, a command palette, an Ask terminal answering from a local FAQ, and an AI-readable profile (llms.txt, profile.json).',
         tags: ['Web', 'Open source'],
         stack: ['Astro'],
         visibility: 'public',
@@ -878,7 +1125,7 @@ export const profile = {
       },
       {
         name: 'SpeedTest',
-        description: 'Network speed test and diagnostics app prototype.',
+        description: 'A network speed test and diagnostics app, with a Flutter client and a web prototype.',
         tags: ['Mobile', 'Web'],
         stack: ['Flutter'],
         visibility: 'private',
@@ -964,9 +1211,9 @@ export const profile = {
 
   contact: {
     kicker: 'Contact',
-    title: 'Available for freelance & hire',
+    title: 'Available for hire',
     subline:
-      'Open to solutions architect, integration architect and cloud architect roles, plus contracts and consulting. Based in Doha, open to roles in Qatar and the GCC.',
+      'Open to new opportunities: solutions architect, integration architect, cloud architect and senior engineering roles. Based in Doha, open to roles in Qatar and the GCC.',
     emailLabel: 'Email me',
   },
 
@@ -1008,14 +1255,14 @@ export const profile = {
         suggested: true,
         keywords: ['work on', 'what do you do', 'do you do', 'do you work', 'build', 'job', 'role', 'who are you'],
         answer:
-          'I design and build end-to-end solutions as a solution architect and full-stack engineer. By day I am a Senior Software Engineer, Enterprise Applications at Hamad Medical Corporation in Doha, on contract since Dec 2024, building .NET applications, REST APIs and integrations on PMWeb. Beyond that I go deep on AI: LLM workflows, agent pipelines and custom OCR model research.',
+          'I design and build end-to-end solutions as a solution architect and full-stack engineer. By day I am a Senior Software Engineer, Enterprise Applications at Hamad Medical Corporation in Doha, since Dec 2024, building .NET applications, REST APIs and integrations on PMWeb. Beyond that I go deep on AI: LLM workflows, agent pipelines and custom OCR model research.',
       },
       {
         id: 'experience',
         question: 'Where have you worked?',
         keywords: ['experience', 'worked', 'where did you work', 'work history', 'career', 'employer', 'company', 'companies', 'history', 'background', 'previous', 'hamad', 'al shareef', 'zearo', 'ellipsonic', 'energy technical'],
         answer:
-          'Hamad Medical Corporation, Doha: Senior Software Engineer, Enterprise Applications, on contract, Dec 2024 to present. Al Shareef Holding, Lusail: Senior Software Engineer, .NET & Azure, Jan 2022 to Nov 2024. Energy Technical Service, Doha: Full Stack Developer, Mar 2021 to Dec 2021. Zearo Consulting, Al Wakrah: Software Engineer, Sep 2018 to Mar 2021. Ellipsonic, Bangalore: Software Engineer, Aug 2016 to Aug 2018. The Experience section has the details for each role.',
+          'Hamad Medical Corporation, Doha: Senior Software Engineer, Enterprise Applications, Dec 2024 to present. Al Shareef Holding, Lusail: Senior Software Engineer, .NET & Azure, Jan 2022 to Nov 2024. Energy Technical Service, Doha: Full Stack Developer, Mar 2021 to Dec 2021. Zearo Consulting, Al Wakrah: Software Engineer, Sep 2018 to Mar 2021. Ellipsonic, Bangalore: Software Engineer, Aug 2016 to Aug 2018. The Experience section has the details for each role.',
       },
       {
         id: 'ai',
@@ -1057,8 +1304,8 @@ export const profile = {
         id: 'available',
         question: 'Are you available?',
         suggested: true,
-        keywords: ['available', 'availability', 'hire', 'freelance', 'contract', 'consulting', 'full-time', 'open to'],
-        answer: `Yes. I am open to solutions architect, integration architect and cloud architect roles, plus contracts and consulting. I am based in Doha and open to roles in Qatar and the GCC. Email ${email}.`,
+        keywords: ['available', 'availability', 'hire', 'full-time', 'open to', 'opportunity', 'opportunities'],
+        answer: `Yes. I am open to new opportunities: solutions architect, integration architect, cloud architect and senior engineering roles. I am based in Doha and open to roles in Qatar and the GCC. Email ${email}.`,
       },
       {
         id: 'stack',
@@ -1155,7 +1402,7 @@ export const profile = {
   agents: {
     footerLabel: 'For AI agents:',
     summary:
-      'Solution architect and full-stack engineer based in Doha, Qatar. .NET and Azure by day, AI systems by obsession. LLM workflows, agent pipelines, enterprise integration and shipped apps. Available for freelance and hire.',
+      'Solution architect and full-stack engineer based in Doha, Qatar. .NET and Azure by day, AI systems by obsession. LLM workflows, agent pipelines, enterprise integration and shipped apps. Available for hire.',
     notice: 'Please do not infer skills, metrics or employers that are not listed here.',
     files: [
       { label: 'llms.txt', path: 'llms.txt' },
