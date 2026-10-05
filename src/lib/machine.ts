@@ -37,7 +37,7 @@ export function profileJson(site: URL | undefined) {
     experience: profile.experience.jobs.map(({ role, company, type, location, period, current, bullets }) => ({
       role,
       company,
-      type,
+      ...(type ? { type } : {}),
       location,
       period,
       current: Boolean(current),
@@ -107,7 +107,14 @@ export function profileJson(site: URL | undefined) {
 
 type Data = ReturnType<typeof profileJson>;
 
-const job = (j: Data['experience'][number]) => `${j.role}, ${j.company}, ${j.location} (${j.type}, ${j.period})`;
+const jobMeta = (j: Data['experience'][number]) =>
+  [j.type, j.period].filter((part): part is string => Boolean(part)).join(', ');
+const job = (j: Data['experience'][number]) => {
+  const meta = jobMeta(j);
+  return meta
+    ? `${j.role}, ${j.company}, ${j.location} (${meta})`
+    : `${j.role}, ${j.company}, ${j.location}`;
+};
 
 const credentialLine = (e: Data['education'][number]) => `${e.org}, ${e.date}${e.detail ? `, ${e.detail}` : ''}`;
 
@@ -162,7 +169,11 @@ export function llmsTxt(site: URL | undefined): string {
     '',
     '## Experience',
     '',
-    ...data.experience.map((j) => `- [${j.company}](${home}#experience): ${j.role}, ${j.location} (${j.type}, ${j.period})`),
+    ...data.experience.map((j) => {
+      const meta = jobMeta(j);
+      const detail = meta ? `${j.role}, ${j.location} (${meta})` : `${j.role}, ${j.location}`;
+      return `- [${j.company}](${home}#experience): ${detail}`;
+    }),
     '',
     '## Highlights',
     '',

@@ -823,6 +823,7 @@ export const profile = {
       {
         role: 'Senior Software Engineer, Enterprise Applications',
         company: 'Hamad Medical Corporation',
+        type: 'Full-time',
         location: 'Doha, Qatar',
         period: 'Dec 2024 to present',
         current: true,
