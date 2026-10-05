@@ -40,7 +40,8 @@
   --shadow: 0 20px 50px -24px rgb(0 0 0 / 0.9);
   --logo-hover: var(--accent);
   --grain: 0.07;
-  --tabbar: 3.5rem;
+  --tabbar: 4rem;
+  --tabbar-gap: 0.75rem;
   color-scheme: dark;
 }
 
@@ -353,7 +354,7 @@
     transform: scale(0.94);
   }
 
-  /* Bottom sheet on phones, centred dialog from sm up. Shared by the command palette and the Ask sheet. */
+  /* Bottom sheet below lg, centred dialog from lg up. Shared by the command palette and the Ask sheet. */
   .sheet {
     position: fixed;
     inset: 0;
@@ -422,27 +423,27 @@
     }
   }
 
-  /* Drag handle: pull down or tap to close. Phones only. */
+  /* Drag handle: pull down or tap to close. Below lg only. */
   .sheet-handle {
     display: none;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 1.75rem;
+    height: 2rem;
     cursor: grab;
     touch-action: none;
   }
 
   .sheet-handle::before {
     content: "";
-    width: 2.5rem;
-    height: 0.25rem;
+    width: 2.25rem;
+    height: 0.3125rem;
     border-radius: 9999px;
     background: var(--line-strong);
   }
 
-  @media (width >= 40rem) {
+  @media (width >= 64rem) {
     .sheet-panel {
       width: min(40rem, calc(100% - 3rem));
       margin: 14vh auto 0;
@@ -451,7 +452,7 @@
     }
   }
 
-  @media (width < 40rem) {
+  @media (width < 64rem) {
     /* --vvh tracks the visual viewport, so the sheet rides above the on-screen keyboard. */
     .sheet[open] {
       display: flex;
@@ -461,12 +462,16 @@
     }
 
     .sheet-panel {
-      max-height: min(36rem, 86%);
+      width: min(100%, 40rem);
+      max-height: min(38rem, 88%);
+      margin-inline: auto;
       padding-bottom: env(safe-area-inset-bottom);
-      border-top: 1px solid var(--line-strong);
-      border-radius: 1.25rem 1.25rem 0 0;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-radius: 1.75rem 1.75rem 0 0;
       box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.7);
       transform: translateY(100%);
+      transition-duration: 0.32s;
     }
 
     .sheet-handle {
@@ -613,8 +618,8 @@
 
 @media (width < 64rem) {
   body {
-    /* Room for the fixed tab bar. */
-    padding-bottom: calc(var(--tabbar) + env(safe-area-inset-bottom));
+    /* Room for the floating tab bar and the gap either side of it. */
+    padding-bottom: calc(var(--tabbar) + var(--tabbar-gap) * 2 + env(safe-area-inset-bottom));
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -633,9 +638,112 @@
     }
   }
 
+  /* Glass pill that floats just above the tab bar. */
   .toast {
-    bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 0.75rem);
+    bottom: calc(var(--tabbar) + var(--tabbar-gap) * 2 + env(safe-area-inset-bottom));
     max-width: calc(100% - 2rem);
+    padding: 0.75rem 1.25rem;
+    border-color: color-mix(in srgb, var(--fg) 12%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--raised) 78%, transparent);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+
+  /* App canvas: true black behind slightly lifted cards. The light theme keeps its own palette. */
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --card: #0e0e10;
+    --raised: #1a1a1d;
+    --line: #232327;
+  }
+
+  /* Sections are separated by air, not rules, and content sits in large rounded cards. */
+  .section,
+  .now {
+    border-top-width: 0;
+    border-bottom-width: 0;
+  }
+
+  .card {
+    border-radius: 1.25rem;
+  }
+
+  /* Hero: one large card, with the fact cards stacked under it. */
+  .hero-card {
+    padding: 1.5rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 1.75rem;
+    background: color-mix(in srgb, var(--card) 80%, transparent);
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 10.5vw, 4.75rem);
+  }
+
+  .hero-actions .btn {
+    flex: 1 1 0;
+    height: 3.25rem;
+    border-radius: 9999px;
+    font-size: 1rem;
+  }
+
+  .hero-actions nav {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .now-card {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: var(--card);
+  }
+
+  /* Experience: each job is an accordion card. The timeline rail is a desktop device. */
+  .jobs {
+    display: grid;
+    gap: 0.75rem;
+    margin-left: 0;
+    border-left-width: 0;
+  }
+
+  .job {
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: var(--card);
+  }
+
+  .js .job:not(.is-open) {
+    padding-bottom: 0.25rem;
+  }
+
+  .job-dot {
+    display: none;
+  }
+
+  .job > .collapse-toggle {
+    margin-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  /* Chips: raised pills at rest, solid accent when chosen. */
+  .filter-chip {
+    border-color: transparent;
+    background: var(--raised);
+    color: var(--fg);
+  }
+
+  .filter-chip[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--accent-ink) 28%, var(--accent));
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+
+  button.chip {
+    border-radius: 9999px;
   }
 
   /* 44px touch targets. */
@@ -656,16 +764,17 @@
     display: none;
   }
 
+  /* Accordion row: label on the left, chevron on the right, the whole width tappable. */
   .js .collapse-toggle {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.5rem;
-    min-height: 2.75rem;
+    width: 100%;
+    min-height: 3rem;
     color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: 0.875rem;
+    font-weight: 500;
     cursor: pointer;
   }
 
@@ -678,21 +787,39 @@
   }
 
   .collapse-chevron {
-    transition: transform 0.2s ease;
+    display: inline-flex;
+    order: 2;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background: var(--raised);
+    font-size: 1.125rem;
+    line-height: 1;
+    transform: rotate(90deg);
+    transition: transform 0.25s ease;
   }
 
   .collapse-toggle[aria-expanded="true"] .collapse-chevron {
-    transform: rotate(90deg);
+    transform: rotate(-90deg);
   }
 
   /* The list-level button reads as a full-width control. */
   .collapse-toggle.is-block {
     justify-content: center;
-    width: 100%;
+    min-height: 3.25rem;
     margin-top: 0.75rem;
     border: 1px solid var(--line);
-    border-radius: 0.875rem;
+    border-radius: 9999px;
     background: var(--card);
+    color: var(--fg);
+  }
+
+  .collapse-toggle.is-block .collapse-chevron {
+    order: 0;
+    width: auto;
+    background: none;
   }
 
   .collapse-toggle.is-block:active {
@@ -729,6 +856,12 @@
     letter-spacing: 0.14em;
   }
 
+  .section-title {
+    font-size: 2rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
   /* Swipe row: one card per snap, the next one peeking in, a progress bar underneath. */
   .swipe {
     display: flex;
@@ -746,10 +879,12 @@
     display: none;
   }
 
+  /* min-width matches the basis so a card can never be squeezed into a sliver. */
   .swipe > * {
     flex: 0 0 84%;
-    min-width: 0;
+    min-width: 84%;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   /* Cards off to the side should already be there when they slide in. */

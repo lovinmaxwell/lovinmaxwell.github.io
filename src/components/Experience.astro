@@ -19,11 +19,11 @@ const hiddenJobs = experience.jobs.length - jobsShown;
     </div>
 
     <div class="min-w-0" data-collapse>
-    <ol class="relative ml-1.5 border-l border-line lg:mt-9">
+    <ol class="jobs relative ml-1.5 border-l border-line lg:mt-9">
       {
         experience.jobs.map((job, i) => (
           <li
-            class:list={['relative pb-10 pl-7 last:pb-0 sm:pl-9', i === 0 && 'is-open']}
+            class:list={['job relative pb-10 pl-7 last:pb-0 sm:pl-9', i === 0 && 'is-open']}
             data-reveal
             data-fold
             data-collapse-extra={i >= jobsShown ? '' : undefined}
@@ -31,7 +31,7 @@ const hiddenJobs = experience.jobs.length - jobsShown;
           >
             <span
               class:list={[
-                'absolute top-1.5 -left-[5px] size-[9px] rounded-full ring-4 ring-bg',
+                'job-dot absolute top-1.5 -left-[5px] size-[9px] rounded-full ring-4 ring-bg',
                 job.current ? 'bg-accent outline outline-1 outline-fg/40' : 'bg-line-strong',
               ]}
               aria-hidden="true"
@@ -48,7 +48,7 @@ const hiddenJobs = experience.jobs.length - jobsShown;
             <p class="mt-1 text-muted">
               {job.company}, {job.location}
             </p>
-            <p class="mt-3 text-[0.9375rem] leading-relaxed text-fg/90 sm:text-base">{job.summary}</p>
+            <p class="mt-3 text-[0.9375rem] leading-relaxed text-fg/90 max-lg:text-base sm:text-base">{job.summary}</p>
             <CollapseToggle
               more={mobile.details}
               less={mobile.hideDetails}

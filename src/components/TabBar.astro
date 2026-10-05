@@ -2,17 +2,21 @@
 import Icon from './Icon.astro';
 import { profile } from '../data/profile';
 
+// A floating glass pill of section tabs, with the hire action as its own filled button beside it.
 // "Ask" opens the FAQ sheet when the script in Ask.astro is running. Without JS it is a plain anchor.
+const tabs = profile.tabs.filter((tab) => !tab.primary);
+const actions = profile.tabs.filter((tab) => tab.primary);
 ---
 
 <nav class="tabbar lg:hidden" aria-label={profile.a11y.tabs}>
-  <ul class="mx-auto flex max-w-xl">
+  <ul class="tab-pill">
+    <li class="tab-indicator" role="presentation" aria-hidden="true"></li>
     {
-      profile.tabs.map((tab) => (
+      tabs.map((tab) => (
         <li class="min-w-0 flex-1">
           <a
             href={tab.href}
-            class:list={['tab', tab.primary && 'tab-primary']}
+            class="tab"
             data-tab={tab.href.startsWith('#') ? tab.href.slice(1) : undefined}
             data-ask-open={tab.href === '#ask' ? '' : undefined}
           >
@@ -25,73 +29,169 @@ import { profile } from '../data/profile';
       ))
     }
   </ul>
+  {
+    actions.map((tab) => (
+      <a href={tab.href} class="tab-action">
+        <Icon name={tab.icon} size={20} />
+        <span>{tab.label}</span>
+      </a>
+    ))
+  }
 </nav>
 
 <script>
-  // Mark the tab whose section sits across the middle of the screen.
-  const tabs = Array.from(document.querySelectorAll<HTMLAnchorElement>('.tabbar [data-tab]'));
+  const bar = document.querySelector<HTMLElement>('.tabbar');
+  const pill = bar?.querySelector<HTMLElement>('.tab-pill');
+  const indicator = bar?.querySelector<HTMLElement>('.tab-indicator');
+  const tabs = Array.from(bar?.querySelectorAll<HTMLAnchorElement>('[data-tab]') ?? []);
 
-  if (tabs.length && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const tab = tabs.find((t) => t.dataset.tab === entry.target.id);
-          if (entry.isIntersecting) tab?.setAttribute('aria-current', 'true');
-          else tab?.removeAttribute('aria-current');
-        });
-      },
-      { rootMargin: '-45% 0px -55% 0px' }
-    );
-    tabs.forEach((tab) => {
-      const section = document.getElementById(tab.dataset.tab ?? '');
-      if (section) io.observe(section);
+  if (bar && pill && indicator && tabs.length) {
+    const small = window.matchMedia('(width < 64rem)');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // Tabs paired with their sections, in page order.
+    const spots = tabs
+      .map((tab) => ({ tab, section: document.getElementById(tab.dataset.tab ?? '') }))
+      .filter((s): s is { tab: HTMLAnchorElement; section: HTMLElement } => !!s.section)
+      .sort((a, b) => (a.section.compareDocumentPosition(b.section) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+
+    let current: HTMLAnchorElement | undefined;
+    let lastY = window.scrollY;
+    let holdUntil = 0;
+    let queued = false;
+
+    // Slide the accent pill behind the active tab's icon.
+    const place = () => {
+      const icon = current?.querySelector<HTMLElement>('.tab-icon');
+      if (!icon) {
+        indicator.style.opacity = '0';
+        return;
+      }
+      const from = pill.getBoundingClientRect();
+      const to = icon.getBoundingClientRect();
+      indicator.style.width = `${to.width}px`;
+      indicator.style.height = `${to.height}px`;
+      indicator.style.transform = `translate(${to.left - from.left - pill.clientLeft}px, ${to.top - from.top - pill.clientTop}px)`;
+      indicator.style.opacity = '1';
+    };
+
+    const update = () => {
+      queued = false;
+      if (!small.matches) return;
+      const y = window.scrollY;
+      const atEnd = y + window.innerHeight >= document.documentElement.scrollHeight - 4;
+
+      // Scroll-spy: the last section whose top has passed the upper-middle of the screen.
+      const line = window.innerHeight * 0.45;
+      let active = spots[0];
+      for (const spot of spots) if (spot.section.getBoundingClientRect().top <= line) active = spot;
+      if (atEnd) active = spots[spots.length - 1];
+      if (active.tab !== current) {
+        current?.removeAttribute('aria-current');
+        current = active.tab;
+        current.setAttribute('aria-current', 'true');
+        place();
+      }
+
+      // Step aside while reading down, come back on the way up. Never under reduced motion.
+      const dy = y - lastY;
+      if (Math.abs(dy) < 6) return;
+      lastY = y;
+      const hide = dy > 0 && y > 160 && !atEnd && !reduced.matches && performance.now() > holdUntil;
+      bar.classList.toggle('is-hidden', hide);
+    };
+
+    const queue = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', () => {
+      place();
+      queue();
     });
+    // A tap on a tab scrolls the page: keep the bar in place while it travels.
+    bar.addEventListener('click', () => {
+      holdUntil = performance.now() + 1200;
+      bar.classList.remove('is-hidden');
+    });
+    bar.addEventListener('focusin', () => bar.classList.remove('is-hidden'));
+    small.addEventListener('change', () => {
+      place();
+      queue();
+    });
+    document.fonts?.ready.then(place);
+    update();
   }
 </script>
 
 <style>
   .tabbar {
     position: fixed;
-    inset: auto 0 0;
+    inset-inline: 0;
+    bottom: calc(var(--tabbar-gap) + env(safe-area-inset-bottom));
     z-index: 40;
-    padding-inline: max(0.25rem, env(safe-area-inset-left)) max(0.25rem, env(safe-area-inset-right));
-    padding-bottom: env(safe-area-inset-bottom);
-    border-top: 1px solid var(--line);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: blur(14px);
+    display: flex;
+    gap: 0.5rem;
+    width: min(100% - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right), 26rem);
+    margin-inline: auto;
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .tabbar.is-hidden {
+    transform: translateY(calc(100% + var(--tabbar-gap) + env(safe-area-inset-bottom) + 1rem));
+  }
+
+  /* Frosted glass: translucent fill, hairline edge, soft drop shadow. */
+  .tab-pill {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    padding: 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--raised) 66%, transparent);
+    box-shadow:
+      0 12px 32px -10px rgb(0 0 0 / 0.55),
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 7%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
   }
 
   .tab {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.1875rem;
-    height: var(--tabbar);
+    gap: 0.125rem;
+    height: calc(var(--tabbar) - 0.5rem - 2px);
+    min-height: 3rem;
+    border-radius: 9999px;
     color: var(--muted);
     font-size: 0.6875rem;
     font-weight: 500;
     letter-spacing: 0.01em;
     -webkit-tap-highlight-color: transparent;
-    transition: color 0.2s ease;
+    transition: color 0.25s ease;
   }
 
   .tab-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
+    width: 2.75rem;
     height: 1.75rem;
     border-radius: 9999px;
     transition:
-      background-color 0.2s ease,
-      color 0.2s ease,
+      color 0.25s ease,
       transform 0.15s ease;
   }
 
   .tab:active .tab-icon {
-    background: var(--raised);
-    transform: scale(0.92);
+    transform: scale(0.9);
   }
 
   .tab[aria-current] {
@@ -99,26 +199,61 @@ import { profile } from '../data/profile';
   }
 
   .tab[aria-current] .tab-icon {
-    background: var(--raised);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
-  }
-
-  .tab-primary {
-    color: var(--fg);
-  }
-
-  .tab-primary .tab-icon,
-  .tab-primary:active .tab-icon {
-    background: var(--accent);
     color: var(--accent-ink);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ink) 28%, var(--accent));
+  }
+
+  /* One accent pill that slides between tabs. The script sizes and places it. */
+  .tab-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 9999px;
+    background: var(--accent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ink) 22%, var(--accent));
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.4s cubic-bezier(0.3, 1.3, 0.5, 1),
+      opacity 0.2s ease;
+  }
+
+  /* Hire sits outside the pill as its own filled button, so it never reads as a tab. */
+  .tab-action {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+    width: var(--tabbar);
+    height: var(--tabbar);
+    border: 1px solid color-mix(in srgb, var(--accent-ink) 28%, var(--accent));
+    border-radius: 9999px;
+    background: var(--accent);
+    box-shadow: 0 12px 32px -10px rgb(0 0 0 / 0.55);
+    color: var(--accent-ink);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease;
+  }
+
+  .tab-action:active {
+    transform: scale(0.94);
   }
 
   .tab:focus-visible {
-    outline-offset: -3px;
+    outline-offset: -2px;
+    border-radius: 9999px;
   }
 
-  @media print {
+  .tab-action:focus-visible {
+    border-radius: 9999px;
+  }
+
+  /* Scoped rules outrank the lg:hidden utility, so the bar is switched off here from lg up. */
+  @media (width >= 64rem), print {
     .tabbar {
       display: none;
     }

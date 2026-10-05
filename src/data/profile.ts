@@ -326,8 +326,8 @@ export const profile = {
   // Bottom tab bar on phones and tablets. Desktop keeps the header nav.
   tabs: [
     { label: 'Home', href: '#top', icon: 'home' },
-    { label: 'Work', href: '#projects', icon: 'briefcase' },
     { label: 'Stack', href: '#stack', icon: 'layers' },
+    { label: 'Work', href: '#projects', icon: 'briefcase' },
     { label: 'Ask', href: '#ask', icon: 'message' },
     { label: 'Hire', href: `mailto:${email}`, icon: 'mail', primary: true },
   ] satisfies Tab[],

@@ -33,7 +33,7 @@ const spanClass = {
               <Icon name={item.icon} size={20} />
             </span>
             <h3 class="mt-5 text-lg leading-snug font-semibold tracking-tight sm:text-xl">{item.title}</h3>
-            <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted sm:text-base">{item.text}</p>
+            <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted max-lg:text-base sm:text-base">{item.text}</p>
             {item.chips && item.chips.length > 0 && (
               <ul class="mt-auto flex flex-wrap gap-2 pt-5" aria-label={`Tech for ${item.title}`}>
                 {item.chips.map((c) => (

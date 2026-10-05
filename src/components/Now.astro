@@ -4,8 +4,9 @@ import { profile } from '../data/profile';
 const { now } = profile;
 ---
 
-<section class="border-b border-line" aria-labelledby="now-title">
-  <div class="wrap flex flex-col gap-x-6 gap-y-3 py-4 lg:flex-row lg:items-center">
+<section class="now border-b border-line" aria-labelledby="now-title">
+  <div class="wrap">
+  <div class="now-card flex flex-col gap-x-6 gap-y-3 py-4 lg:flex-row lg:items-center">
     <h2 id="now-title" class="label flex shrink-0 items-center gap-2.5 text-fg!">
       <span class="relative flex size-2" aria-hidden="true">
         <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60"></span>
@@ -28,6 +29,7 @@ const { now } = profile;
       }
     </ul>
     <p class="label shrink-0 lg:ml-auto">{now.updatedLabel} {now.updated}</p>
+  </div>
   </div>
 </section>
 

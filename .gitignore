@@ -4,3 +4,6 @@ dist
 .fable-*.log
 .DS_Store
 notes/
+
+# Local design references (Mobbin etc.) — do not publish
+.design-refs/

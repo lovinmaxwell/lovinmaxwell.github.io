@@ -70,7 +70,7 @@ let n = 0;
     <button type="button" class="sheet-handle" aria-label={profile.a11y.close}></button>
     <h2 id="palette-title" class="sr-only">{palette.title}</h2>
 
-    <div class="flex items-center gap-3 border-b border-line px-4">
+    <div class="palette-search flex shrink-0 items-center gap-3 border-b border-line px-4">
       <Icon name="search" size={18} class="shrink-0 text-muted" />
       <input
         id="palette-input"
@@ -89,12 +89,12 @@ let n = 0;
       />
       <button
         type="button"
-        class="kbd shrink-0 cursor-pointer max-sm:size-11 max-sm:border-0 max-sm:bg-transparent"
+        class="kbd shrink-0 cursor-pointer max-lg:size-11 max-lg:border-0 max-lg:bg-transparent"
         data-palette-close
         aria-label={profile.a11y.close}
       >
-        <span class="max-sm:hidden">Esc</span>
-        <Icon name="x" size={18} class="sm:hidden" />
+        <span class="max-lg:hidden">Esc</span>
+        <Icon name="x" size={18} class="lg:hidden" />
       </button>
     </div>
 
@@ -117,7 +117,7 @@ let n = 0;
               >
                 <Icon name={item.icon} size={16} class="shrink-0 text-muted" />
                 <span class="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.hint && <span class="hidden max-w-[45%] truncate font-mono text-xs text-muted sm:block">{item.hint}</span>}
+                {item.hint && <span class="hidden max-w-[45%] truncate font-mono text-xs text-muted lg:block">{item.hint}</span>}
               </div>
             ))}
           </div>
@@ -126,7 +126,7 @@ let n = 0;
       <p class="px-3 py-8 text-center text-sm text-muted" data-palette-empty hidden>{palette.empty}</p>
     </div>
 
-    <p class="hidden items-center gap-4 border-t border-line px-4 py-2.5 text-xs text-muted sm:flex" aria-hidden="true">
+    <p class="hidden items-center gap-4 border-t border-line px-4 py-2.5 text-xs text-muted lg:flex" aria-hidden="true">
       <span class="flex items-center gap-1.5"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd>{palette.hints.move}</span>
       <span class="flex items-center gap-1.5"><kbd class="kbd">↵</kbd>{palette.hints.select}</span>
       <span class="ml-auto flex items-center gap-1.5"><kbd class="kbd">Esc</kbd>{palette.hints.close}</span>
@@ -323,10 +323,29 @@ let n = 0;
     box-shadow: inset 2px 0 0 var(--accent);
   }
 
-  @media (width < 40rem) {
+  @media (width < 64rem) {
     .palette-option {
-      min-height: 3rem;
+      min-height: 3.25rem;
+      padding-inline: 0.875rem;
+      border-radius: 0.875rem;
       font-size: 1rem;
+    }
+
+    /* The search row becomes a rounded field of its own, as in a native sheet. */
+    .palette-search {
+      margin: 0.25rem 1rem 0.5rem;
+      padding-inline: 1rem 0.25rem;
+      border: 1px solid var(--line);
+      border-radius: 9999px;
+      background: var(--raised);
+    }
+
+    .palette-search input {
+      height: 3rem;
+    }
+
+    .palette-list {
+      padding-inline: 0.75rem;
     }
   }
 </style>

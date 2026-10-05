@@ -10,16 +10,16 @@ const now = profile.experience.jobs.find((j) => j.current) ?? profile.experience
 const latest = profile.projects.items.find((p) => p.featured) ?? profile.projects.items[0];
 ---
 
-<section id="top" class="relative overflow-hidden border-b border-line">
+<section id="top" class="relative overflow-hidden border-b border-line max-lg:border-b-0">
   <div class="hero-bg" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
-  <div class="wrap relative grid items-center gap-10 pt-12 pb-14 sm:pt-16 sm:pb-16 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
-    <div>
+  <div class="wrap relative grid items-center gap-10 pt-12 pb-14 max-lg:gap-3 max-lg:pt-4 max-lg:pb-3 sm:pt-16 sm:pb-16 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
+    <div class="hero-card">
       <Availability />
 
       <h1
-        class="mt-6 text-[clamp(2.5rem,12vw,4.75rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance lg:text-[clamp(4.75rem,6.4vw,5.25rem)]"
+        class="hero-title mt-6 text-[clamp(2.5rem,12vw,4.75rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance lg:text-[clamp(4.75rem,6.4vw,5.25rem)]"
       >
         <span class="block">{profile.firstName} {profile.middleName}</span>
         <span class="block"><span class="marker">{profile.lastName}</span></span>
@@ -52,7 +52,7 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
         </div>
       </div>
 
-      <div class="mt-7 flex flex-wrap items-center gap-3">
+      <div class="hero-actions mt-7 flex flex-wrap items-center gap-3">
         <a href={profile.cta.hire.href} class="btn btn-primary">
           <Icon name="mail" size={16} />
           {profile.cta.hire.label}
@@ -67,7 +67,7 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
       </div>
     </div>
 
-    <div class="hidden gap-3 lg:grid lg:grid-cols-2">
+    <div class="grid grid-cols-2 gap-3">
       <div class="card col-span-2 p-5!">
         <p class="label flex items-center gap-2">
           <span class="size-1.5 rounded-full bg-ok-dot" aria-hidden="true"></span>
