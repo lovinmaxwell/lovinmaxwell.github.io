@@ -1,0 +1,30 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+
+interface Props {
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const { size = 'md', class: className } = Astro.props;
+const isExternal = (href: string) => href.startsWith('http');
+---
+
+<ul class:list={['flex flex-wrap items-center gap-2', className]}>
+  {
+    profile.socials.map((s) => (
+      <li>
+        <a
+          href={s.href}
+          class:list={['icon-link', size === 'sm' && 'size-9 rounded-lg']}
+          aria-label={isExternal(s.href) ? `${s.label} ${profile.a11y.newTab}` : s.label}
+          title={s.label}
+          {...(isExternal(s.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          <Icon name={s.icon} size={size === 'sm' ? 16 : 18} />
+        </a>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,23 @@
+---
+import { profile } from '../data/profile';
+
+const { about } = profile;
+// The title is sized to set as three stepped lines on phones and two lines from lg up.
+---
+
+<section id="about" class="section" aria-labelledby="about-title">
+  <div class="wrap grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-12">
+    <div data-reveal>
+      <p class="kicker">{about.kicker}</p>
+      <h2
+        id="about-title"
+        class="section-title max-w-[10em] text-wrap sm:max-w-2xl sm:text-balance lg:text-3xl xl:text-4xl"
+      >
+        {about.title}
+      </h2>
+    </div>
+    <div class="space-y-5 text-lg leading-relaxed text-muted sm:text-xl lg:pt-9" data-reveal style="--d: 80ms">
+      {about.paragraphs.map((p, i) => <p class:list={[i === 0 && 'text-fg']}>{p}</p>)}
+    </div>
+  </div>
+</section>

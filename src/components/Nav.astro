@@ -1,0 +1,86 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+---
+
+<header class="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md">
+  <div class="wrap flex h-14 items-center gap-3">
+    <a
+      href="#top"
+      class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent font-mono text-xs font-bold text-accent-ink"
+      aria-label={profile.a11y.home}
+    >
+      {profile.monogram}
+    </a>
+
+    <nav aria-label={profile.a11y.mainNav} class="ml-3 hidden lg:block">
+      <ul class="flex items-center gap-1">
+        {
+          profile.nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="rounded-lg px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-fg"
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2">
+      <button
+        type="button"
+        id="theme-toggle"
+        class="icon-link size-9 rounded-lg"
+        aria-label={profile.a11y.themeToggle}
+        title={profile.a11y.themeToggle}
+      >
+        <Icon name="sun" size={16} class="theme-icon-sun" />
+        <Icon name="moon" size={16} class="theme-icon-moon" />
+      </button>
+
+      <a href={profile.cta.hire.href} class="btn btn-primary h-9 rounded-lg px-3.5">
+        {profile.cta.hire.label}
+      </a>
+
+      <details id="mobile-menu" class="relative lg:hidden">
+        <summary
+          class="icon-link size-9 cursor-pointer list-none rounded-lg [&::-webkit-details-marker]:hidden"
+          aria-label={profile.a11y.menu}
+        >
+          <Icon name="menu" size={16} />
+        </summary>
+        <nav
+          aria-label={profile.a11y.menu}
+          class="absolute top-12 right-0 w-56 rounded-2xl border border-line bg-card p-2 shadow-2xl"
+        >
+          <ul>
+            {
+              profile.nav.map((item) => (
+                <li>
+                  <a href={item.href} class="block rounded-lg px-3 py-2.5 text-sm text-fg hover:bg-raised">
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<style is:global>
+  .theme-icon-moon,
+  :root[data-theme='light'] .theme-icon-sun {
+    display: none;
+  }
+
+  :root[data-theme='light'] .theme-icon-moon {
+    display: block;
+  }
+</style>

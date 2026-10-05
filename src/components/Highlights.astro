@@ -1,0 +1,47 @@
+---
+import { profile } from '../data/profile';
+
+const { highlights } = profile;
+---
+
+<section id="highlights" class="section border-t border-line" aria-labelledby="highlights-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{highlights.kicker}</p>
+      <h2 id="highlights-title" class="section-title">{highlights.title}</h2>
+    </div>
+
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        highlights.items.map((item, i) => (
+          <li
+            class:list={['card flex flex-col', item.metric ? 'min-h-56 lg:col-span-2' : 'min-h-44']}
+            data-reveal
+            style={`--d: ${(i % 4) * 70}ms`}
+          >
+            {item.metric ? (
+              <p class="flex items-baseline gap-3">
+                {item.qualifier && <span class="label">{item.qualifier}</span>}
+                <span class="marker text-7xl leading-none font-semibold tracking-[-0.05em] sm:text-8xl">
+                  {item.metric}
+                </span>
+              </p>
+            ) : (
+              <p class="label">{item.tag}</p>
+            )}
+            <p
+              class:list={[
+                'leading-relaxed',
+                item.metric
+                  ? 'mt-auto max-w-md pt-6 text-base text-fg sm:text-lg'
+                  : 'mt-3 text-[0.9375rem] text-muted',
+              ]}
+            >
+              {item.text}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

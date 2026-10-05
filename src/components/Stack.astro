@@ -1,0 +1,35 @@
+---
+import { profile } from '../data/profile';
+
+const { stack } = profile;
+
+// Bento rhythm on a 6-column grid: 4+2, 3+3, 3+3, 2+4.
+const spans = ['lg:col-span-4', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-3', 'lg:col-span-3', 'lg:col-span-3', 'lg:col-span-2', 'lg:col-span-4'];
+---
+
+<section id="stack" class="section border-t border-line" aria-labelledby="stack-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{stack.kicker}</p>
+      <h2 id="stack-title" class="section-title">{stack.title}</h2>
+    </div>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      {
+        stack.categories.map((cat, i) => (
+          <article class:list={['card', spans[i % spans.length]]} data-reveal style={`--d: ${(i % 2) * 70}ms`}>
+            <h3 class="flex items-baseline justify-between gap-3">
+              <span class="text-lg font-semibold tracking-tight">{cat.name}</span>
+              <span class="label" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+            </h3>
+            <ul class="mt-5 flex flex-wrap gap-2">
+              {cat.chips.map((chip) => <li class="chip">{chip}</li>)}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

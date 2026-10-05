@@ -1,0 +1,164 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import { profile } from '../data/profile';
+import { absoluteUrl, withBase } from '../lib/url';
+
+const { seo } = profile;
+const canonical = absoluteUrl('/', Astro.site);
+const ogImage = absoluteUrl(seo.ogImage, Astro.site);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  url: canonical,
+  image: ogImage,
+  jobTitle: profile.jobTitle,
+  description: seo.description,
+  email: `mailto:${profile.email}`,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: profile.city,
+    addressCountry: profile.country,
+  },
+  alumniOf: {
+    '@type': 'CollegeOrUniversity',
+    name: profile.education.school,
+  },
+  sameAs: profile.socials.filter((s) => s.href.startsWith('http')).map((s) => s.href),
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      // Runs before first paint so the theme never flashes.
+      // Dark unless the visitor has picked light with the toggle.
+      (function () {
+        var root = document.documentElement;
+        var stored = null;
+        try {
+          stored = localStorage.getItem('theme');
+        } catch (e) {}
+        root.dataset.theme = stored === 'light' ? 'light' : 'dark';
+        root.classList.add('js');
+      })();
+    </script>
+
+    <title>{seo.title}</title>
+    <meta name="description" content={seo.description} />
+    <meta name="author" content={profile.name} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content={seo.themeColorDark} />
+    <meta name="generator" content={Astro.generator} />
+
+    <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
+    <link rel="sitemap" href={withBase('sitemap-index.xml')} />
+
+    <meta property="og:type" content="profile" />
+    <meta property="og:site_name" content={profile.name} />
+    <meta property="og:title" content={seo.title} />
+    <meta property="og:description" content={seo.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={seo.ogImageAlt} />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={seo.title} />
+    <meta name="twitter:description" content={seo.description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={seo.ogImageAlt} />
+
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body class="min-h-screen antialiased">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-ink"
+    >
+      {profile.a11y.skipLink}
+    </a>
+
+    <slot />
+
+    <script is:inline define:vars={{ dark: seo.themeColorDark, light: seo.themeColorLight }}>
+      (function () {
+        var root = document.documentElement;
+
+        // Theme toggle
+        var toggle = document.getElementById('theme-toggle');
+        function apply(theme) {
+          root.dataset.theme = theme;
+          if (toggle) toggle.setAttribute('aria-pressed', String(theme === 'light'));
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+            m.setAttribute('content', theme === 'light' ? light : dark);
+          });
+        }
+        apply(root.dataset.theme || 'dark');
+        if (toggle) {
+          toggle.addEventListener('click', function () {
+            var next = root.dataset.theme === 'light' ? 'dark' : 'light';
+            apply(next);
+            try {
+              localStorage.setItem('theme', next);
+            } catch (e) {}
+          });
+        }
+
+        // Close the mobile menu after picking a section, or on Escape
+        var menu = document.getElementById('mobile-menu');
+        if (menu) {
+          menu.addEventListener('click', function (e) {
+            if (e.target.closest('a')) menu.removeAttribute('open');
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') menu.removeAttribute('open');
+          });
+        }
+
+        // Fade-up reveals. CSS only hides elements when motion is allowed.
+        var items = document.querySelectorAll('[data-reveal]');
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced || !('IntersectionObserver' in window)) {
+          items.forEach(function (el) {
+            el.classList.add('is-in');
+          });
+        } else {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add('is-in');
+                  io.unobserve(entry.target);
+                }
+              });
+            },
+            { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+          );
+          items.forEach(function (el) {
+            io.observe(el);
+          });
+        }
+
+        // Card spotlight follows the pointer
+        if (window.matchMedia('(hover: hover)').matches && !reduced) {
+          document.querySelectorAll('.card').forEach(function (card) {
+            card.addEventListener('pointermove', function (e) {
+              var r = card.getBoundingClientRect();
+              card.style.setProperty('--mx', e.clientX - r.left + 'px');
+              card.style.setProperty('--my', e.clientY - r.top + 'px');
+            });
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

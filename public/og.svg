@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="18%" cy="0%" r="75%">
+      <stop offset="0" stop-color="#fcee0a" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#fcee0a" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#0a0a0b"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- LM monogram -->
+  <g transform="translate(80 72)">
+    <rect width="88" height="88" rx="20" fill="#fcee0a"/>
+    <path d="M18 25h9.5v30H41v8H18z" fill="#0a0a0b"/>
+    <path d="M45 63V25h9.5l7.5 17.5L69.500 25H79v38h-8.800V42l-5.300 13h-5.800l-5.300-13v21z" fill="#0a0a0b"/>
+  </g>
+
+  <!-- Availability pill -->
+  <g transform="translate(80 236)">
+    <rect width="372" height="46" rx="23" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-opacity="0.45"/>
+    <circle cx="26" cy="23" r="7" fill="#22c55e"/>
+    <text x="46" y="30" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#4ade80">Available for freelance &amp; hire</text>
+  </g>
+
+  <text x="76" y="388" font-family="Helvetica, Arial, sans-serif" font-size="112" font-weight="700" letter-spacing="-4" fill="#fafafa">Lovin Maxwell</text>
+  <rect x="80" y="412" width="150" height="10" fill="#fcee0a"/>
+
+  <text x="80" y="486" font-family="Helvetica, Arial, sans-serif" font-size="36" font-weight="600" fill="#fafafa">Senior .NET &amp; Azure Engineer.</text>
+  <text x="80" y="534" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#a1a1aa">Enterprise Integration. Document AI Automation.</text>
+  <text x="80" y="584" font-family="Menlo, Courier, monospace" font-size="20" letter-spacing="3" fill="#a1a1aa">BASED IN DOHA, QATAR</text>
+</svg>

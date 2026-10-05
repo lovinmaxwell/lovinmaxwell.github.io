@@ -1,0 +1,153 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+import { withBase } from '../lib/url';
+
+const { projects } = profile;
+const featured = projects.items.filter((p) => p.featured);
+const others = projects.items.filter((p) => !p.featured);
+
+// Fan the phone screenshots a little on larger screens.
+const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rotate-3 sm:translate-y-4'];
+---
+
+<section id="projects" class="section border-t border-line" aria-labelledby="projects-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{projects.kicker}</p>
+      <h2 id="projects-title" class="section-title">{projects.title}</h2>
+    </div>
+
+    <div class="mt-10 grid gap-4 lg:grid-cols-3">
+      {
+        featured.map((p) => (
+          <article class="card grid gap-10 p-6! sm:p-9! lg:col-span-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12" data-reveal>
+            <div class="flex flex-col">
+              <p class="label">{projects.featuredLabel}</p>
+              <h3 class="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{p.name}</h3>
+              <ul class="mt-4 flex flex-wrap gap-2">
+                {p.statuses.map((s) => (
+                  <li class="status" data-tone={s.tone}>
+                    {s.label}
+                  </li>
+                ))}
+              </ul>
+              <p class="mt-5 text-lg leading-relaxed">{p.description}</p>
+
+              {p.features && (
+                <>
+                  <h4 class="label mt-8">{projects.featuresLabel}</h4>
+                  <ul class="mt-3 grid gap-x-6 gap-y-2 text-[0.9375rem] leading-snug text-muted sm:grid-cols-2">
+                    {p.features.map((f) => (
+                      <li class="flex gap-2.5">
+                        <span class="mt-[0.55em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {p.stack && (
+                <>
+                  <h4 class="label mt-8">{projects.stackLabel}</h4>
+                  <ul class="mt-3 flex flex-wrap gap-2">
+                    {p.stack.map((t) => (
+                      <li class="chip">{t}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {p.link && (
+                <p class="mt-8 lg:mt-auto lg:pt-8">
+                  <a href={p.link.href} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                    {p.link.label}
+                    <Icon name="arrow-up-right" size={16} />
+                    <span class="sr-only">{profile.a11y.newTab}</span>
+                  </a>
+                </p>
+              )}
+            </div>
+
+            {p.images && (
+              <div class="shots flex items-center gap-3 sm:justify-center sm:gap-4 lg:py-6">
+                {p.images.map((img, i) => (
+                  <img
+                    src={withBase(img.src)}
+                    alt={img.alt}
+                    width={img.width}
+                    height={img.height}
+                    loading="lazy"
+                    decoding="async"
+                    class:list={[
+                      'h-auto w-[60%] shrink-0 snap-center rounded-2xl border border-line-strong shadow-lg sm:w-[31%] sm:max-w-[200px] sm:shrink sm:rounded-3xl sm:shadow-2xl',
+                      tilt[i % tilt.length],
+                    ]}
+                  />
+                ))}
+              </div>
+            )}
+          </article>
+        ))
+      }
+
+      {
+        others.map((p, i) => (
+          <article class="card flex flex-col" data-reveal style={`--d: ${i * 70}ms`}>
+            <ul class="flex flex-wrap gap-2">
+              {p.statuses.map((s) => (
+                <li class="status" data-tone={s.tone}>
+                  {s.label}
+                </li>
+              ))}
+            </ul>
+            <h3 class="mt-5 text-2xl font-semibold tracking-tight">{p.name}</h3>
+            <p class="mt-3 leading-relaxed">{p.description}</p>
+            {p.details && <p class="mt-3 text-[0.9375rem] leading-relaxed text-muted">{p.details}</p>}
+            {p.stack && (
+              <ul class="mt-6 flex flex-wrap gap-2">
+                {p.stack.map((t) => (
+                  <li class="chip">{t}</li>
+                ))}
+              </ul>
+            )}
+            {p.link && (
+              <p class="mt-auto pt-6">
+                <a
+                  href={p.link.href}
+                  class="link-underline inline-flex items-center gap-1.5 font-medium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {p.link.label}
+                  <Icon name="arrow-up-right" size={16} />
+                  <span class="sr-only">{profile.a11y.newTab}</span>
+                </a>
+              </p>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Small screens: screenshots become a swipeable snap row that bleeds to the card edges. */
+  @media (width < 40rem) {
+    .shots {
+      margin-inline: -1.5rem;
+      padding: 0.25rem 1.5rem 0.75rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 1.5rem;
+      scrollbar-width: none;
+      mask-image: linear-gradient(to right, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent);
+    }
+
+    .shots::-webkit-scrollbar {
+      display: none;
+    }
+  }
+</style>

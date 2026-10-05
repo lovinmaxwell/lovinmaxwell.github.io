@@ -1,0 +1,17 @@
+---
+import Socials from './Socials.astro';
+import { profile } from '../data/profile';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-line">
+  <div class="wrap flex flex-col items-start justify-between gap-4 py-8 sm:flex-row sm:items-center">
+    <p class="font-mono text-xs text-muted">
+      &copy; {year} {profile.name}. {profile.footer.builtWith}
+    </p>
+    <nav aria-label={profile.a11y.socialNav}>
+      <Socials size="sm" />
+    </nav>
+  </div>
+</footer>

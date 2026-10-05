@@ -1,0 +1,74 @@
+---
+import Availability from './Availability.astro';
+import Icon from './Icon.astro';
+import Socials from './Socials.astro';
+import { profile } from '../data/profile';
+
+const [lead, ...rest] = profile.headline;
+const now = profile.experience.jobs.find((j) => j.current) ?? profile.experience.jobs[0];
+const latest = profile.projects.items.find((p) => p.featured) ?? profile.projects.items[0];
+---
+
+<section id="top" class="relative overflow-hidden border-b border-line">
+  <div class="hero-bg" aria-hidden="true"></div>
+
+  <div class="wrap relative grid items-center gap-10 pt-12 pb-14 sm:pt-16 sm:pb-16 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
+    <div>
+      <Availability />
+
+      <h1 class="mt-6 text-[clamp(3rem,11vw,6.5rem)] leading-[0.95] font-semibold tracking-[-0.045em]">
+        {profile.firstName} <span class="marker">{profile.lastName}</span>
+      </h1>
+
+      <p class="mt-6 max-w-2xl text-xl leading-snug font-medium tracking-tight sm:text-2xl">
+        {lead} <span class="text-muted">{rest.join(' ')}</span>
+      </p>
+
+      <p class="mt-5 flex items-center gap-2 font-mono text-xs tracking-[0.14em] text-muted uppercase">
+        <Icon name="pin" size={14} />
+        {profile.location}
+      </p>
+
+      <p class="mt-3 max-w-xl text-base text-muted sm:text-lg">{profile.tagline}</p>
+
+      <div class="mt-7 flex flex-wrap items-center gap-3">
+        <a href={profile.cta.hire.href} class="btn btn-primary">
+          <Icon name="mail" size={16} />
+          {profile.cta.hire.label}
+        </a>
+        <a href={profile.cta.work.href} class="btn btn-ghost">
+          {profile.cta.work.label}
+          <Icon name="arrow-down" size={16} />
+        </a>
+        <nav aria-label={profile.a11y.socialNav} class="sm:ml-2">
+          <Socials />
+        </nav>
+      </div>
+    </div>
+
+    <div class="hidden gap-3 lg:grid lg:grid-cols-2">
+      <div class="card col-span-2 p-5!">
+        <p class="label flex items-center gap-2">
+          <span class="size-1.5 rounded-full bg-ok-dot" aria-hidden="true"></span>
+          {profile.hero.nowLabel}
+        </p>
+        <p class="mt-3 text-[0.9375rem] leading-snug font-medium">{now.role}</p>
+        <p class="mt-1 text-sm text-muted">
+          {now.company}{now.location ? `, ${now.location}` : ''}
+        </p>
+      </div>
+      <div class="card p-5!">
+        <p class="text-4xl font-semibold tracking-tight">{profile.hero.yearsValue}</p>
+        <p class="mt-2 text-[0.8125rem] leading-snug text-muted">{profile.hero.yearsLabel}</p>
+      </div>
+      <a href={profile.cta.work.href} class="card group block p-5!">
+        <p class="label">{profile.hero.latestLabel}</p>
+        <p class="mt-3 flex items-center gap-1.5 text-[0.9375rem] font-medium">
+          {latest.name}
+          <Icon name="arrow-down" size={14} class="text-muted transition-transform group-hover:translate-y-0.5" />
+        </p>
+        <p class="mt-1 text-[0.8125rem] leading-snug text-muted">{latest.statuses[0].label}</p>
+      </a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,41 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+
+const { contact } = profile;
+const links = profile.socials.filter((s) => s.icon !== 'mail');
+---
+
+<section id="contact" class="section border-t border-line" aria-labelledby="contact-title">
+  <div class="wrap">
+    <div class="card overflow-hidden p-7! sm:p-12! lg:p-16!" data-reveal>
+      <div class="hero-bg" aria-hidden="true"></div>
+
+      <p class="kicker">{contact.kicker}</p>
+      <h2 id="contact-title" class="mt-5 flex max-w-3xl items-start gap-4 text-4xl leading-[1.05] font-semibold tracking-[-0.035em] sm:text-6xl">
+        <span class="relative mt-[0.4em] flex size-3 shrink-0 sm:size-4" aria-hidden="true">
+          <span class="absolute inline-flex size-full animate-ping rounded-full bg-ok-dot opacity-70"></span>
+          <span class="relative inline-flex size-full rounded-full bg-ok-dot"></span>
+        </span>
+        {contact.title}
+      </h2>
+      <p class="mt-5 text-lg text-muted sm:text-xl">{contact.subline}</p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <a href={`mailto:${profile.email}`} class="btn btn-primary h-12 px-6 text-base">
+          <Icon name="mail" size={18} />
+          {profile.email}
+        </a>
+        {
+          links.map((s) => (
+            <a href={s.href} class="btn btn-ghost h-12" target="_blank" rel="noopener noreferrer">
+              <Icon name={s.icon} size={16} />
+              {s.label}
+              <span class="sr-only">{profile.a11y.newTab}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

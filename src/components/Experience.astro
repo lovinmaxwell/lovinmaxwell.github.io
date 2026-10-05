@@ -1,0 +1,42 @@
+---
+import { profile } from '../data/profile';
+
+const { experience } = profile;
+---
+
+<section id="experience" class="section border-t border-line" aria-labelledby="experience-title">
+  <div class="wrap grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+    <div data-reveal>
+      <p class="kicker">{experience.kicker}</p>
+      <h2 id="experience-title" class="section-title">{experience.title}</h2>
+    </div>
+
+    <ol class="relative ml-1.5 border-l border-line lg:mt-9">
+      {
+        experience.jobs.map((job, i) => (
+          <li class="relative pb-9 pl-7 last:pb-0 sm:pl-9" data-reveal style={`--d: ${i * 60}ms`}>
+            <span
+              class:list={[
+                'absolute top-1.5 -left-[5px] size-[9px] rounded-full ring-4 ring-bg',
+                job.current ? 'bg-accent outline outline-1 outline-fg/40' : 'bg-line-strong',
+              ]}
+              aria-hidden="true"
+            />
+            <p class="label flex flex-wrap items-center gap-x-3 gap-y-1">
+              {job.period}
+              {job.current && (
+                <span class="rounded-full bg-accent px-2 py-0.5 text-[0.625rem] font-bold tracking-[0.12em] text-accent-ink">
+                  {experience.presentLabel}
+                </span>
+              )}
+            </p>
+            <h3 class="mt-2 text-lg leading-snug font-semibold tracking-tight sm:text-xl">{job.role}</h3>
+            <p class="mt-1 text-muted">
+              {job.company}{job.location ? `, ${job.location}` : ''}
+            </p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

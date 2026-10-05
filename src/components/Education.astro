@@ -1,0 +1,29 @@
+---
+import { profile } from '../data/profile';
+
+const { education } = profile;
+---
+
+<section id="education" class="section border-t border-line" aria-labelledby="education-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{education.kicker}</p>
+      <h2 id="education-title" class="section-title">{education.title}</h2>
+    </div>
+
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2">
+      {
+        education.items.map((item, i) => (
+          <li class="card" data-reveal style={`--d: ${i * 70}ms`}>
+            <p class="label flex items-center justify-between gap-3">
+              <span>{item.label}</span>
+              <span>{item.date}</span>
+            </p>
+            <h3 class="mt-5 text-xl leading-snug font-semibold tracking-tight">{item.title}</h3>
+            <p class="mt-1.5 text-muted">{item.org}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

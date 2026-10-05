@@ -1,0 +1,68 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+
+const { openSource } = profile;
+
+// 6-column grid: three across, then two wider cards.
+const spans = ['lg:col-span-2', 'lg:col-span-2', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-3'];
+---
+
+<section id="open-source" class="section border-t border-line" aria-labelledby="open-source-title">
+  <div class="wrap">
+    <div data-reveal>
+      <p class="kicker">{openSource.kicker}</p>
+      <h2 id="open-source-title" class="section-title">{openSource.title}</h2>
+    </div>
+
+    <h3 class="label mt-10" data-reveal>{openSource.pluginsLabel}</h3>
+    <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      {
+        openSource.plugins.map((repo, i) => (
+          <li class:list={['card group flex flex-col', spans[i % spans.length]]} data-reveal style={`--d: ${(i % 3) * 70}ms`}>
+            <div class="flex items-start justify-between gap-3">
+              <Icon name="github" size={20} class="mt-0.5 text-muted" />
+              <Icon
+                name="arrow-up-right"
+                size={18}
+                class="text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-fg"
+              />
+            </div>
+            <h4 class="static mt-5 font-mono text-base font-semibold">
+              <a
+                href={repo.href}
+                class="rounded-2xl after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-(--focus)"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {repo.name}
+                <span class="sr-only">{profile.a11y.newTab}</span>
+              </a>
+            </h4>
+            <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted">{repo.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <h3 class="label mt-12" data-reveal>{openSource.olderLabel}</h3>
+    <ul class="mt-4 grid gap-x-8 border-t border-line sm:grid-cols-3" data-reveal>
+      {
+        openSource.older.map((repo) => (
+          <li class="border-b border-line py-4 sm:border-b-0">
+            <a
+              href={repo.href}
+              class="link-underline font-mono text-sm font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {repo.name}
+              <span class="sr-only">{profile.a11y.newTab}</span>
+            </a>
+            <p class="mt-1.5 text-sm text-muted">{repo.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
