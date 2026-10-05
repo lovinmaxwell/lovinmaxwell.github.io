@@ -11,6 +11,8 @@ const data = {
 };
 ---
 
+{/* #ask is the tab bar target. Below lg the script lifts the terminal into the sheet at the end of this file. */}
+<div id="ask" data-ask-home>
 <div class="terminal mt-4" data-ask data-reveal>
   <div class="flex items-center gap-2 border-b border-line px-4 py-3">
     <span class="flex gap-1.5" aria-hidden="true">
@@ -22,9 +24,9 @@ const data = {
     <span class="label ml-auto hidden sm:block" aria-hidden="true">{ask.windowTitle}</span>
   </div>
 
-  <div class="p-4 sm:p-5">
+  <div class="terminal-body p-4 sm:p-5">
     <!-- Without JS this is a plain list of questions and answers. The script swaps it for the log. -->
-    <dl class="terminal-static space-y-4 font-mono text-[0.8125rem] leading-relaxed">
+    <dl class="terminal-static space-y-4 font-mono text-sm leading-relaxed sm:text-[0.8125rem]">
       {
         suggested.map((f) => (
           <div>
@@ -39,7 +41,7 @@ const data = {
 
     <div class="terminal-live">
       <div
-        class="terminal-log font-mono text-[0.8125rem] leading-relaxed"
+        class="terminal-log font-mono text-sm leading-relaxed sm:text-[0.8125rem]"
         data-ask-log
         tabindex="0"
         role="group"
@@ -53,7 +55,7 @@ const data = {
         {
           suggested.map((f) => (
             <li class="shrink-0">
-              <button type="button" class="chip cursor-pointer hover:border-line-strong" data-ask-chip>
+              <button type="button" class="chip tap cursor-pointer hover:border-line-strong max-lg:px-3.5" data-ask-chip>
                 {f.question}
               </button>
             </li>
@@ -66,7 +68,7 @@ const data = {
         <input
           id="ask-input"
           type="text"
-          class="h-9 min-w-0 flex-1 bg-transparent text-fg outline-none placeholder:text-muted/70"
+          class="h-11 min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-muted/70 sm:text-[0.8125rem] lg:h-9"
           placeholder={ask.placeholder}
           aria-label={ask.inputLabel}
           autocomplete="off"
@@ -75,15 +77,24 @@ const data = {
           maxlength="120"
           enterkeyhint="send"
         />
-        <button type="submit" class="kbd h-7! shrink-0 cursor-pointer px-2.5!">{ask.submitLabel}</button>
+        <button type="submit" class="kbd h-11! min-w-11! shrink-0 cursor-pointer px-3! lg:h-7! lg:min-w-6! lg:px-2.5!">{ask.submitLabel}</button>
       </form>
     </div>
   </div>
 
   <script type="application/json" data-ask-data set:html={JSON.stringify(data).replace(/</g, '\\u003c')} />
 </div>
+</div>
+
+<dialog id="ask-sheet" class="sheet" aria-modal="true" aria-label={ask.title}>
+  <div class="sheet-panel" data-ask-slot>
+    <button type="button" class="sheet-handle" aria-label={profile.a11y.close}></button>
+  </div>
+</dialog>
 
 <script>
+  import { bindSheet } from '../lib/sheet';
+
   interface Entry {
     question: string;
     keywords: string[];
@@ -182,8 +193,40 @@ const data = {
     });
 
     root.querySelectorAll<HTMLButtonElement>('[data-ask-chip]').forEach((chip) => {
-      chip.addEventListener('click', () => ask(chip.textContent ?? ''));
+      chip.addEventListener('click', () => ask(chip.textContent?.trim() ?? ''));
     });
+
+    // Below lg the Ask tab opens this same terminal in a bottom sheet. The node is moved, not copied,
+    // so the log and listeners carry over, and it goes back to its place in Contact on close.
+    const sheet = document.getElementById('ask-sheet') as HTMLDialogElement | null;
+    const slot = sheet?.querySelector<HTMLElement>('[data-ask-slot]');
+    const home = document.querySelector<HTMLElement>('[data-ask-home]');
+    const small = window.matchMedia('(width < 64rem)');
+
+    if (sheet && slot && home && typeof sheet.showModal === 'function') {
+      bindSheet(sheet);
+
+      document.querySelectorAll<HTMLElement>('[data-ask-open]').forEach((opener) => {
+        opener.addEventListener('click', (e) => {
+          if (!small.matches || sheet.open) return;
+          e.preventDefault();
+          // Hold the gap open so the page behind does not jump.
+          home.style.minHeight = `${home.offsetHeight}px`;
+          root.classList.add('is-in');
+          slot.append(root);
+          sheet.showModal();
+          log.scrollTop = log.scrollHeight;
+        });
+      });
+
+      sheet.addEventListener('close', () => {
+        home.append(root);
+        home.style.minHeight = '';
+      });
+      // A click on the backdrop lands on the dialog element itself.
+      sheet.addEventListener('click', (e) => e.target === sheet && sheet.close());
+      small.addEventListener('change', () => !small.matches && sheet.open && sheet.close());
+    }
   }
 </script>
 
@@ -211,6 +254,23 @@ const data = {
     display: block;
   }
 
+  /* Inside the sheet the panel is the frame, so the terminal drops its own. */
+  .sheet-panel .terminal {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .sheet-panel .terminal-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   /* Suggested questions: one scrollable row on phones, wrapping from sm up. */
   .ask-chips {
     display: flex;
@@ -218,7 +278,14 @@ const data = {
     margin-inline: -1rem;
     padding-inline: 1rem;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 1rem;
     scrollbar-width: none;
+  }
+
+  .ask-chips > li {
+    scroll-snap-align: start;
   }
 
   .ask-chips::-webkit-scrollbar {

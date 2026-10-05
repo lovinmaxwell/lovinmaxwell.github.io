@@ -1,0 +1,27 @@
+---
+// Button for the [data-collapse] / [data-fold] pattern. The click handler lives in Base.astro,
+// and global.css hides the button from lg up, where nothing is collapsed.
+interface Props {
+  more: string;
+  less: string;
+  open?: boolean;
+  /** Screen-reader suffix that says what is being expanded. */
+  context?: string;
+  class?: string;
+}
+
+const { more, less, open = false, context, class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['collapse-toggle', className]}
+  data-collapse-toggle
+  data-more={more}
+  data-less={less}
+  aria-expanded={open ? 'true' : 'false'}
+>
+  <span class="collapse-chevron" aria-hidden="true">›</span>
+  <span data-collapse-label>{open ? less : more}</span>
+  {context && <span class="sr-only">: {context}</span>}
+</button>

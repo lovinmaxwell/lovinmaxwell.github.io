@@ -17,7 +17,7 @@ const isExternal = (href: string) => href.startsWith('http');
       <li>
         <a
           href={s.href}
-          class:list={['icon-link', size === 'sm' && 'size-9 rounded-lg']}
+          class:list={['icon-link max-lg:size-11', size === 'sm' && 'rounded-lg lg:size-9']}
           aria-label={isExternal(s.href) ? `${s.label} ${profile.a11y.newTab}` : s.label}
           title={s.label}
           {...(isExternal(s.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}

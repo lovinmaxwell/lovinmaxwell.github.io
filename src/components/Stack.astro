@@ -70,7 +70,7 @@ const showLessLabel = stack.showLessLabel;
   </div>
 
   <div class="wrap">
-    <div class="mt-10 grid gap-4 lg:grid-cols-3">
+    <div class="swipe mt-10 grid gap-4 lg:grid-cols-3" data-swipe>
       {
         stack.features.map((f, i) => (
           <article class:list={['card feature', i === 0 && 'lg:col-span-2']} data-reveal style={`--d: ${i * 70}ms`}>
@@ -133,7 +133,7 @@ const showLessLabel = stack.showLessLabel;
                 <p class="text-[0.9375rem] leading-snug font-medium">{item.name}</p>
                 {item.detail && <p class="text-xs leading-snug text-muted">{item.detail}</p>}
               </div>
-              <span class="label shrink-0 self-start text-[0.625rem]!">{item.category}</span>
+              <span class="label shrink-0 self-start text-[0.6875rem]! lg:text-[0.625rem]!">{item.category}</span>
             </div>
             {item.note && <p class="mt-3 text-[0.8125rem] leading-snug text-muted">{item.note}</p>}
           </li>

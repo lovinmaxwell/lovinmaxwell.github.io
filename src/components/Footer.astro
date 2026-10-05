@@ -17,7 +17,7 @@ const { agents } = profile;
           agents.files.map((file, i) => (
             <>
               {i > 0 && <span aria-hidden="true"> · </span>}
-              <a href={withBase(file.path)} class="link-underline text-fg">
+              <a href={withBase(file.path)} class="link-underline tap text-fg max-lg:inline-flex max-lg:items-center">
                 {file.label}
               </a>
             </>

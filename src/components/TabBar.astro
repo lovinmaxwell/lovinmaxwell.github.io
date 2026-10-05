@@ -1,0 +1,126 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '../data/profile';
+
+// "Ask" opens the FAQ sheet when the script in Ask.astro is running. Without JS it is a plain anchor.
+---
+
+<nav class="tabbar lg:hidden" aria-label={profile.a11y.tabs}>
+  <ul class="mx-auto flex max-w-xl">
+    {
+      profile.tabs.map((tab) => (
+        <li class="min-w-0 flex-1">
+          <a
+            href={tab.href}
+            class:list={['tab', tab.primary && 'tab-primary']}
+            data-tab={tab.href.startsWith('#') ? tab.href.slice(1) : undefined}
+            data-ask-open={tab.href === '#ask' ? '' : undefined}
+          >
+            <span class="tab-icon">
+              <Icon name={tab.icon} size={20} />
+            </span>
+            <span class="truncate">{tab.label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  // Mark the tab whose section sits across the middle of the screen.
+  const tabs = Array.from(document.querySelectorAll<HTMLAnchorElement>('.tabbar [data-tab]'));
+
+  if (tabs.length && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const tab = tabs.find((t) => t.dataset.tab === entry.target.id);
+          if (entry.isIntersecting) tab?.setAttribute('aria-current', 'true');
+          else tab?.removeAttribute('aria-current');
+        });
+      },
+      { rootMargin: '-45% 0px -55% 0px' }
+    );
+    tabs.forEach((tab) => {
+      const section = document.getElementById(tab.dataset.tab ?? '');
+      if (section) io.observe(section);
+    });
+  }
+</script>
+
+<style>
+  .tabbar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    padding-inline: max(0.25rem, env(safe-area-inset-left)) max(0.25rem, env(safe-area-inset-right));
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1875rem;
+    height: var(--tabbar);
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s ease;
+  }
+
+  .tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.15s ease;
+  }
+
+  .tab:active .tab-icon {
+    background: var(--raised);
+    transform: scale(0.92);
+  }
+
+  .tab[aria-current] {
+    color: var(--fg);
+  }
+
+  .tab[aria-current] .tab-icon {
+    background: var(--raised);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  .tab-primary {
+    color: var(--fg);
+  }
+
+  .tab-primary .tab-icon,
+  .tab-primary:active .tab-icon {
+    background: var(--accent);
+    color: var(--accent-ink);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ink) 28%, var(--accent));
+  }
+
+  .tab:focus-visible {
+    outline-offset: -3px;
+  }
+
+  @media print {
+    .tabbar {
+      display: none;
+    }
+  }
+</style>

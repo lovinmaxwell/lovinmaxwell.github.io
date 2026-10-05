@@ -5,8 +5,9 @@ import { profile } from '../data/profile';
 const { domains } = profile;
 
 const spanClass = {
-  wide: 'col-span-2',
-  full: 'col-span-2 lg:col-span-4',
+  // Spans start at the breakpoint that has the columns, so a one-column grid never grows a second one.
+  wide: 'sm:col-span-2',
+  full: 'sm:col-span-2 lg:col-span-4',
 } as const;
 ---
 
@@ -17,7 +18,7 @@ const spanClass = {
       <h2 id="domains-title" class="section-title max-w-2xl">{domains.title}</h2>
     </div>
 
-    <ul class="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+    <ul class="swipe mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4" data-swipe>
       {
         domains.items.map((item, i) => (
           <li

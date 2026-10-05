@@ -1,4 +1,5 @@
 ---
+import CollapseToggle from './CollapseToggle.astro';
 import Icon from './Icon.astro';
 import Logo from './Logo.astro';
 import { profile } from '../data/profile';
@@ -9,6 +10,9 @@ const statusLabel = {
   merged: openSource.mergedLabel,
   closed: openSource.closedLabel,
 } as const;
+// Below lg the two long lists start short.
+const listShown = 3;
+const moreLabel = (total: number) => profile.mobile.showMore.replace('{n}', String(total - listShown));
 const kindLabel = {
   pr: openSource.prLabel,
   issue: openSource.issueLabel,
@@ -34,7 +38,7 @@ const kindLabel = {
       <p class="mt-2 max-w-2xl text-[0.9375rem] leading-relaxed text-muted sm:text-base">{openSource.picksSubline}</p>
     </div>
 
-    <ul class="mt-6 grid gap-4 lg:grid-cols-3">
+    <ul class="swipe mt-6 grid gap-4 lg:grid-cols-3" data-swipe>
       {
         openSource.picks.map((pick, i) => (
           <li class="card pick flex flex-col p-6! sm:p-7!" data-reveal style={`--d: ${i * 70}ms`}>
@@ -55,7 +59,7 @@ const kindLabel = {
               <p>
                 <a
                   href={pick.site.href}
-                  class="link-underline inline-flex items-center gap-1.5 text-sm font-medium"
+                  class="link-underline tap inline-flex items-center gap-1.5 text-sm font-medium"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -67,12 +71,12 @@ const kindLabel = {
               {pick.related.length > 0 && (
                 <div>
                   <p class="label">{openSource.relatedLabel}</p>
-                  <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                  <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 max-lg:gap-x-5">
                     {pick.related.map((link) => (
                       <li>
                         <a
                           href={link.href}
-                          class="link-underline font-mono text-sm font-medium"
+                          class="link-underline tap font-mono text-sm font-medium max-lg:inline-flex max-lg:items-center"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -91,10 +95,16 @@ const kindLabel = {
     </ul>
 
     <h3 class="label mt-14" data-reveal>{openSource.maintainLabel}</h3>
+    <div data-collapse>
     <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {
         openSource.maintain.map((repo, i) => (
-          <li class="card group flex flex-col p-5!" data-reveal style={`--d: ${(i % 3) * 60}ms`}>
+          <li
+            class="card group flex flex-col p-5!"
+            data-reveal
+            data-collapse-extra={i >= listShown ? '' : undefined}
+            style={`--d: ${(i % 3) * 60}ms`}
+          >
             <div class="flex items-start justify-between gap-3">
               <Icon name="github" size={18} class="mt-0.5 text-muted" />
               <Icon
@@ -119,12 +129,29 @@ const kindLabel = {
         ))
       }
     </ul>
+    {
+      openSource.maintain.length > listShown && (
+        <CollapseToggle
+          more={moreLabel(openSource.maintain.length)}
+          less={profile.mobile.showLess}
+          context={openSource.maintainLabel}
+          class="is-block"
+        />
+      )
+    }
+    </div>
 
     <h3 class="label mt-14" data-reveal>{openSource.contributedLabel}</h3>
+    <div data-collapse>
     <ul class="mt-4 grid gap-3">
       {
         openSource.contributions.map((c, i) => (
-          <li class="card group flex flex-col gap-3 p-5! sm:flex-row sm:items-center sm:justify-between" data-reveal style={`--d: ${i * 50}ms`}>
+          <li
+            class="card group flex flex-col gap-3 p-5! sm:flex-row sm:items-center sm:justify-between"
+            data-reveal
+            data-collapse-extra={i >= listShown ? '' : undefined}
+            style={`--d: ${i * 50}ms`}
+          >
             <div class="min-w-0">
               <p class="label flex flex-wrap items-center gap-2">
                 <span>{c.project}</span>
@@ -158,6 +185,17 @@ const kindLabel = {
         ))
       }
     </ul>
+    {
+      openSource.contributions.length > listShown && (
+        <CollapseToggle
+          more={moreLabel(openSource.contributions.length)}
+          less={profile.mobile.showLess}
+          context={openSource.contributedLabel}
+          class="is-block"
+        />
+      )
+    }
+    </div>
   </div>
 </section>
 

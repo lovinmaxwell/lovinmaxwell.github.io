@@ -10,7 +10,7 @@ const links = profile.socials.filter((s) => s.icon !== 'mail');
 
 <section id="contact" class="section border-t border-line" aria-labelledby="contact-title">
   <div class="wrap">
-    <div class="card overflow-hidden p-7! sm:p-12! lg:p-16!" data-reveal>
+    <div class="card overflow-hidden p-6! sm:p-12! lg:p-16!" data-reveal>
       <div class="hero-bg" aria-hidden="true"></div>
 
       <p class="kicker">{contact.kicker}</p>
@@ -24,7 +24,10 @@ const links = profile.socials.filter((s) => s.icon !== 'mail');
       <p class="mt-5 text-lg text-muted sm:text-xl">{contact.subline}</p>
 
       <div class="mt-9 flex flex-wrap items-center gap-3">
-        <a href={`mailto:${profile.email}`} class="btn btn-primary h-12 px-6 text-base">
+        <a
+          href={`mailto:${profile.email}`}
+          class="btn btn-primary h-12 px-6 text-base max-sm:h-auto max-sm:min-h-12 max-sm:w-full max-sm:px-3 max-sm:py-2 max-sm:text-sm max-sm:break-all max-sm:whitespace-normal"
+        >
           <Icon name="mail" size={18} />
           {profile.email}
         </a>

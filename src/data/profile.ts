@@ -2,6 +2,16 @@
 
 export type SocialIcon = 'mail' | 'linkedin' | 'github' | 'youtube' | 'instagram';
 
+export type TabIcon = 'home' | 'briefcase' | 'layers' | 'message' | 'mail';
+
+export interface Tab {
+  label: string;
+  href: string;
+  icon: TabIcon;
+  /** The one accent-coloured tab. */
+  primary?: boolean;
+}
+
 export interface Social {
   label: string;
   href: string;
@@ -312,6 +322,23 @@ export const profile = {
     { label: 'Open source', href: '#open-source' },
     { label: 'Contact', href: '#contact' },
   ],
+
+  // Bottom tab bar on phones and tablets. Desktop keeps the header nav.
+  tabs: [
+    { label: 'Home', href: '#top', icon: 'home' },
+    { label: 'Work', href: '#projects', icon: 'briefcase' },
+    { label: 'Stack', href: '#stack', icon: 'layers' },
+    { label: 'Ask', href: '#ask', icon: 'message' },
+    { label: 'Hire', href: `mailto:${email}`, icon: 'mail', primary: true },
+  ] satisfies Tab[],
+
+  // Small-screen controls: "show more" on long lists and per-job details.
+  mobile: {
+    showMore: 'Show {n} more',
+    showLess: 'Show fewer',
+    details: 'Details',
+    hideDetails: 'Hide details',
+  },
 
   cta: {
     hire: { label: 'Hire me', href: `mailto:${email}` },
@@ -1558,6 +1585,7 @@ export const profile = {
     socialNav: 'Social links',
     home: 'Lovin Johnson Maxwell, back to top',
     palette: 'Open command palette',
+    tabs: 'Quick navigation',
     close: 'Close',
     newTab: '(opens in a new tab)',
   },

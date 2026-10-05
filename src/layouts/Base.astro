@@ -37,7 +37,7 @@ const jsonLd = {
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script is:inline>
       // Runs before first paint so the theme never flashes.
       // Dark unless the visitor has picked light with the toggle.
@@ -155,16 +155,44 @@ const jsonLd = {
           }, 2400);
         });
 
-        // Close the mobile menu after picking a section, or on Escape
-        var menu = document.getElementById('mobile-menu');
-        if (menu) {
-          menu.addEventListener('click', function (e) {
-            if (e.target.closest('a')) menu.removeAttribute('open');
-          });
-          document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') menu.removeAttribute('open');
-          });
-        }
+        // "Show more" on long lists and per-job details. CSS only collapses them below lg.
+        document.addEventListener('click', function (e) {
+          var button = e.target.closest && e.target.closest('[data-collapse-toggle]');
+          var box = button && button.closest('[data-collapse], [data-fold]');
+          if (!box) return;
+          var open = box.classList.toggle('is-open');
+          button.setAttribute('aria-expanded', String(open));
+          button.querySelector('[data-collapse-label]').textContent = open ? button.dataset.less : button.dataset.more;
+          if (!open && box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: 'start' });
+        });
+
+        // Swipe rows get a thin progress bar. Hidden by CSS wherever the row is a plain grid.
+        document.querySelectorAll('[data-swipe]').forEach(function (row) {
+          var bar = document.createElement('div');
+          bar.className = 'swipe-progress';
+          bar.setAttribute('aria-hidden', 'true');
+          bar.appendChild(document.createElement('span'));
+          row.after(bar);
+          var queued = false;
+          function update() {
+            queued = false;
+            var max = row.scrollWidth - row.clientWidth;
+            bar.style.setProperty('--size', String(max > 0 ? row.clientWidth / row.scrollWidth : 1));
+            bar.style.setProperty('--at', String(max > 0 ? row.scrollLeft / max : 0));
+          }
+          row.addEventListener(
+            'scroll',
+            function () {
+              if (!queued) {
+                queued = true;
+                requestAnimationFrame(update);
+              }
+            },
+            { passive: true }
+          );
+          window.addEventListener('resize', update, { passive: true });
+          update();
+        });
 
         // Fade-up reveals. CSS only hides elements when motion is allowed.
         var items = document.querySelectorAll('[data-reveal]');

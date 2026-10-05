@@ -51,7 +51,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                 </p>
               )}
               <details class="case mt-8">
-                <summary class="label inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
+                <summary class="label tap inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
                   <span class="chevron inline-block transition-transform" aria-hidden="true">›</span>
                   {projects.caseStudyLabel}
                 </summary>
@@ -153,7 +153,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
               <p class="mt-5">
                 <a
                   href={p.link.href}
-                  class="link-underline inline-flex items-center gap-1.5 font-medium"
+                  class="link-underline tap inline-flex items-center gap-1.5 font-medium"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -164,7 +164,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
               </p>
             )}
             <details class="case mt-auto pt-5">
-              <summary class="label inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
+              <summary class="label tap inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
                 <span class="chevron inline-block transition-transform" aria-hidden="true">›</span>
                 {projects.caseStudyLabel}
               </summary>
@@ -205,7 +205,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                         <li>
                           <a
                             href={r.href}
-                            class="link-underline font-medium"
+                            class="link-underline tap font-medium max-lg:inline-flex max-lg:items-center"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
@@ -265,6 +265,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
       margin-inline: -1.5rem;
       padding: 0.25rem 1.5rem 0.75rem;
       overflow-x: auto;
+      overscroll-behavior-x: contain;
       scroll-snap-type: x mandatory;
       scroll-padding-inline: 1.5rem;
       scrollbar-width: none;

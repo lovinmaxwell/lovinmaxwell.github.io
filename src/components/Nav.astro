@@ -4,10 +4,10 @@ import { profile } from '../data/profile';
 ---
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md">
-  <div class="wrap flex h-14 items-center gap-3">
+  <div class="wrap flex h-12 items-center gap-3 lg:h-14">
     <a
       href="#top"
-      class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent font-mono text-xs font-bold text-accent-ink"
+      class="tap-area flex size-8 shrink-0 [--tap:-0.4375rem] items-center justify-center rounded-lg bg-accent font-mono text-xs font-bold text-accent-ink"
       aria-label={profile.a11y.home}
     >
       {profile.monogram}
@@ -33,21 +33,21 @@ import { profile } from '../data/profile';
     <div class="ml-auto flex items-center gap-2">
       <button
         type="button"
-        class="palette-open icon-link h-9 w-9 gap-2 rounded-lg sm:w-auto sm:px-2.5"
+        class="palette-open icon-link tap-area h-10 w-auto min-w-10 gap-2 rounded-lg px-2.5 lg:h-9"
         data-palette-open
         aria-label={profile.a11y.palette}
         aria-haspopup="dialog"
         aria-keyshortcuts="Meta+K Control+K"
       >
         <Icon name="search" size={16} />
-        <span class="hidden text-sm sm:inline">{profile.palette.button}</span>
+        <span class="hidden text-sm min-[22.5rem]:inline">{profile.palette.button}</span>
         <kbd class="kbd hidden sm:inline-flex">⌘K</kbd>
       </button>
 
       <button
         type="button"
         id="theme-toggle"
-        class="icon-link size-9 rounded-lg"
+        class="icon-link tap-area size-10 rounded-lg lg:size-9"
         aria-label={profile.a11y.themeToggle}
         title={profile.a11y.themeToggle}
       >
@@ -55,34 +55,10 @@ import { profile } from '../data/profile';
         <Icon name="moon" size={16} class="theme-icon-moon" />
       </button>
 
-      <a href={profile.cta.hire.href} class="btn btn-primary h-9 rounded-lg px-3.5">
+      <a href={profile.cta.hire.href} class="btn btn-primary tap-area h-10 rounded-lg px-3.5 lg:h-9">
         {profile.cta.hire.label}
       </a>
 
-      <details id="mobile-menu" class="relative lg:hidden">
-        <summary
-          class="icon-link size-9 cursor-pointer list-none rounded-lg [&::-webkit-details-marker]:hidden"
-          aria-label={profile.a11y.menu}
-        >
-          <Icon name="menu" size={16} />
-        </summary>
-        <nav
-          aria-label={profile.a11y.menu}
-          class="absolute top-12 right-0 w-56 rounded-2xl border border-line bg-card p-2 shadow-2xl"
-        >
-          <ul>
-            {
-              profile.nav.map((item) => (
-                <li>
-                  <a href={item.href} class="block rounded-lg px-3 py-2.5 text-sm text-fg hover:bg-raised">
-                    {item.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </nav>
-      </details>
     </div>
   </div>
 </header>

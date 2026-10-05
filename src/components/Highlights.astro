@@ -11,7 +11,7 @@ const { highlights } = profile;
       <h2 id="highlights-title" class="section-title">{highlights.title}</h2>
     </div>
 
-    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <ul class="swipe mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-swipe>
       {
         highlights.items.map((item, i) => (
           <li

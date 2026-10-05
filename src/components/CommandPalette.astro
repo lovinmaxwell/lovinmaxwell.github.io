@@ -65,8 +65,9 @@ const groups: { id: string; label: string; items: Item[] }[] = [
 let n = 0;
 ---
 
-<dialog id="palette" class="palette" aria-modal="true" aria-labelledby="palette-title">
-  <div class="palette-panel">
+<dialog id="palette" class="sheet" aria-modal="true" aria-labelledby="palette-title">
+  <div class="sheet-panel" tabindex="-1">
+    <button type="button" class="sheet-handle" aria-label={profile.a11y.close}></button>
     <h2 id="palette-title" class="sr-only">{palette.title}</h2>
 
     <div class="flex items-center gap-3 border-b border-line px-4">
@@ -86,8 +87,14 @@ let n = 0;
         spellcheck="false"
         enterkeyhint="go"
       />
-      <button type="button" class="kbd shrink-0 cursor-pointer" data-palette-close aria-label={profile.a11y.close}>
-        Esc
+      <button
+        type="button"
+        class="kbd shrink-0 cursor-pointer max-sm:size-11 max-sm:border-0 max-sm:bg-transparent"
+        data-palette-close
+        aria-label={profile.a11y.close}
+      >
+        <span class="max-sm:hidden">Esc</span>
+        <Icon name="x" size={18} class="sm:hidden" />
       </button>
     </div>
 
@@ -137,6 +144,8 @@ let n = 0;
 </div>
 
 <script>
+  import { bindSheet } from '../lib/sheet';
+
   const dialog = document.getElementById('palette') as HTMLDialogElement | null;
   const input = document.getElementById('palette-input') as HTMLInputElement | null;
   const list = document.getElementById('palette-list');
@@ -190,13 +199,19 @@ let n = 0;
       setActive(best);
     };
 
+    const panel = dialog.querySelector<HTMLElement>('.sheet-panel');
+    // On touch screens the list comes first: focusing the input would cover half of it with the keyboard.
+    const touch = window.matchMedia('(pointer: coarse)');
+    bindSheet(dialog);
+
     const open = () => {
       if (dialog.open) return;
       input.value = '';
       filter();
+      panel?.toggleAttribute('autofocus', touch.matches);
       dialog.showModal();
       list.scrollTop = 0;
-      input.focus();
+      if (!touch.matches) input.focus();
     };
 
     const close = () => dialog.open && dialog.close();
@@ -273,84 +288,9 @@ let n = 0;
 </script>
 
 <style>
-  .palette {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    max-width: none;
-    height: 100%;
-    max-height: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    border: 0;
-    background: transparent;
-    color: var(--fg);
-    opacity: 0;
-    transition:
-      opacity 0.18s ease,
-      overlay 0.18s ease allow-discrete,
-      display 0.18s ease allow-discrete;
-  }
-
-  .palette:not([open]) {
-    display: none;
-  }
-
-  .palette[open] {
-    opacity: 1;
-  }
-
-  .palette::backdrop {
-    background: rgb(0 0 0 / 0.55);
-    backdrop-filter: blur(6px);
-    opacity: 0;
-    transition:
-      opacity 0.18s ease,
-      overlay 0.18s ease allow-discrete,
-      display 0.18s ease allow-discrete;
-  }
-
-  .palette[open]::backdrop {
-    opacity: 1;
-  }
-
-  /* Phones: a full-width sheet from the top, clear of the on-screen keyboard. */
-  .palette-panel {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-height: min(32rem, 78dvh);
-    border-bottom: 1px solid var(--line-strong);
-    border-radius: 0 0 1.25rem 1.25rem;
-    background: var(--card);
-    box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.7);
-    transform: translateY(-10px) scale(0.985);
-    transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .palette[open] .palette-panel {
-    transform: none;
-  }
-
-  @starting-style {
-    .palette[open],
-    .palette[open]::backdrop {
-      opacity: 0;
-    }
-
-    .palette[open] .palette-panel {
-      transform: translateY(-10px) scale(0.985);
-    }
-  }
-
-  @media (width >= 40rem) {
-    .palette-panel {
-      width: min(40rem, calc(100% - 3rem));
-      margin: 14vh auto 0;
-      border: 1px solid var(--line-strong);
-      border-radius: 1rem;
-    }
+  /* The dialog shell (.sheet, .sheet-panel) lives in global.css: bottom sheet on phones, centred from sm up. */
+  .sheet-panel:focus {
+    outline: none;
   }
 
   .palette-list {
@@ -381,5 +321,12 @@ let n = 0;
   .palette-option[aria-selected='true'] {
     background: var(--raised);
     box-shadow: inset 2px 0 0 var(--accent);
+  }
+
+  @media (width < 40rem) {
+    .palette-option {
+      min-height: 3rem;
+      font-size: 1rem;
+    }
   }
 </style>

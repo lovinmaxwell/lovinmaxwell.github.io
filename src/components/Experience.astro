@@ -1,10 +1,14 @@
 ---
+import CollapseToggle from './CollapseToggle.astro';
 import { profile } from '../data/profile';
 
-const { experience } = profile;
+const { experience, mobile } = profile;
 
 // First four bullets show; a fifth sits behind "More".
 const shown = 4;
+// Below lg: the first few jobs show, and only the current one starts with its details open.
+const jobsShown = 3;
+const hiddenJobs = experience.jobs.length - jobsShown;
 ---
 
 <section id="experience" class="section border-t border-line" aria-labelledby="experience-title">
@@ -14,10 +18,17 @@ const shown = 4;
       <h2 id="experience-title" class="section-title">{experience.title}</h2>
     </div>
 
+    <div class="min-w-0" data-collapse>
     <ol class="relative ml-1.5 border-l border-line lg:mt-9">
       {
         experience.jobs.map((job, i) => (
-          <li class="relative pb-10 pl-7 last:pb-0 sm:pl-9" data-reveal style={`--d: ${i * 60}ms`}>
+          <li
+            class:list={['relative pb-10 pl-7 last:pb-0 sm:pl-9', i === 0 && 'is-open']}
+            data-reveal
+            data-fold
+            data-collapse-extra={i >= jobsShown ? '' : undefined}
+            style={`--d: ${i * 60}ms`}
+          >
             <span
               class:list={[
                 'absolute top-1.5 -left-[5px] size-[9px] rounded-full ring-4 ring-bg',
@@ -38,6 +49,14 @@ const shown = 4;
               {job.company}, {job.location}
             </p>
             <p class="mt-3 text-[0.9375rem] leading-relaxed text-fg/90 sm:text-base">{job.summary}</p>
+            <CollapseToggle
+              more={mobile.details}
+              less={mobile.hideDetails}
+              open={i === 0}
+              context={`${job.role}, ${job.company}`}
+              class="mt-1"
+            />
+            <div data-fold-body>
             <ul class="mt-4 grid gap-2.5 text-[0.9375rem] leading-relaxed text-muted">
               {job.bullets.slice(0, shown).map((b) => (
                 <li class="flex gap-2.5">
@@ -48,7 +67,7 @@ const shown = 4;
             </ul>
             {job.bullets.length > shown && (
               <details class="more group mt-2">
-                <summary class="label inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
+                <summary class="label tap inline-flex cursor-pointer items-center gap-1.5 rounded-md py-1.5 hover:text-fg">
                   <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">›</span>
                   {experience.moreLabel}
                   <span class="sr-only">: {job.role}, {job.company}</span>
@@ -70,10 +89,22 @@ const shown = 4;
                 ))}
               </ul>
             )}
+            </div>
           </li>
         ))
       }
     </ol>
+    {
+      hiddenJobs > 0 && (
+        <CollapseToggle
+          more={mobile.showMore.replace('{n}', String(hiddenJobs))}
+          less={mobile.showLess}
+          context={experience.kicker}
+          class="is-block"
+        />
+      )
+    }
+    </div>
   </div>
 </section>
 
