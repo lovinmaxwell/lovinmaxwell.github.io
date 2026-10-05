@@ -16,6 +16,8 @@ export function profileJson(site: URL | undefined) {
     name: profile.name,
     alternateName: profile.alternateName,
     headline: profile.headline.join(' '),
+    tagline: profile.taglines[0],
+    taglines: profile.taglines,
     jobTitle: profile.jobTitle,
     location: { city: profile.city, country: profile.country, timeZone: profile.localTime.timeZone },
     availability: { status: profile.availability, detail: profile.contact.subline },

@@ -245,8 +245,13 @@ export const profile = {
   location: 'Based in Doha, Qatar',
   city: 'Doha',
   country: 'Qatar',
-  // DRAFT: pending Lovin's approval. Alt: "Shipping real AI: tools, agents, products."
-  tagline: 'I build with AI and show you what actually works.',
+  /** Rotating hero lines. First entry is the static/meta/OG line. */
+  taglines: [
+    'I design and build reliable systems, from enterprise integrations to AI-powered products.',
+    'Enterprise-grade software, built to last. Now bringing AI into real systems.',
+    'I connect platforms, automate processes and build software that scales.',
+    'Engineer first. I turn complex business problems into clean, working software.',
+  ],
   availability: 'Available for hire',
   email,
   /** Date this file was last reviewed. Shown in profile.json and llms.txt. */
@@ -255,7 +260,7 @@ export const profile = {
   seo: {
     title: 'Lovin Johnson Maxwell | Solution Architect & Full-Stack Engineer',
     description:
-      'Lovin Johnson Maxwell is a solution architect and full-stack engineer based in Doha, Qatar. .NET and Azure by day, AI systems by obsession. Available for hire.',
+      'Lovin Johnson Maxwell is a solution architect and full-stack engineer based in Doha, Qatar. I design and build reliable systems, from enterprise integrations to AI-powered products. Available for hire.',
     ogImage: 'og.png',
     ogImageAlt:
       'Lovin Johnson Maxwell. Solution architect and full-stack engineer. .NET and Azure by day, AI systems by obsession.',
