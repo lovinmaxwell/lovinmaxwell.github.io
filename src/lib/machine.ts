@@ -2,6 +2,7 @@
 // Everything comes from src/data/profile.ts. Nothing is added here.
 import { profile, type ArchiveItem, type EducationItem } from '../data/profile';
 import { absoluteUrl } from './url';
+import { aboutSummary } from './seo';
 
 const { stack } = profile;
 
@@ -15,6 +16,7 @@ export function profileJson(site: URL | undefined) {
   return {
     name: profile.name,
     alternateName: profile.alternateName,
+    summary: aboutSummary,
     headline: profile.headline.join(' '),
     tagline: profile.taglines[0],
     taglines: profile.taglines,
@@ -57,6 +59,7 @@ export function profileJson(site: URL | undefined) {
       ...(p.stack ? { stack: p.stack } : {}),
       ...(p.link ? { url: p.link.href } : {}),
     })),
+    faq: profile.ask.faq.map(({ question, answer }) => ({ question, answer })),
     caseStudies: profile.caseStudies.items.map((c) => ({
       title: c.title,
       kind: c.kind,
@@ -151,6 +154,27 @@ const ossContribLine = (data: Data) =>
     .map((c) => `- [${c.project}] ${c.title} (${c.kind}, ${c.status}, ${c.date}): ${c.url}`)
     .join('\n');
 
+const current = profile.experience.jobs.find((j) => j.current) ?? profile.experience.jobs[0];
+
+/** Short, quotable facts near the top of both text files. */
+const quickFacts = (data: Data) => [
+  '## Summary',
+  '',
+  data.summary,
+  '',
+  '## Quick facts',
+  '',
+  `- Name: ${data.name} (also ${data.alternateName})`,
+  `- Role: ${data.jobTitle}`,
+  `- Current position: ${current.role}, ${current.company}${current.location ? `, ${current.location}` : ''} (${current.period})`,
+  `- Location: ${data.location.city}, ${data.location.country} (${data.location.timeZone})`,
+  `- Availability: ${data.availability.status}`,
+  `- Email: ${data.contact.email}`,
+  `- Website: ${data.url}`,
+];
+
+const faqLines = (data: Data) => data.faq.flatMap((f) => [`### ${f.question}`, '', f.answer, '']);
+
 const contactLines = (data: Data) => [
   `- [Email](mailto:${data.contact.email}): ${data.contact.email}`,
   ...data.contact.links.map((l) => `- [${l.label}](${l.url})`),
@@ -162,6 +186,8 @@ export function llmsTxt(site: URL | undefined): string {
   const home = data.url;
   const lines = [
     ...header(data),
+    '',
+    ...quickFacts(data),
     '',
     '## About',
     '',
@@ -224,6 +250,9 @@ export function llmsTxt(site: URL | undefined): string {
     ...[...data.education, ...data.certifications].map((e) => `- [${e.title}](${home}#education): ${credentialLine(e)}`),
     `- [${profile.education.coursesLabel}](${home}#education): ${data.courses.map((c) => `${c.title} (${c.org}, ${c.date})`).join('; ')}`,
     '',
+    `## ${profile.ask.title} (FAQ)`,
+    '',
+    ...faqLines(data),
     '## Contact',
     '',
     ...contactLines(data),
@@ -239,6 +268,8 @@ export function llmsFullTxt(site: URL | undefined): string {
     ...header(data),
     '',
     `${data.headline} ${profile.location}. ${data.availability.status}.`,
+    '',
+    ...quickFacts(data),
     '',
     '## About',
     '',
@@ -327,6 +358,9 @@ export function llmsFullTxt(site: URL | undefined): string {
     '',
     ...list(data.courses.map((c) => `${c.title} (${c.org}, ${c.date})`)),
     '',
+    `## ${profile.ask.title} (FAQ)`,
+    '',
+    ...faqLines(data),
     '## Contact',
     '',
     ...contactLines(data),

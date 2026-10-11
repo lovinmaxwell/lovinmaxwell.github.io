@@ -4,6 +4,10 @@ import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
 import { profile } from '../data/profile';
 import { absoluteUrl, withBase } from '../lib/url';
+import { homeLd } from '../lib/seo';
+// Preload the two Latin variable fonts the first screen uses. Vite hashes them to the same files the CSS loads.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 interface Props {
   /** Page title. Defaults to the home page title. */
@@ -16,8 +20,10 @@ interface Props {
   ogImageWidth?: number;
   ogImageHeight?: number;
   ogType?: string;
-  /** Extra JSON-LD for the page. The home page Person record is used when this is not set. */
+  /** JSON-LD for the page. The home page graph (Person, WebSite, ProfilePage, FAQPage) is used when this is not set. */
   jsonLd?: Record<string, unknown>;
+  /** Open Graph article fields, for article pages. */
+  article?: { published: string; modified?: string; section?: string; tags?: string[] };
 }
 
 const { seo } = profile;
@@ -25,35 +31,14 @@ const props = Astro.props;
 const title = props.title ?? seo.title;
 const description = props.description ?? seo.description;
 const canonical = absoluteUrl(props.path ?? '/', Astro.site);
+const canonicalHome = absoluteUrl('/', Astro.site);
 const ogImage = absoluteUrl(props.ogImage ?? seo.ogImage, Astro.site);
 const ogImageAlt = props.ogImageAlt ?? seo.ogImageAlt;
 const ogImageWidth = props.ogImageWidth ?? 1200;
 const ogImageHeight = props.ogImageHeight ?? 630;
 const ogType = props.ogType ?? 'profile';
 
-const personLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: profile.name,
-  alternateName: profile.alternateName,
-  url: canonical,
-  image: ogImage,
-  jobTitle: profile.jobTitle,
-  description: seo.description,
-  knowsAbout: seo.knowsAbout,
-  email: `mailto:${profile.email}`,
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: profile.city,
-    addressCountry: profile.country,
-  },
-  alumniOf: {
-    '@type': 'CollegeOrUniversity',
-    name: profile.education.school,
-  },
-  sameAs: profile.socials.filter((s) => s.href.startsWith('http')).map((s) => s.href),
-};
-const jsonLd = props.jsonLd ?? personLd;
+const jsonLd = props.jsonLd ?? homeLd(Astro.site);
 ---
 
 <!doctype html>
@@ -82,10 +67,21 @@ const jsonLd = props.jsonLd ?? personLd;
     <meta name="theme-color" content={seo.themeColorDark} />
     <meta name="generator" content={Astro.generator} />
 
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    {seo.googleSiteVerification && <meta name="google-site-verification" content={seo.googleSiteVerification} />}
+    {seo.bingSiteVerification && <meta name="msvalidate.01" content={seo.bingSiteVerification} />}
+
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin />
+
+    <link rel="icon" href={withBase('favicon.ico')} sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
+    <link rel="apple-touch-icon" href={withBase('apple-touch-icon.png')} />
+    <link rel="author" type="text/plain" href={withBase('humans.txt')} />
     <link rel="sitemap" href={withBase('sitemap-index.xml')} />
     <link rel="alternate" type="application/json" href={absoluteUrl('profile.json', Astro.site)} title="profile.json" />
     <link rel="alternate" type="text/plain" href={absoluteUrl('llms.txt', Astro.site)} title="llms.txt" />
+    <link rel="alternate" type="text/plain" href={absoluteUrl('llms-full.txt', Astro.site)} title="llms-full.txt" />
 
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={profile.name} />
@@ -93,12 +89,30 @@ const jsonLd = props.jsonLd ?? personLd;
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content={String(ogImageWidth)} />
     <meta property="og:image:height" content={String(ogImageHeight)} />
     <meta property="og:image:alt" content={ogImageAlt} />
     <meta property="og:locale" content="en_US" />
+    {
+      props.article ? (
+        <>
+          <meta property="article:published_time" content={props.article.published} />
+          {props.article.modified && <meta property="article:modified_time" content={props.article.modified} />}
+          <meta property="article:author" content={canonicalHome} />
+          {props.article.section && <meta property="article:section" content={props.article.section} />}
+          {props.article.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+        </>
+      ) : (
+        <>
+          <meta property="profile:first_name" content={profile.firstName} />
+          <meta property="profile:last_name" content={profile.lastName} />
+        </>
+      )
+    }
 
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonical} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />

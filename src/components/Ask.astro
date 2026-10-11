@@ -25,10 +25,11 @@ const data = {
   </div>
 
   <div class="terminal-body p-4 sm:p-5">
-    <!-- Without JS this is a plain list of questions and answers. The script swaps it for the log. -->
+    <!-- Without JS this is a plain list of every question and answer, so crawlers get the full FAQ as HTML.
+         The script swaps it for the log. -->
     <dl class="terminal-static space-y-4 font-mono text-sm leading-relaxed sm:text-[0.8125rem]">
       {
-        suggested.map((f) => (
+        ask.faq.map((f) => (
           <div>
             <dt>
               <span class="text-muted">{ask.prompt}</span> {f.question}

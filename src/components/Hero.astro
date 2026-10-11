@@ -4,6 +4,7 @@ import Icon from './Icon.astro';
 import LocalTime from './LocalTime.astro';
 import Socials from './Socials.astro';
 import { profile } from '../data/profile';
+import { aboutSummary } from '../lib/seo';
 
 const [lead, ...rest] = profile.headline;
 const now = profile.experience.jobs.find((j) => j.current) ?? profile.experience.jobs[0];
@@ -33,6 +34,9 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
         <Icon name="pin" size={14} />
         {profile.location}
       </p>
+
+      {/* Short factual summary for screen readers and answer engines. The visible hero says the same in pieces. */}
+      <p id="summary" class="sr-only">{aboutSummary}</p>
 
       {/* Screen readers get the primary line only. The rotator is decorative. */}
       <p class="sr-only">{profile.taglines[0]}</p>

@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import Icon from '../../components/Icon.astro';
 import { profile, JEV_LINKEDIN_POST_URL, type CaseStudyRow } from '../../data/profile';
 import { absoluteUrl, withBase } from '../../lib/url';
+import { ids, personLd } from '../../lib/seo';
 
 const labels = profile.caseStudies;
 const cs = profile.caseStudies.items[0];
@@ -92,18 +93,53 @@ const toc = [
   ['references', 'References'],
 ];
 
+const id = ids(Astro.site);
+const pdfUrl = absoluteUrl(cs.pdf, Astro.site);
+const ogImage = 'case-studies/jev-docai-routing/og.png';
+const published = '2026-10-11';
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'TechArticle',
-  headline: cs.title,
-  description: cs.description,
-  url: pageUrl,
-  image: absoluteUrl(cs.gif.still, Astro.site),
-  datePublished: '2026-10-11',
-  inLanguage: 'en',
-  keywords: cs.tags.join(', '),
-  author: { '@type': 'Person', name: profile.name, url: absoluteUrl('/', Astro.site) },
-  encoding: { '@type': 'MediaObject', contentUrl: absoluteUrl(cs.pdf, Astro.site), encodingFormat: 'application/pdf' },
+  '@graph': [
+    {
+      '@type': 'TechArticle',
+      '@id': `${pageUrl}#article`,
+      headline: cs.title,
+      alternativeHeadline: `${cs.shortTitle} (reference demo)`,
+      description: cs.description,
+      abstract: cs.disclaimer,
+      url: pageUrl,
+      mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl, url: pageUrl, isPartOf: { '@id': id.website } },
+      image: [
+        { '@type': 'ImageObject', url: absoluteUrl(ogImage, Astro.site), width: 1200, height: 630 },
+        { '@type': 'ImageObject', url: absoluteUrl(cs.gif.still, Astro.site), width: cs.gif.width, height: cs.gif.height },
+      ],
+      datePublished: published,
+      dateModified: published,
+      inLanguage: 'en',
+      keywords: cs.tags.join(', '),
+      about: cs.tags.map((name) => ({ '@type': 'Thing', name })),
+      author: personLd(Astro.site),
+      publisher: { '@id': id.person },
+      isPartOf: { '@id': id.website },
+      associatedMedia: {
+        '@type': 'MediaObject',
+        name: `${cs.title} (PDF)`,
+        contentUrl: pdfUrl,
+        encodingFormat: 'application/pdf',
+        description: cs.pdfSize,
+      },
+      ...(linkedin ? { discussionUrl: linkedin } : {}),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: profile.name, item: id.home },
+        { '@type': 'ListItem', position: 2, name: labels.kicker, item: `${id.home}#projects` },
+        { '@type': 'ListItem', position: 3, name: cs.shortTitle, item: pageUrl },
+      ],
+    },
+  ],
 };
 ---
 
@@ -112,11 +148,10 @@ const jsonLd = {
   description={cs.description}
   path={cs.path}
   ogType="article"
-  ogImage={cs.gif.still}
-  ogImageAlt={cs.gif.alt}
-  ogImageWidth={cs.gif.width}
-  ogImageHeight={cs.gif.height}
+  ogImage={ogImage}
+  ogImageAlt={`${cs.title}. Case study, reference demo, by ${profile.name}.`}
   jsonLd={jsonLd}
+  article={{ published, section: labels.kicker, tags: cs.tags }}
 >
   <header class="cs-top sticky top-0 z-40 border-b border-line">
     <div class="wrap flex h-14 items-center justify-between gap-3">

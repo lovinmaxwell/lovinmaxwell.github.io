@@ -313,6 +313,12 @@ export const profile = {
     description:
       'Lovin Johnson Maxwell is a solution architect and full-stack engineer based in Doha, Qatar. I design and build reliable systems, from enterprise integrations to AI-powered products. Available for hire.',
     ogImage: 'og.png',
+    /**
+     * Search console ownership tokens. Paste only the content value of the meta tag each tool gives you.
+     * Empty means the tag is left out.
+     */
+    googleSiteVerification: '',
+    bingSiteVerification: '',
     ogImageAlt:
       'Lovin Johnson Maxwell. Solution architect and full-stack engineer. .NET and Azure by day, AI systems by obsession.',
     /** JSON-LD Person knowsAbout. */
