@@ -317,7 +317,7 @@ export const profile = {
      * Search console ownership tokens. Paste only the content value of the meta tag each tool gives you.
      * Empty means the tag is left out.
      */
-    googleSiteVerification: '',
+    googleSiteVerification: '5WP3snNzZcdOaDVeSE2zBq23hXChvvFNoQwPyNWU6Kk',
     bingSiteVerification: '',
     ogImageAlt:
       'Lovin Johnson Maxwell. Solution architect and full-stack engineer. .NET and Azure by day, AI systems by obsession.',
