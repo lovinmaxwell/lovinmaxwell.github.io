@@ -318,7 +318,7 @@ export const profile = {
      * Empty means the tag is left out.
      */
     googleSiteVerification: '5WP3snNzZcdOaDVeSE2zBq23hXChvvFNoQwPyNWU6Kk',
-    bingSiteVerification: '',
+    bingSiteVerification: '0B4D0E1FA7BFC7C3FC89F5DD760DFB6B',
     ogImageAlt:
       'Lovin Johnson Maxwell. Solution architect and full-stack engineer. .NET and Azure by day, AI systems by obsession.',
     /** JSON-LD Person knowsAbout. */
