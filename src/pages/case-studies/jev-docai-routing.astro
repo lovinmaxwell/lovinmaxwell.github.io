@@ -1,0 +1,412 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { profile, JEV_LINKEDIN_POST_URL, type CaseStudyRow } from '../../data/profile';
+import { absoluteUrl, withBase } from '../../lib/url';
+
+const labels = profile.caseStudies;
+const cs = profile.caseStudies.items[0];
+const pageUrl = absoluteUrl(cs.path, Astro.site);
+const linkedin = JEV_LINKEDIN_POST_URL.trim();
+
+const pipeline = [
+  { step: 'Extract', what: 'Azure AI Content Understanding, prebuilt-documentSearch analyzer' },
+  { step: 'Ask typed questions', what: 'Jev: document type, totals consistency, readiness' },
+  { step: 'Apply threshold policy', what: 'Each question gates separately' },
+  { step: 'Route', what: 'autoPost (ERP stub) or humanReview with a reason' },
+];
+
+const stack = [
+  ['Runtime', 'Node 20, TypeScript command-line application.'],
+  [
+    'Extraction',
+    '@azure/ai-content-understanding 1.1.0 (API 2025-11-01), using ContentUnderstandingClient.analyze / analyzeBinary with the prebuilt-documentSearch analyzer. Configured through CONTENTUNDERSTANDING_ENDPOINT and CONTENTUNDERSTANDING_KEY.',
+  ],
+  [
+    'Decision',
+    '@typesafe-ai/sdk 0.6.0, calling TypeSafeClient.systemOne({ state, questions }) with choice and score questions. Each answer carries choice, confidence and probabilities. Model jev-latest (jev-1.13.0), text-only, 64k context.',
+  ],
+  ['Output', 'autoPost goes to an ERP stub that only logs; nothing is sent to an ERP. humanReview records the reasons.'],
+];
+
+const layout = `src/
+  extract.ts   Azure Content Understanding extraction (or fixture)
+  decide.ts    Jev typed questions (or scripted mock)
+  route.ts     threshold policy -> autoPost | humanReview + reasons
+  erp.ts       ERP auto-post stub (logs only)
+  config.ts    thresholds and environment
+  types.ts     shared types
+  index.ts     CLI entry point
+fixtures/      5 sample documents
+.env.example   endpoint and key placeholders`;
+
+const questions = [
+  ['Document type', 'choice', 'invoice, purchase_order, delivery_note, other, review', 'Not other/review; confidence ≥ 0.85'],
+  ['Totals consistency', 'choice', 'consistent, inconsistent, cannot_tell', 'consistent; confidence ≥ 0.85'],
+  ['Readiness', 'score', 'numeric score (levels 0, 1, 2 in demo output)', 'score ≥ 1.5; confidence ≥ 0.80'],
+];
+
+const why = [
+  ['Bounded outputs', 'Answers are constrained to a fixed set (for example consistent, inconsistent, cannot_tell), so downstream code never guesses at intent.'],
+  ['Measurable certainty', 'Confidence and probabilities are first-class fields, so thresholds can be set, measured and tuned per document type once labelled data exists.'],
+  ['Auditability', 'Every route carries the reasons that produced it, which makes the decision explainable to a reviewer or an auditor.'],
+];
+
+const rows: CaseStudyRow[] = [
+  { document: 'clean-invoice', type: 'invoice', typeConf: '0.91', consistency: 'consistent', consConf: '0.90', readiness: '1.86 (0.91)', route: 'autoPost', reason: 'Cleared all thresholds' },
+  { document: 'purchase-order', type: 'purchase_order', typeConf: '0.90', consistency: 'consistent', consConf: '0.87', readiness: '1.74 (0.88)', route: 'autoPost', reason: 'Cleared all thresholds' },
+  { document: 'delivery-note', type: 'delivery_note', typeConf: '0.88', consistency: 'consistent', consConf: '0.86', readiness: '1.70 (0.86)', route: 'autoPost', reason: 'Cleared all thresholds' },
+  { document: 'ambiguous-scan', type: 'other', typeConf: '0.37', consistency: 'cannot_tell', consConf: '0.48', readiness: '0.42 (0.55)', route: 'humanReview', reason: 'Type is other; totals cannot be checked; readiness low' },
+  { document: 'inconsistent-invoice', type: 'invoice', typeConf: '0.92', consistency: 'inconsistent', consConf: '0.86', readiness: '1.80 (0.90)', route: 'humanReview', reason: 'Totals are inconsistent' },
+];
+
+const limitations = [
+  ['Not run live yet', 'No live Azure or Jev call has been made; all confidences shown are scripted mock values, not model output or calibration evidence.'],
+  ['Jev is external and text-only', 'Jev is a text-only model and a third-party service, not part of Azure. Extracted content leaves the Azure boundary when it is sent for a decision.'],
+  ['Thresholds are illustrative', '0.85 / 1.5 / 0.80 are starting points for the demo, not tuned values.'],
+  ['Residency and security', 'Data residency and a security review are required before any production use, especially for financial documents in regulated environments.'],
+];
+
+const future = [
+  ['ERPNext / Frappe purchase invoice intake', 'Replace the ERP stub with creation of a Purchase Invoice in ERPNext/Frappe for documents that clear every gate, and a review queue entry for those that do not.'],
+  ['SAP posting via RFC/BAPI', 'Post cleared documents to SAP through RFC/BAPI calls, keeping the same typed decision and reasons as the audit trail.'],
+  ['Per-type tuning', 'Thresholds should be tuned per document type on labelled samples rather than shared globally; an invoice and a delivery note carry different risk.'],
+  ['Operating metrics', 'The straight-through rate (share auto-posted) and the review rate (share sent to a person), tracked alongside reviewer corrections.'],
+];
+
+const references = [
+  ['TypeSafe AI, Jev TypeScript guide', 'https://www.typesafeai.org/guides/jev-typescript'],
+  ['TypeSafe AI, Jev models', 'https://docs.typesafe.ai/models'],
+  ['Jev JavaScript SDK', 'https://www.jevcode.ai/en/sdk/javascript/'],
+  ['Microsoft Learn, Azure AI Content Understanding overview', 'https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/overview'],
+];
+
+const toc = [
+  ['summary', 'Summary'],
+  ['problem', 'The problem'],
+  ['architecture', 'Architecture'],
+  ['routing', 'How routing works'],
+  ['results', 'Results (mock)'],
+  ['limitations', 'Limitations'],
+  ['future', 'Future work'],
+  ['references', 'References'],
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: cs.title,
+  description: cs.description,
+  url: pageUrl,
+  image: absoluteUrl(cs.gif.still, Astro.site),
+  datePublished: '2026-10-11',
+  inLanguage: 'en',
+  keywords: cs.tags.join(', '),
+  author: { '@type': 'Person', name: profile.name, url: absoluteUrl('/', Astro.site) },
+  encoding: { '@type': 'MediaObject', contentUrl: absoluteUrl(cs.pdf, Astro.site), encodingFormat: 'application/pdf' },
+};
+---
+
+<Base
+  title={`${cs.shortTitle} (reference demo) | ${profile.name}`}
+  description={cs.description}
+  path={cs.path}
+  ogType="article"
+  ogImage={cs.gif.still}
+  ogImageAlt={cs.gif.alt}
+  ogImageWidth={cs.gif.width}
+  ogImageHeight={cs.gif.height}
+  jsonLd={jsonLd}
+>
+  <header class="cs-top sticky top-0 z-40 border-b border-line">
+    <div class="wrap flex h-14 items-center justify-between gap-3">
+      <a href={withBase('/#projects')} class="tap inline-flex min-w-0 items-center gap-2 text-sm font-medium text-muted hover:text-fg">
+        <Icon name="arrow-left" size={16} class="shrink-0" />
+        <span class="truncate">{labels.backLabel}</span>
+      </a>
+      <div class="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          id="theme-toggle"
+          class="icon-link tap-area size-10 rounded-lg lg:size-9"
+          aria-label={profile.a11y.themeToggle}
+          title={profile.a11y.themeToggle}
+        >
+          <Icon name="sun" size={16} class="theme-icon-sun" />
+          <Icon name="moon" size={16} class="theme-icon-moon" />
+        </button>
+        <a href={profile.cta.hire.href} class="btn btn-primary tap-area h-10 rounded-lg px-3.5 lg:h-9">{profile.cta.hire.label}</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="cs">
+    <article class="wrap pt-10 pb-16 sm:pt-14 lg:pt-20">
+      <header class="max-w-3xl">
+        <p class="kicker">{profile.projects.caseStudyLabel}</p>
+        <h1 class="mt-4 text-[1.875rem] leading-[1.12] font-semibold tracking-tight text-balance sm:text-5xl">{cs.title}</h1>
+        <p class="mt-4 font-mono text-xs tracking-wide text-muted uppercase">
+          {cs.kind} · {cs.date} · {profile.name}
+        </p>
+        <ul class="mt-5 flex flex-wrap gap-2">
+          <li class="status" data-tone="progress">Reference demo</li>
+          <li class="status" data-tone="soon">Mock values, not run live</li>
+        </ul>
+        <p class="mt-6 text-lg leading-relaxed">{cs.description}</p>
+        <p class="cs-note mt-6" role="note"><strong>Read this first.</strong> {cs.disclaimer}</p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href={withBase(cs.pdf)} class="btn btn-primary" download type="application/pdf">
+            <Icon name="download" size={16} />
+            {labels.downloadLabel}
+            <span class="font-normal opacity-70">({cs.pdfSize})</span>
+          </a>
+          {
+            linkedin && (
+              <a href={linkedin} class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
+                <Icon name="linkedin" size={16} />
+                {labels.linkedinLabel}
+                <span class="sr-only">{profile.a11y.newTab}</span>
+              </a>
+            )
+          }
+        </div>
+      </header>
+
+      <figure class="mt-10 sm:mt-14">
+        <picture>
+          <source media="(prefers-reduced-motion: reduce)" srcset={withBase(cs.gif.still)} />
+          <img
+            src={withBase(cs.gif.src)}
+            alt={cs.gif.alt}
+            width={cs.gif.width}
+            height={cs.gif.height}
+            decoding="async"
+            fetchpriority="high"
+            class="h-auto w-full rounded-2xl border border-line-strong bg-card"
+          />
+        </picture>
+        <figcaption class="mt-3 text-sm text-muted">
+          Routing pipeline in doc-ai-jev-router. Thresholds in the demo are illustrative and still need tuning on labelled documents.
+        </figcaption>
+      </figure>
+
+      <div class="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16">
+        <nav class="cs-toc max-lg:hidden" aria-label="On this page">
+          <p class="label">On this page</p>
+          <ol class="mt-3 grid gap-2 text-sm">
+            {toc.map(([id, label]) => (
+              <li><a href={`#${id}`} class="text-muted hover:text-fg">{label}</a></li>
+            ))}
+          </ol>
+        </nav>
+
+        <div class="cs-body grid min-w-0 grid-cols-[minmax(0,1fr)] gap-14">
+          <section id="summary" aria-labelledby="summary-h">
+            <h2 id="summary-h">Summary</h2>
+            <p>
+              doc-ai-jev-router is a TypeScript reference implementation that decides which business documents are safe to post straight into an
+              ERP and which should go to a person. It extracts content with Azure AI Content Understanding, asks TypeSafe AI's Jev decision model
+              three typed questions about each document, and applies an explicit threshold policy to route each one to <code>autoPost</code> or
+              <code>humanReview</code> with a stated reason.
+            </p>
+            <p>
+              The demo builds, tests and runs end to end in mock mode with five sample documents. No live Azure or Jev call has been made yet, so
+              every number in this study is an illustrative mock value. The point of the work is the design: a routing decision that is typed,
+              gated question by question, and auditable.
+            </p>
+          </section>
+
+          <section id="problem" aria-labelledby="problem-h">
+            <h2 id="problem-h">The problem</h2>
+            <p>
+              In accounts payable and ERP intake, extraction is not the decision. A model can read an invoice number, line items and a total and
+              still leave the real question open: should this document be posted without a human looking at it?
+            </p>
+            <p>
+              Teams usually settle on one of two defaults. Auto-posting everything is fast but risky, because a misclassified document or a total
+              that does not add up goes straight into the ledger. Reviewing everything is safe but slow, and it wastes reviewer time on documents
+              that were never in doubt.
+            </p>
+            <p>
+              The useful question sits between those defaults: which documents are safe to post straight through, and why? Answering it needs a
+              decision that can be checked, explained and tuned, not just more extracted fields.
+            </p>
+          </section>
+
+          <section id="architecture" aria-labelledby="architecture-h">
+            <h2 id="architecture-h">Architecture</h2>
+            <p>
+              Each document passes through four stages. Extraction produces content; the decision layer turns that content into typed answers with
+              confidence; a policy compares those answers against thresholds; and the router sends the document to one of two destinations.
+            </p>
+            <ol class="cs-steps">
+              {pipeline.map((s, i) => (
+                <li>
+                  <span class="cs-step-n" aria-hidden="true">{i + 1}</span>
+                  <span>
+                    <strong class="block">{s.step}</strong>
+                    <span class="text-muted">{s.what}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <h3>Stack</h3>
+            <dl class="cs-dl">
+              {stack.map(([k, v]) => (
+                <div>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <h3>Project layout</h3>
+            <pre class="cs-pre" tabindex="0"><code>{layout}</code></pre>
+            <p>
+              13 vitest tests cover the routing policy: which combinations of type, consistency and readiness clear the gates and which are held,
+              and what reasons are attached. Build, test and demo all pass in mock mode.
+            </p>
+          </section>
+
+          <section id="routing" aria-labelledby="routing-h">
+            <h2 id="routing-h">How routing works</h2>
+            <p>
+              A free-text answer such as "this looks like a valid invoice" is hard to act on. It has to be parsed, it can be phrased differently on
+              every call, and it does not say how sure the model is. Jev answers each question with a choice or a score, plus a confidence and a
+              probability distribution over the allowed options. That gives the policy something it can compare against a number and log.
+            </p>
+            <ul class="cs-list">
+              {why.map(([k, v]) => (
+                <li><strong>{k}.</strong> {v}</li>
+              ))}
+            </ul>
+            <h3>The three Jev questions and thresholds</h3>
+            <div class="cs-table" tabindex="0" role="region" aria-labelledby="q-cap">
+              <table>
+                <thead>
+                  <tr><th scope="col">Question</th><th scope="col">Type</th><th scope="col">Allowed answers</th><th scope="col">Gate to auto-post</th></tr>
+                </thead>
+                <tbody>
+                  {questions.map((q) => (
+                    <tr><th scope="row">{q[0]}</th><td><code>{q[1]}</code></td><td>{q[2]}</td><td>{q[3]}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p id="q-cap" class="cs-caption">Jev questions and the illustrative thresholds used in the demo. <span class="lg:hidden">Swipe the table sideways to see every column.</span></p>
+            <h3>"Review" is a valid answer, not an error</h3>
+            <p>
+              The document-type question deliberately includes <code>review</code> and <code>other</code> as options. When a scan is unreadable or
+              a document does not fit the expected types, the correct outcome is to hand it to a person, and the system treats that as a normal
+              route with a reason attached, not as an exception. A router that is allowed to say "I should not decide this" is safer than one forced
+              to pick a type.
+            </p>
+            <p class="text-muted">
+              Whether Jev's confidences are well calibrated for a given document set is something to verify on labelled samples; the design makes
+              that check straightforward rather than assuming it.
+            </p>
+          </section>
+
+          <section id="results" aria-labelledby="results-h">
+            <h2 id="results-h">Results (mock run)</h2>
+            <p class="cs-note" role="note">
+              <strong>Mock values.</strong> There were no live Azure or Jev keys, so extraction uses fixtures and the Jev step is replaced by a mock
+              decider whose confidences are hand-scripted in <code>src/decide.ts</code>. The table shows how the policy behaves, not how Jev
+              performs.
+            </p>
+            <div class="cs-table" tabindex="0" role="region" aria-labelledby="r-cap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Document</th><th scope="col">Type</th><th scope="col">Type conf.</th><th scope="col">Consistency</th>
+                    <th scope="col">Cons. conf.</th><th scope="col">Readiness (conf.)</th><th scope="col">Route</th><th scope="col">Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr>
+                      <th scope="row"><code>{r.document}</code></th>
+                      <td>{r.type}</td>
+                      <td class="num">{r.typeConf}</td>
+                      <td>{r.consistency}</td>
+                      <td class="num">{r.consConf}</td>
+                      <td class="num">{r.readiness}</td>
+                      <td><span class="cs-route" data-route={r.route}>{r.route}</span></td>
+                      <td class="min-w-[12rem]">{r.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p id="r-cap" class="cs-caption">Mock run of the five sample documents. Thresholds: choice confidence ≥ 0.85, readiness score ≥ 1.5, readiness confidence ≥ 0.80. <span class="lg:hidden">Swipe the table sideways to see every column.</span></p>
+            <p>
+              <strong>Key insight.</strong> The inconsistent invoice is the most confidently typed document in the set (type confidence 0.92), and
+              its readiness score of 1.80 also clears the bar. It is still held, because the line amounts plus tax do not equal the printed total,
+              and totals consistency is its own question with its own gate. One confident answer is not permission to auto-post; each question
+              gates separately.
+            </p>
+            <p>
+              The ambiguous scan shows the other side: a skewed, unreadable document that the policy holds for four separate reasons (type is other,
+              totals cannot be checked, readiness 0.42 below 1.5, readiness confidence 0.55 below 0.80). The reviewer sees all of them, not just a
+              generic failure.
+            </p>
+          </section>
+
+          <section id="limitations" aria-labelledby="limitations-h">
+            <h2 id="limitations-h">Limitations</h2>
+            <ul class="cs-list">
+              {limitations.map(([k, v]) => (
+                <li><strong>{k}.</strong> {v}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section id="future" aria-labelledby="future-h">
+            <h2 id="future-h">Future work</h2>
+            <p>
+              The router is designed to sit between document intake and ERP posting. The integration points below are future work; neither ERP
+              integration has been built in this demo.
+            </p>
+            <ul class="cs-list">
+              {future.map(([k, v]) => (
+                <li><strong>{k}.</strong> {v}</li>
+              ))}
+            </ul>
+            <p>
+              Next steps: run the pipeline live with Azure and Jev keys on a labelled sample set; tune thresholds per document type; and measure
+              the straight-through rate, the review rate and the cost per document before considering an ERP integration.
+            </p>
+          </section>
+
+          <section id="references" aria-labelledby="references-h">
+            <h2 id="references-h">References</h2>
+            <ul class="cs-list">
+              {references.map(([label, href]) => (
+                <li>
+                  {label}:{' '}
+                  <a href={href} class="link-underline break-words" target="_blank" rel="noopener noreferrer">
+                    {href.replace(/^https:\/\//, '')}<span class="sr-only"> {profile.a11y.newTab}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <aside class="card p-6! sm:p-8!" aria-label="Contact">
+            <p class="label">{profile.availability}</p>
+            <p class="mt-3 text-lg leading-relaxed">
+              I work on document AI, ERPNext/Frappe and SAP ABAP RFC integration, and LLM workflows. If this kind of routing problem is on your
+              desk, get in touch.
+            </p>
+            <div class="mt-5 flex flex-wrap gap-3">
+              <a href={profile.cta.hire.href} class="btn btn-primary">{profile.cta.hire.label}</a>
+              <a href={withBase(cs.pdf)} class="btn btn-ghost" download type="application/pdf">
+                <Icon name="download" size={16} />
+                {labels.downloadLabel}
+              </a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </article>
+  </main>
+</Base>

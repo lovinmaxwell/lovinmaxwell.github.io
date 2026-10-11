@@ -917,3 +917,244 @@
     display: none;
   }
 }
+
+/* ---------- Case study pages ---------- */
+.cs-top {
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+}
+
+.cs-toc {
+  position: sticky;
+  top: 5.5rem;
+  align-self: start;
+}
+
+.cs-body h2 {
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cs-body h3 {
+  margin-top: 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.cs-body section > p,
+.cs-body section > ul,
+.cs-body section > ol,
+.cs-body section > dl,
+.cs-body section > pre,
+.cs-body section > .cs-table {
+  margin-top: 1rem;
+  max-width: 46rem;
+  line-height: 1.7;
+}
+
+.cs-body section > .cs-table {
+  max-width: none;
+}
+
+.cs-body code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+}
+
+.cs-note {
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  background: var(--card);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.cs-steps {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (width >= 40rem) {
+  .cs-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cs-steps li {
+  display: flex;
+  gap: 0.875rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  line-height: 1.45;
+  font-size: 0.9375rem;
+}
+
+.cs-step-n {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.cs-dl {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cs-dl > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+@media (width >= 40rem) {
+  .cs-dl > div {
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 1rem;
+  }
+}
+
+.cs-dl dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 0.2em;
+}
+
+.cs-dl dd {
+  min-width: 0;
+  font-size: 0.9375rem;
+}
+
+.cs-list {
+  display: grid;
+  gap: 0.625rem;
+  padding-left: 1.125rem;
+  list-style: disc;
+}
+
+.cs-list li::marker {
+  color: var(--muted);
+}
+
+.cs-pre {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.cs-pre code {
+  overflow-wrap: normal;
+}
+
+/* Wide tables scroll inside their own box so the page never does. */
+.cs-table {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid var(--line);
+  border-radius: 0.875rem;
+  background: var(--card);
+}
+
+.cs-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.cs-body section > .cs-caption {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cs-table th,
+.cs-table td {
+  padding: 0.625rem 0.875rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.cs-table thead th {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cs-table tbody th code,
+.cs-table td.num {
+  white-space: nowrap;
+}
+
+.cs-table td.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cs-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.cs-route {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border: 1px solid var(--line-strong);
+}
+
+.cs-route[data-route="autoPost"] {
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
+}
+
+.cs-route[data-route="humanReview"] {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+@media (width < 64rem) {
+  .cs-body h2 {
+    font-size: 1.5rem;
+  }
+
+  .cs-body section > p,
+  .cs-body section > ul {
+    font-size: 1rem;
+  }
+}
+
+.cs-body > * {
+  min-width: 0;
+}

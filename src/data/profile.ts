@@ -1,5 +1,40 @@
 // All site content lives here. Components only render what this file exports.
 
+/**
+ * LinkedIn post for the Jev document-routing case study.
+ * TODO(Lovin): paste the public post URL here once it is live. While it is empty, the link stays hidden.
+ */
+export const JEV_LINKEDIN_POST_URL = 'https://www.linkedin.com/feed/update/urn:li:activity:7514904558599573504/';
+
+export interface CaseStudyRow {
+  document: string;
+  type: string;
+  typeConf: string;
+  consistency: string;
+  consConf: string;
+  readiness: string;
+  route: 'autoPost' | 'humanReview';
+  reason: string;
+}
+
+export interface CaseStudy {
+  slug: string;
+  /** Page path relative to the site base, with a trailing slash. */
+  path: string;
+  title: string;
+  shortTitle: string;
+  kind: string;
+  date: string;
+  /** One-line pitch for cards, palette and the machine-readable files. */
+  description: string;
+  /** Always shown next to any figure. */
+  disclaimer: string;
+  pdf: string;
+  pdfSize: string;
+  gif: { src: string; still: string; width: number; height: number; alt: string };
+  tags: string[];
+}
+
 export type SocialIcon = 'mail' | 'linkedin' | 'github' | 'youtube' | 'instagram';
 
 export type TabIcon = 'home' | 'briefcase' | 'layers' | 'message' | 'mail';
@@ -271,7 +306,7 @@ export const profile = {
   availability: 'Available for hire',
   email,
   /** Date this file was last reviewed. Shown in profile.json and llms.txt. */
-  updated: '2026-10-05',
+  updated: '2026-10-11',
 
   seo: {
     title: 'Lovin Johnson Maxwell | Solution Architect & Full-Stack Engineer',
@@ -1531,6 +1566,39 @@ export const profile = {
     ] satisfies Faq[],
   },
 
+  caseStudies: {
+    kicker: 'Case studies',
+    title: 'Papers and write-ups.',
+    readLabel: 'Read the case study',
+    downloadLabel: 'Download PDF',
+    linkedinLabel: 'Discussion on LinkedIn',
+    backLabel: 'Back to portfolio',
+    items: [
+      {
+        slug: 'jev-docai-routing',
+        path: 'case-studies/jev-docai-routing/',
+        title: 'Confidence-Based Document Routing with Azure Content Understanding and Jev',
+        shortTitle: 'Confidence-based document routing',
+        kind: 'Use case study · reference demo',
+        date: 'October 2026',
+        description:
+          'doc-ai-jev-router is a TypeScript reference demo that decides which business documents are safe to post straight into an ERP and which should go to a person, using Azure AI Content Understanding, three typed Jev questions and an explicit threshold policy.',
+        disclaimer:
+          'Reference demo, run in mock mode. No live Azure or Jev call has been made (no credentials), so every confidence and score shown here is a hand-scripted mock value, not Jev output and not calibration evidence.',
+        pdf: 'case-studies/jev-docai-routing/jev-docai-use-case-study.pdf',
+        pdfSize: '4 pages · PDF',
+        gif: {
+          src: 'case-studies/jev-docai-routing/jev-routing.gif',
+          still: 'case-studies/jev-docai-routing/jev-routing-still.png',
+          width: 1200,
+          height: 675,
+          alt: 'Routing pipeline: invoices, purchase orders and delivery notes go through Azure Content Understanding for text and fields, then Jev answers three typed questions (document type, totals consistency, readiness score). If confidence clears the threshold on every question the document is auto-posted to the ERP; otherwise it goes to human review with a reason, for example an invoice typed at 0.92 whose totals are inconsistent.',
+        },
+        tags: ['Document AI', 'Azure AI Content Understanding', 'Jev', 'TypeScript', 'Confidence routing'],
+      },
+    ] satisfies CaseStudy[],
+  },
+
   palette: {
     title: 'Command palette',
     button: 'Search',
@@ -1541,6 +1609,7 @@ export const profile = {
       actions: 'Actions',
       socials: 'Socials',
       projects: 'Projects',
+      caseStudies: 'Case studies',
     },
     actions: {
       copyEmail: 'Copy email',

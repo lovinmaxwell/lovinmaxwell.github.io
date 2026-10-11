@@ -47,6 +47,13 @@ const groups: { id: string; label: string; items: Item[] }[] = [
     ),
   },
   {
+    id: 'case-studies',
+    label: palette.groups.caseStudies,
+    items: profile.caseStudies.items.map(
+      (cs): Item => ({ label: cs.shortTitle, hint: 'Case study', icon: 'file', kind: 'link', href: withBase(cs.path), keywords: `${cs.tags.join(' ')} jev azure document ai pdf paper` })
+    ),
+  },
+  {
     id: 'projects',
     label: palette.groups.projects,
     items: [

@@ -7,6 +7,7 @@ const { projects } = profile;
 const featured = projects.items.filter((p) => p.featured);
 const others = projects.items.filter((p) => !p.featured);
 const keyCount = projects.keyStackCount ?? 4;
+const caseStudies = profile.caseStudies.items;
 
 const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rotate-3 sm:translate-y-4'];
 
@@ -241,6 +242,43 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
               </div>
             </details>
           </article>
+        ))
+      }
+      {
+        caseStudies.map((c) => (
+          <a
+            href={withBase(c.path)}
+            class="card group flex flex-col p-6! sm:p-7! lg:col-span-2 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-10"
+            data-reveal
+          >
+            <div class="flex flex-col">
+              <ul class="flex flex-wrap gap-2">
+                <li class="status" data-tone="progress">{projects.caseStudyLabel}</li>
+                <li class="status" data-tone="soon">Reference demo</li>
+              </ul>
+              <h3 class="mt-5 text-2xl font-semibold tracking-tight">{c.shortTitle}</h3>
+              <p class="mt-3 leading-relaxed">{c.description}</p>
+              <p class="mt-3 text-sm text-muted">Figures in the study are scripted mock values; it has not been run against live Azure or Jev.</p>
+              <ul class="mt-5 flex flex-wrap gap-2">
+                {c.tags.slice(0, keyCount).map((t) => (
+                  <li class="chip">{t}</li>
+                ))}
+              </ul>
+              <p class="mt-5 inline-flex items-center gap-1.5 font-medium">
+                <span class="link-underline">{profile.caseStudies.readLabel}</span>
+                <Icon name="arrow-up-right" size={16} />
+              </p>
+            </div>
+            <img
+              src={withBase(c.gif.still)}
+              alt=""
+              width={c.gif.width}
+              height={c.gif.height}
+              loading="lazy"
+              decoding="async"
+              class="mt-6 h-auto w-full rounded-xl border border-line-strong lg:mt-0"
+            />
+          </a>
         ))
       }
     </div>
