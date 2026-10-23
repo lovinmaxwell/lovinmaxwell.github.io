@@ -167,6 +167,26 @@ test('capabilities lead to work while the complete catalog remains in a secondar
   assert.doesNotMatch(stack, /data-story-category=/);
 });
 
+test('the Stack window is a labelled tab list with an index tab, a dock and a searchable catalog', () => {
+  const stack = story.slice(story.indexOf('id="stack"'), story.indexOf('id="contact"'));
+  assert.match(stack, /role="tablist"[^>]*aria-orientation="vertical"/);
+  const tabs = stack.match(/<button\b[^>]*role="tab"[^>]*>/g) ?? [];
+  assert.equal(tabs.length, 5);
+  for (const tab of tabs) {
+    const panel = tab.match(/aria-controls="([^"]+)"/)[1];
+    assert.match(stack, new RegExp(`role="tabpanel"[^>]*id="${panel}"`));
+  }
+  assert.equal(tabs.filter(tab => /aria-selected="true"/.test(tab)).length, 1);
+  assert.match(stack, /<nav class="stack-dock" aria-label="Where each capability was used"/);
+  assert.match(stack, /data-stack-search-open/);
+  assert.match(story, /type="search" data-stack-query/);
+  assert.match(story, /data-stack-empty hidden/);
+  for (const id of ['application', 'integration', 'infrastructure', 'intelligence']) {
+    assert.ok(existsSync(new URL(`../dist/images/stack/stack-icon-${id}.webp`, import.meta.url)));
+  }
+  assert.match(stack, /4 capabilities · 10 categories · 66 tools &amp; practices/);
+});
+
 test('the visual chapter atlas exposes all six destinations and accessible search', () => {
   assert.match(story, /aria-controls="chapter-atlas"/);
   assert.match(story, /<dialog[^>]+id="chapter-atlas"[^>]+aria-labelledby="atlas-title"/);

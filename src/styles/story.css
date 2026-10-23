@@ -37,7 +37,7 @@ html[data-appearance="immersive"] {
 .story-field { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--field-image) center / cover no-repeat; }
 .story-field::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(150, 165, 185, .1) 1px, transparent 1.3px); background-size: 32px 32px; mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 80%); }
 .story-grain { position: absolute; inset: 0; z-index: 20; opacity: .03; pointer-events: none; mix-blend-mode: soft-light; }
-.glass, .story-header, .about-ledger, .flow-node, .journey-stop, .capability { background: var(--glass); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--glass-shadow); }
+.glass, .story-header, .about-ledger, .flow-node, .journey-stop { background: var(--glass); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--glass-shadow); }
 .signal-edge, .journey-stop.is-active, .flow-node.is-inspected { border-color: transparent; background: linear-gradient(var(--panel-highlight), var(--panel-highlight)) padding-box, var(--grad-signal) border-box; }
 .story-header { position: relative; z-index: 30; width: min(1200px, calc(100% - 24px)); margin: 12px auto 0; min-height: 60px; padding: 8px 10px 8px 24px; display: flex; align-items: center; gap: 26px; border-radius: 999px; }
 .story-name { display: flex; align-items: center; gap: 12px; font-size: 14px; letter-spacing: -.03em; font-weight: 550; white-space: nowrap; }
@@ -177,7 +177,7 @@ html[data-appearance="immersive"] {
 .chapter-index { font: 9px var(--font-mono); opacity: .8; }
 .timeline-track { position: absolute; top: 0; left: 32px; right: 32px; height: 1px; background: var(--line); }
 .timeline-track span { display: block; height: 1px; background: var(--grad-signal); transform: scaleX(0); transform-origin: left; }
-.story[data-motion="on"] { height: 1100svh; }
+.story[data-motion="on"] { height: 1250svh; }
 [data-motion="on"] .story-stage { position: sticky; top: 0; height: 100svh; min-height: 556px; }
 [data-motion="on"] .story-header { position: absolute; inset: 0 0 auto; }
 [data-motion="on"] .story-panels { position: absolute; inset: 0; }

@@ -3,7 +3,7 @@ import { profile } from '../data/profile';
 const { stack } = profile;
 ---
 <div class="stack-console">
-  <div class="stack-console-bar"><span>Technology index</span><span data-stack-total aria-live="polite">{stack.items.length} tools &amp; practices</span></div>
+  <div class="stack-console-bar"><span>Technology index</span><label class="stack-search-field"><span class="sr-only">Search tools and practices</span><input type="search" data-stack-query placeholder={`Search ${stack.items.length} tools`} autocomplete="off" spellcheck="false" /></label><span data-stack-total aria-live="polite">{stack.items.length} tools &amp; practices</span></div>
   <div class="stack-console-body">
     <div class="stack-categories" role="group" aria-label="Technology categories">
       <button type="button" data-story-filter="all" aria-pressed="true">All tools <span>{stack.items.length}</span></button>
@@ -15,6 +15,7 @@ const { stack } = profile;
           <h3>{category}</h3><ul>{stack.items.filter(item => item.category === category).map(item => <li><strong>{item.name}</strong>{item.detail && <span>{item.detail}</span>}{item.note && <small>{item.note}</small>}</li>)}</ul>
         </section>
       ))}
+      <p class="stack-empty" data-stack-empty hidden>No tools match that search.</p>
     </div>
   </div>
 </div>

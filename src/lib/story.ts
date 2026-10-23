@@ -1,6 +1,6 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { storyChapters, storyDuration as duration, galleryTimings } from '../data/story';
+import { storyChapters, storyDuration as duration, galleryTimings, stackSteps } from '../data/story';
 import type { NeuralCore } from './neural-core';
 
 const chapterTimes = storyChapters.map(chapter => chapter.at);
@@ -54,6 +54,25 @@ export function initStory() {
     if (document.readyState === 'complete') idle();
     else addEventListener('load', idle, { once: true });
   };
+  const stackApp = root.querySelector<HTMLElement>('[data-stack-app]')!;
+  const stackTabs = Array.from(stackApp.querySelectorAll<HTMLButtonElement>('[data-stack-tab]'));
+  const stackPanes = Array.from(stackApp.querySelectorAll<HTMLElement>('[data-stack-pane]'));
+  const stackDock = Array.from(stackApp.querySelectorAll<HTMLAnchorElement>('[data-stack-dock]'));
+  const stackPath = stackApp.querySelector<HTMLElement>('[data-stack-path]')!;
+  let stackStep = -1;
+  const selectStack = (step: number) => {
+    if (step === stackStep) return;
+    stackStep = step;
+    stackApp.dataset.step = String(step);
+    stackTabs.forEach((tab, i) => {
+      tab.setAttribute('aria-selected', String(i === step));
+      tab.tabIndex = i === step ? 0 : -1;
+    });
+    stackPanes.forEach((pane, i) => pane.classList.toggle('is-active', i === step));
+    stackDock.forEach((icon, i) => icon.classList.toggle('is-active', i === step));
+    stackPath.textContent = stackPanes[step].dataset.stackCode!;
+  };
+  const stackStepAt = (time: number) => stackSteps.reduce((best, at, i) => Math.abs(time - at) < Math.abs(time - stackSteps[best]) ? i : best, 0);
   const scrollForTime = (time: number, smooth = false) => {
     const trigger = timeline?.scrollTrigger;
     if (!trigger) return;
@@ -131,6 +150,7 @@ export function initStory() {
           let index = 0;
           chapterTimes.forEach((at, i) => { if (time >= at - 0.32) index = i; });
           if (index !== currentScene) activeScene(index);
+          selectStack(stackStepAt(time));
           progress.style.transform = `scaleX(${time / duration})`;
           core?.setOpen((time - 0.65) / 0.75);
         },
@@ -145,7 +165,9 @@ export function initStory() {
       });
       timeline.to('.core-art', { xPercent: 10, yPercent: -8, scale: 0.88, opacity: 0.6, duration: 0.75 }, 0.65)
         .fromTo('.flow-node', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4 }, 5.95)
-        .fromTo('.doha-art', { y: 40, opacity: 0.4 }, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out' }, 8.55)
+        .fromTo('.stack-window', { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, 7.3)
+        .fromTo('.stack-dock', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 7.45)
+        .fromTo('.doha-art', { y: 40, opacity: 0.4 }, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out' }, 9.95)
         .to({}, { duration: 0.8 }, duration - 0.8);
       galleries.forEach(({ track, start, end, distance }) => {
         timeline!.fromTo(track, { x: 0 }, { x: () => -distance(), duration: end - start, ease: 'none' }, start);
@@ -246,7 +268,7 @@ export function initStory() {
   });
   document.addEventListener('visibilitychange', syncCore);
   wide.addEventListener('change', mountCore);
-  root.querySelectorAll<HTMLElement>('.capability').forEach(card => {
+  root.querySelectorAll<HTMLElement>('.stack-pane:not(.stack-index)').forEach(card => {
     card.addEventListener('pointermove', event => {
       if (!finePointer.matches) return;
       const rect = card.getBoundingClientRect();
@@ -254,6 +276,33 @@ export function initStory() {
       card.style.setProperty('--my', `${event.clientY - rect.top}px`);
     });
   });
+  // In the animated story a tab moves the scroll to its step; otherwise the window behaves as a plain tab list.
+  const chooseStack = (step: number) => {
+    if (animated()) scrollForTime(stackSteps[step]);
+    selectStack(step);
+  };
+  stackTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => chooseStack(index));
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight';
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? stackTabs.length - 1 :
+        (index + (forward ? 1 : -1) + stackTabs.length) % stackTabs.length;
+      chooseStack(next);
+      stackTabs[next].focus({ preventScroll: true });
+    });
+  });
+  selectStack(0);
+  const dock = stackApp.querySelector<HTMLElement>('.stack-dock')!;
+  dock.addEventListener('pointermove', event => {
+    if (!animated() || !finePointer.matches) return;
+    stackDock.forEach(icon => {
+      const rect = icon.getBoundingClientRect();
+      icon.style.setProperty('--dock-hover', String(Math.max(0, 1 - Math.abs(event.clientX - rect.left - rect.width / 2) / 120)));
+    });
+  });
+  dock.addEventListener('pointerleave', () => stackDock.forEach(icon => icon.style.removeProperty('--dock-hover')));
   let scrollFrame = 0;
   const updateDocumentProgress = () => {
     scrollFrame = 0;
@@ -362,16 +411,28 @@ export function initStory() {
 
   const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-story-filter]'));
   const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-story-category]'));
-  const filterStack = (category: string) => {
+  const stackQuery = document.querySelector<HTMLInputElement>('[data-stack-query]')!;
+  let stackCategory = 'all';
+  const filterStack = (category = stackCategory) => {
+    stackCategory = category;
     filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.storyFilter === category)));
+    const words = stackQuery.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
     let total = 0;
     groups.forEach(group => {
-      group.hidden = category !== 'all' && group.dataset.storyCategory !== category;
-      if (!group.hidden) total += group.querySelectorAll('li').length;
+      let shown = 0;
+      group.querySelectorAll('li').forEach(item => {
+        const terms = `${item.textContent} ${group.dataset.storyCategory}`.toLowerCase();
+        item.hidden = !words.every(word => terms.includes(word));
+        if (!item.hidden) shown++;
+      });
+      group.hidden = (category !== 'all' && group.dataset.storyCategory !== category) || shown === 0;
+      if (!group.hidden) total += shown;
     });
     document.querySelector<HTMLElement>('[data-stack-total]')!.textContent = `${total} tools & practices`;
+    document.querySelector<HTMLElement>('[data-stack-empty]')!.hidden = total !== 0;
   };
   filters.forEach(button => button.addEventListener('click', () => filterStack(button.dataset.storyFilter!)));
+  stackQuery.addEventListener('input', () => filterStack('all'));
   filterStack('all');
 
   const systemButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-system-select]'));
@@ -428,6 +489,15 @@ export function initStory() {
       dialog.showModal();
       document.documentElement.classList.add('story-viewer-open');
       dialog.querySelector<HTMLElement>('[data-viewer-close]')?.focus();
+    });
+  });
+  // Registered after the viewer opener, so the search field takes focus from the close button.
+  root.querySelectorAll<HTMLAnchorElement>('[data-detail="stack"]').forEach(link => {
+    link.addEventListener('click', event => {
+      if (!event.defaultPrevented) return;
+      stackQuery.value = '';
+      filterStack(link.dataset.stackFilter ?? 'all');
+      if (link.hasAttribute('data-stack-search-open')) stackQuery.focus();
     });
   });
   document.querySelectorAll<HTMLDialogElement>('.project-viewer').forEach(dialog => {

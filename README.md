@@ -38,8 +38,12 @@ not assumed relocation dates.
 Systems offers three selectable walkthroughs grounded in recorded work:
 enterprise mobility, SAP integration, and AccessFlow's local-first AI concept.
 Public role schematics are not presented as internal deployment diagrams.
-The stack chapter organizes tools around four engineering capabilities, with
-the complete categorized catalog in a secondary viewer. Work is hidden from
+The stack chapter is a macOS-style "Stack" window: four capability tabs plus an
+index tab, a status bar and a dock linking each capability to where it was used.
+Scrolling steps through the tabs (`stackSteps` in `src/data/story.ts`); without
+animation they are an ordinary keyboard tab list. Icons are in
+`public/images/stack/`. The complete categorized catalog, with search, stays in
+a secondary viewer. Work is hidden from
 the new view, including its navigation and archive viewer; projects and the
 full archive remain available in **Original** at `/classic/`.
 The final Doha chapter keeps the original football-stadium and skyline drawing
@@ -67,7 +71,7 @@ still come from the shared profile.
 - Shared chapter positions and gallery timing are in `src/data/story.ts`.
 - Career, stack and Doha scenes are in `CareerJourney.astro`, `StoryStack.astro`, and `QatarFinale.astro`; their responsive styling is in `src/styles/journey.css`.
 - The hero core and Systems walkthroughs are in `NeuralCore.astro` and `SystemsShowcase.astro`; the three.js scene is in `src/lib/neural-core.ts` and is only imported on demand. The unmounted `WorkShowcase.astro` retains the previous Work presentation.
-- `StackCatalog.astro` preserves every shared technology entry and its category filters inside the stack viewer.
+- `StackCatalog.astro` preserves every shared technology entry, its category filters and a search field inside the stack viewer.
 - Dialog content is in `src/components/ProjectViewer.astro`; original sections are composed in `src/pages/classic.astro`.
 - Head tags, SEO and the small inline scripts (theme toggle, reveals) are in `src/layouts/Base.astro`.
 - The social preview image is `public/og.png`, rendered from `public/og.svg`. To regenerate it after editing the SVG: `npm run og`.

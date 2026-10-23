@@ -3,20 +3,74 @@ import { profile } from '../data/profile';
 import Icon from './Icon.astro';
 import { withBase } from '../lib/url';
 const capabilities = [
-  { title: 'Build the application', code: 'application/', tools: ['C# & .NET', 'Angular', 'Flutter', 'React'], context: 'Enterprise web, mobile and desktop.', detail: 'career-4' },
-  { title: 'Connect the business', code: 'integration/', tools: ['REST APIs', 'SAP RFC / ABAP', 'SQL Server', 'PMWeb'], context: 'Data and workflows across real systems.', detail: 'career-3' },
-  { title: 'Deliver on the cloud', code: 'infrastructure/', tools: ['Azure', 'API Management', 'Service Bus', 'Entra ID'], context: 'Application services, messaging and identity.', detail: 'career-3' },
-  { title: 'Keep intelligence local', code: 'intelligence/', tools: ['Python FastAPI', 'Qwen2.5-VL', 'ONNX Runtime', 'n8n'], context: 'On-device research and practical automation.', detail: 'accessflow' },
+  { id: 'application', short: 'App', title: 'Build the application', code: 'application/', tools: ['C# & .NET', 'Angular', 'Flutter', 'React'], context: 'Enterprise web, mobile and desktop.', detail: 'career-4' },
+  { id: 'integration', short: 'Integrate', title: 'Connect the business', code: 'integration/', tools: ['REST APIs', 'SAP RFC / ABAP', 'SQL Server', 'PMWeb'], context: 'Data and workflows across real systems.', detail: 'career-3' },
+  { id: 'infrastructure', short: 'Cloud', title: 'Deliver on the cloud', code: 'infrastructure/', tools: ['Azure', 'API Management', 'Service Bus', 'Entra ID'], context: 'Application services, messaging and identity.', detail: 'career-3' },
+  { id: 'intelligence', short: 'Local AI', title: 'Keep intelligence local', code: 'intelligence/', tools: ['Python FastAPI', 'Qwen2.5-VL', 'ONNX Runtime', 'n8n'], context: 'On-device research and practical automation.', detail: 'accessflow' },
 ];
+const href = (detail: string) => detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${detail}`;
+const icon = (id: string) => withBase(`images/stack/stack-icon-${id}.webp`);
+const { items, categories } = profile.stack;
+const groups = categories.map(category => ({ category, tools: items.filter(item => item.category === category).map(item => item.name) }));
+const totals = `${capabilities.length} capabilities · ${categories.length} categories · ${items.length} tools & practices`;
 ---
 <section id="stack" class="story-scene scene-stack" data-scene aria-labelledby="story-stack-title">
   <div class="chapter-heading"><div><p class="scene-eyebrow">A toolkit, not a trophy cabinet</p><h2 id="story-stack-title">The right tool.<br />For the actual problem.</h2></div><p class="chapter-context">A decade of production experience.<br />Still learning. Still building.</p></div>
-  <div class="capability-grid">{capabilities.map(item => (
-    <article class="capability">
-      <p class="capability-path">{item.code}</p><h3>{item.title}</h3>
-      <ul>{item.tools.map(tool => <li>{tool}</li>)}</ul>
-      <a href={item.detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${item.detail}`} data-detail={item.detail}>{item.context}<Icon name="arrow-up-right" size={15} /></a>
-    </article>
-  ))}</div>
-  <div class="stack-footer"><p>See where the tools were used, not an invented proficiency score.</p><a class="story-link" href="#detail-stack" data-detail="stack">Explore all {profile.stack.items.length} tools &amp; practices <Icon name="arrow-up-right" size={16} /></a></div>
+  <div class="stack-app" data-stack-app>
+    <div class="stack-window">
+      <div class="stack-titlebar">
+        <span class="stack-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+        <p>Stack</p>
+        <a class="stack-search" href="#detail-stack" data-detail="stack" data-stack-search-open><Icon name="search" size={14} />Search {items.length} tools</a>
+      </div>
+      <div class="stack-body">
+        <div class="stack-sidebar">
+          <p class="stack-label" id="stack-capabilities-label">Capabilities</p>
+          <div class="stack-tabs" role="tablist" aria-labelledby="stack-capabilities-label" aria-orientation="vertical">
+            {capabilities.map((item, index) => (
+              <button type="button" role="tab" id={`stack-tab-${item.id}`} aria-controls={`stack-panel-${item.id}`} aria-selected={String(index === 0)} tabindex={index === 0 ? 0 : -1} aria-label={item.title} data-stack-tab={index}>
+                <img src={icon(item.id)} width="22" height="22" alt="" decoding="async" /><span class="stack-tab-long">{item.title}</span><span class="stack-tab-short" aria-hidden="true">{item.short}</span>
+              </button>
+            ))}
+            <button type="button" role="tab" id="stack-tab-index" class="stack-tab-index" aria-controls="stack-panel-index" aria-selected="false" tabindex="-1" aria-label={`Index of all ${items.length} tools and practices`} data-stack-tab={capabilities.length}>
+              <span class="stack-index-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="stack-tab-long">Index · {items.length}</span><span class="stack-tab-short" aria-hidden="true">Index</span>
+            </button>
+          </div>
+          <ul class="stack-categories-list" aria-label="Open the index by category">
+            {groups.map(group => <li><a href="#detail-stack" data-detail="stack" data-stack-filter={group.category}>{group.category}<span>{group.tools.length}</span></a></li>)}
+          </ul>
+        </div>
+        <div class="stack-panes">
+          {capabilities.map((item, index) => (
+            <article class="stack-pane" role="tabpanel" id={`stack-panel-${item.id}`} aria-labelledby={`stack-tab-${item.id}`} data-stack-pane={index} data-stack-code={item.code}>
+              <img class="stack-pane-icon" src={icon(item.id)} width="160" height="160" alt="" decoding="async" loading="lazy" />
+              <div class="stack-pane-copy">
+                <p class="stack-pane-path">0{index + 1} / 0{capabilities.length} · {item.code}</p>
+                <h3>{item.title}</h3>
+                <p class="stack-pane-context">{item.context}</p>
+                <ul class="stack-chips">{item.tools.map(tool => <li>{tool}</li>)}</ul>
+                <a class="stack-pane-link" href={href(item.detail)} data-detail={item.detail}>See where this was used <Icon name="arrow-up-right" size={15} /></a>
+              </div>
+              <ol class="stack-rail" aria-hidden="true">{capabilities.map((_, step) => <li class:list={{ 'is-filled': step <= index }}></li>)}</ol>
+            </article>
+          ))}
+          <section class="stack-pane stack-index" role="tabpanel" id="stack-panel-index" aria-labelledby="stack-tab-index" data-stack-pane={capabilities.length} data-stack-code="index/">
+            <div class="stack-index-head"><div><h3>All tools &amp; practices</h3><p>The full list, not an invented proficiency score.</p></div><a class="stack-cta" href="#detail-stack" data-detail="stack">Explore all {items.length} tools &amp; practices <Icon name="arrow-up-right" size={16} /></a></div>
+            <div class="stack-index-grid">
+              {groups.map(group => (
+                <div class="stack-index-group">
+                  <h4><a href="#detail-stack" data-detail="stack" data-stack-filter={group.category}>{group.category}<span>{group.tools.length}</span></a></h4>
+                  <p>{group.tools.map(tool => <span>{tool}</span>)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="stack-status"><span class="stack-path"><i></i><span data-stack-path>{capabilities[0].code}</span></span><span>{totals}</span></div>
+    </div>
+    <nav class="stack-dock" aria-label="Where each capability was used">
+      {capabilities.map((item, index) => <a href={href(item.detail)} data-detail={item.detail} data-stack-dock={index} aria-label={`${item.title}: see where this was used`}><img src={icon(item.id)} width="56" height="56" alt="" decoding="async" /></a>)}
+    </nav>
+  </div>
 </section>
