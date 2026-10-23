@@ -1,0 +1,40 @@
+---
+import { withBase } from '../lib/url';
+
+interface Props {
+  current: 'new' | 'classic';
+}
+
+const { current } = Astro.props;
+---
+
+<nav class="version-switch" aria-label="Portfolio version">
+  <a href={withBase('/')} aria-current={current === 'new' ? 'page' : undefined}>New</a>
+  <a href={withBase('classic/')} aria-current={current === 'classic' ? 'page' : undefined}>Original</a>
+</nav>
+
+<style>
+  .version-switch {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 550;
+  }
+
+  a {
+    display: grid;
+    place-items: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  a:hover { color: var(--fg); }
+  a[aria-current] { background: var(--fg); color: var(--bg); }
+</style>

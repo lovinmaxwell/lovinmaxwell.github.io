@@ -5,6 +5,12 @@ import { withBase } from '../lib/url';
 
 type IconName = SocialIcon | 'hash' | 'copy' | 'sun' | 'file' | 'arrow-up-right';
 
+interface Props {
+  allowThemeToggle?: boolean;
+}
+
+const { allowThemeToggle = true } = Astro.props;
+
 interface Item {
   label: string;
   hint?: string;
@@ -34,7 +40,7 @@ const groups: { id: string; label: string; items: Item[] }[] = [
     label: palette.groups.actions,
     items: [
       { label: palette.actions.copyEmail, hint: profile.email, icon: 'copy', kind: 'copy' },
-      { label: palette.actions.toggleTheme, icon: 'sun', kind: 'theme', keywords: 'dark light mode' },
+      ...(allowThemeToggle ? [{ label: palette.actions.toggleTheme, icon: 'sun', kind: 'theme', keywords: 'dark light mode' } satisfies Item] : []),
       { label: palette.actions.openProfile, icon: 'file', kind: 'link', href: withBase(json.path), keywords: 'download' },
       { label: palette.actions.openLlms, icon: 'file', kind: 'link', href: withBase(llms.path), keywords: 'ai agents' },
     ],

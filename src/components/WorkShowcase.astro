@@ -1,0 +1,43 @@
+---
+import { profile } from '../data/profile';
+import { withBase } from '../lib/url';
+import Icon from './Icon.astro';
+const selected = profile.projects.items.filter(project => ['HolyWhisper', 'AccessFlow', 'DiskManager Pro'].includes(project.name));
+const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+---
+<section id="projects" class="story-scene scene-work" data-scene aria-labelledby="work-title">
+  <div class="work-heading"><div><p class="scene-eyebrow">Independent products &amp; engineering studies</p><h2 id="work-title">Work, in context.</h2></div><span class="gallery-hint">Scroll / drag to explore</span></div>
+  <div class="work-window" data-work-window data-horizontal="work" role="region" aria-label="Selected projects" tabindex="0">
+    <div class="work-track" data-work-track data-horizontal-track>
+      {selected.map((project, index) => (
+        <a class:list={['work-piece', `piece-${slug(project.name)}`]} href={withBase(`classic/#project-${slug(project.name)}`)} data-project={slug(project.name)} data-horizontal-item>
+          <div class="work-art">
+            {project.images ? (
+              <div class="work-phones">{project.images.slice(0, 2).map(image => <img src={withBase(image.src)} alt={image.alt} width={image.width} height={image.height} loading="lazy" />)}</div>
+            ) : project.name === 'AccessFlow' ? (
+              <div class="access-study" aria-hidden="true"><span>accessflow / on-device pipeline</span><div class="document-outline"><i></i><div><b></b><b></b><b></b></div></div><div class="access-path"><span>Capture</span><i></i><span>Read</span><i></i><span>Confirm</span></div><strong>Local by design.</strong><small>No ID upload to the cloud.</small></div>
+            ) : (
+              <div class="disk-study" aria-hidden="true"><span>diskmanager pro / macOS</span><div class="storage-map"><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>Make room for<br />what comes next.</strong></div>
+            )}
+            {!project.images && <small class="concept-disclaimer">Concept artwork, not a product screenshot</small>}
+          </div>
+          <div class="work-copy">
+            <p class="work-piece-meta"><span>0{index + 1}</span><span>{index === 0 ? 'Mobile product' : index === 1 ? 'On-device AI' : 'macOS application'}</span></p>
+            <h3>{project.name}</h3>
+            <p class="work-description">{project.description}</p>
+            {project.stack && <p class="work-technologies">{project.stack.slice(0, 3).join(' / ')}</p>}
+            <p class="work-status">{project.statuses.map(status => status.label).join(' / ')}</p>
+            <span class="work-open">Inside the project <Icon name="arrow-up-right" size={18} /></span>
+          </div>
+        </a>
+      ))}
+      {profile.caseStudies.items.map((study, index) => (
+        <a class="work-piece piece-study" href={withBase(study.path)} data-study={study.slug} data-horizontal-item>
+          <div class="work-art"><img src={withBase(study.gif.still)} width={study.gif.width} height={study.gif.height} alt={study.gif.alt} loading="lazy" /></div>
+          <div class="work-copy"><p class="work-piece-meta"><span>0{selected.length + index + 1}</span><span>Engineering study</span></p><h3>Document routing.</h3><p class="work-description">{study.description}</p><p class="work-technologies">{study.tags.slice(0, 3).join(' / ')}</p><p class="work-status">Reference demo / scripted mock values, not live Azure or Jev results</p><span class="work-open">Read the case study <Icon name="arrow-up-right" size={18} /></span></div>
+        </a>
+      ))}
+    </div>
+  </div>
+  <div class="work-footer"><a class="story-link" href="#detail-workbench" data-detail="workbench">View the full workbench <Icon name="arrow-up-right" size={16} /></a><div class="gallery-controls"><button type="button" data-gallery-prev data-horizontal-prev="work" aria-label="Previous project">←</button><button type="button" data-gallery-next data-horizontal-next="work" aria-label="Next project">→</button></div></div>
+</section>

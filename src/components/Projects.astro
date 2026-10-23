@@ -23,7 +23,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
     <div class="mt-10 grid gap-4 lg:grid-cols-2">
       {
         featured.map((p) => (
-          <article class="card grid gap-8 p-6! sm:p-9! lg:col-span-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12" data-reveal>
+          <article id={`project-${p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} class="card grid gap-8 p-6! sm:p-9! lg:col-span-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12" data-reveal>
             <div class="flex flex-col">
               <p class="label">{projects.featuredLabel}</p>
               <h3 class="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">{p.name}</h3>
@@ -133,7 +133,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
 
       {
         others.map((p, i) => (
-          <article class="card flex flex-col p-6! sm:p-7!" data-reveal style={`--d: ${i * 70}ms`}>
+          <article id={`project-${p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} class="card flex flex-col p-6! sm:p-7!" data-reveal style={`--d: ${i * 70}ms`}>
             <ul class="flex flex-wrap gap-2">
               {p.statuses.map((s) => (
                 <li class="status" data-tone={s.tone}>

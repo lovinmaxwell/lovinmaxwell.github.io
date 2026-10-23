@@ -10,6 +10,7 @@ import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal
 import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 interface Props {
+  appearance?: 'immersive';
   /** Page title. Defaults to the home page title. */
   title?: string;
   description?: string;
@@ -42,7 +43,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-appearance={props.appearance}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -55,7 +56,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
         try {
           stored = localStorage.getItem('theme');
         } catch (e) {}
-        root.dataset.theme = stored === 'light' ? 'light' : 'dark';
+        root.dataset.theme = root.dataset.appearance ? 'dark' : stored === 'light' ? 'light' : 'dark';
         root.classList.add('js');
       })();
     </script>
@@ -64,7 +65,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
     <meta name="description" content={description} />
     <meta name="author" content={profile.name} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content={seo.themeColorDark} />
+    <meta name="theme-color" content={props.appearance ? '#0c1219' : seo.themeColorDark} />
     <meta name="generator" content={Astro.generator} />
 
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
@@ -132,7 +133,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
 
     <p id="toast" class="toast" role="status" aria-live="polite"></p>
 
-    <script is:inline define:vars={{ dark: seo.themeColorDark, light: seo.themeColorLight }}>
+    <script is:inline define:vars={{ dark: props.appearance ? '#0c1219' : seo.themeColorDark, light: seo.themeColorLight }}>
       (function () {
         var root = document.documentElement;
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -147,6 +148,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
           });
         }
         function toggleTheme() {
+          if (root.dataset.appearance) return;
           var next = root.dataset.theme === 'light' ? 'dark' : 'light';
           try {
             localStorage.setItem('theme', next);

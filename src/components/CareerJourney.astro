@@ -1,0 +1,38 @@
+---
+import { profile } from '../data/profile';
+import Icon from './Icon.astro';
+const degree = profile.education.items.find(item => item.label === 'Education')!;
+const jobs = [...profile.experience.jobs].reverse();
+---
+
+<section id="experience" class="story-scene scene-journey" data-scene aria-labelledby="journey-title">
+  <div class="chapter-heading">
+    <div><p class="scene-eyebrow">2012 to now / Education &amp; experience</p><h2 id="journey-title">From circuits to systems.</h2></div>
+    <p class="chapter-context">India to Qatar.<br />A career built one real problem at a time.</p>
+  </div>
+  <div class="journey-route" aria-hidden="true"><span>Anna University</span><i></i><span>Bangalore</span><i></i><span>Al Wakrah</span><i></i><span>Doha</span><i></i><span>Lusail</span><i></i><span>Doha / now</span></div>
+  <div class="journey-window" data-horizontal="journey" tabindex="0" role="region" aria-label="Education and career timeline">
+    <div class="journey-track" data-horizontal-track>
+      <article class="journey-stop" data-horizontal-item>
+        <div class="journey-date"><span>2012</span><span>2016</span></div>
+        <p class="journey-location">The foundation / {degree.org}</p>
+        <h3>{degree.title}</h3>
+        <p class="journey-summary">An engineering foundation in how things work, before a career building the software that connects them.</p>
+        <p class="journey-qualification">{degree.detail} / {degree.date}</p>
+        <a href="#detail-education" class="story-link" data-detail="education">Education &amp; certifications <Icon name="arrow-up-right" size={17} /></a>
+      </article>
+      {jobs.map((job, index) => (
+        <article class:list={['journey-stop', job.current && 'journey-current']} data-horizontal-item>
+          <div class="journey-date"><span>{job.period.match(/\d{4}/)?.[0]}</span><span>{job.current ? 'Now' : job.period.match(/\d{4}/g)?.[1]}</span></div>
+          <p class="journey-location">{job.location}{index === 1 ? ' / First Qatar role' : ''}{job.current ? ' / Current role' : ''}</p>
+          <h3>{job.company}</h3>
+          <p class="journey-role">{job.role}</p>
+          <p class="journey-summary">{job.summary}</p>
+          <p class="journey-period">{job.period}</p>
+          <a href={`#detail-career-${index}`} class="story-link" data-detail={`career-${index}`}>Explore this role <Icon name="arrow-up-right" size={17} /></a>
+        </article>
+      ))}
+    </div>
+  </div>
+  <div class="journey-footer"><span>Scroll through or drag the timeline</span><div class="gallery-controls"><button type="button" data-horizontal-prev="journey" aria-label="Previous career milestone">←</button><button type="button" data-horizontal-next="journey" aria-label="Next career milestone">→</button></div></div>
+</section>

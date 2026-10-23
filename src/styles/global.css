@@ -651,7 +651,7 @@
   }
 
   /* App canvas: true black behind slightly lifted cards. The light theme keeps its own palette. */
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-appearance="immersive"]) {
     --bg: #000000;
     --card: #0e0e10;
     --raised: #1a1a1d;

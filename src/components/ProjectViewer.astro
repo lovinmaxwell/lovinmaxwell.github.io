@@ -1,0 +1,63 @@
+---
+import { profile } from '../data/profile';
+import { withBase } from '../lib/url';
+import Icon from './Icon.astro';
+import StackCatalog from './StackCatalog.astro';
+const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+---
+
+{profile.projects.items.filter(project => ['HolyWhisper', 'AccessFlow', 'DiskManager Pro'].includes(project.name)).map(project => (
+  <dialog class="project-viewer" id={`detail-${slug(project.name)}`} aria-labelledby={`detail-title-${slug(project.name)}`}>
+    <div class="viewer-toolbar"><span>Inside the work</span><button type="button" data-viewer-close aria-label="Close project">Back to the story <Icon name="x" size={20} /></button></div>
+    <div class="viewer-content">
+      <p class="scene-eyebrow">{project.statuses.map(status => status.label).join(' / ')}</p>
+      <h2 id={`detail-title-${slug(project.name)}`}>{project.name}</h2>
+      <p class="viewer-intro">{project.description}</p>
+      {project.images && <div class="viewer-images">{project.images.map(image => <img src={withBase(image.src)} alt={image.alt} width={image.width} height={image.height} loading="lazy" />)}</div>}
+      <div class="viewer-columns"><div><h3>The problem</h3><p>{project.problem}</p></div><div><h3>The approach</h3><ul>{project.approach.map(item => <li>{item}</li>)}</ul></div></div>
+      {project.features && <div class="viewer-features"><h3>What it does</h3><ul>{project.features.map(feature => <li>{feature}</li>)}</ul></div>}
+      {project.stack && <p class="viewer-stack">{project.stack.join(' / ')}</p>}
+      {project.link && <a class="story-link" href={project.link.href} target="_blank" rel="noopener noreferrer">{project.link.label}<Icon name="arrow-up-right" size={18} /><span class="sr-only"> (opens in a new tab)</span></a>}
+    </div>
+  </dialog>
+))}
+{profile.caseStudies.items.map(study => (
+  <dialog class="project-viewer study-viewer" id={`detail-${study.slug}`} aria-label={study.title}>
+    <div class="viewer-toolbar"><a href={withBase(study.path)}>Open full case study <Icon name="arrow-up-right" size={16} /></a><button type="button" data-viewer-close aria-label="Close case study">Back to the story <Icon name="x" size={20} /></button></div>
+    <iframe data-study-src={withBase(study.path)} title={study.title}></iframe>
+  </dialog>
+))}
+
+{[...profile.experience.jobs].reverse().map((job, index) => (
+  <dialog class="project-viewer story-dossier" id={`detail-career-${index}`} aria-labelledby={`career-title-${index}`}>
+    <div class="viewer-toolbar"><span>Career / {job.location}</span><button type="button" data-viewer-close aria-label="Close career details">Back to the journey <Icon name="x" size={20} /></button></div>
+    <div class="viewer-content">
+      <p class="scene-eyebrow">{job.period}{job.current ? ' / Current role' : ''}</p>
+      <h2 id={`career-title-${index}`}>{job.company}</h2>
+      <h3 class="career-viewer-role">{job.role}</h3>
+      <p class="viewer-intro">{job.summary}</p>
+      <div class="viewer-features"><h3>What I worked on</h3><ul>{job.bullets.map(bullet => <li>{bullet}</li>)}</ul></div>
+      <h3>Technology in the role</h3>
+      <ul class="career-tech">{job.stack.map(tool => <li>{tool}</li>)}</ul>
+    </div>
+  </dialog>
+))}
+<dialog class="project-viewer story-dossier" id="detail-education" aria-labelledby="education-viewer-title">
+  <div class="viewer-toolbar"><span>Foundation &amp; continued learning</span><button type="button" data-viewer-close aria-label="Close education details">Back to the journey <Icon name="x" size={20} /></button></div>
+  <div class="viewer-content">
+    <h2 id="education-viewer-title">The learning never stopped.</h2>
+    {profile.education.items.map(item => <article class="education-record"><p class="scene-eyebrow">{item.date} / {item.label}</p><h3>{item.title}</h3><p>{item.org}{item.detail ? ` / ${item.detail}` : ''}</p></article>)}
+    <h3>Further study</h3>
+    <ul>{profile.education.courses.map(course => <li><strong>{course.title}</strong><br />{course.org} / {course.date}</li>)}</ul>
+  </div>
+</dialog>
+<dialog class="project-viewer story-dossier" id="detail-stack" aria-labelledby="catalog-title">
+  <div class="viewer-toolbar"><span>Tools &amp; practices</span><button type="button" data-viewer-close aria-label="Close technology index">Back to the toolkit <Icon name="x" size={20} /></button></div>
+  <div class="viewer-content"><h2 id="catalog-title">The full technology index.</h2><StackCatalog /></div>
+</dialog>
+<noscript>
+  <style is:global>
+    dialog.story-dossier { display: block; position: relative; inset: auto; width: 100%; height: auto; max-height: none; margin-top: 24px; }
+    dialog.story-dossier .viewer-toolbar button { display: none; }
+  </style>
+</noscript>

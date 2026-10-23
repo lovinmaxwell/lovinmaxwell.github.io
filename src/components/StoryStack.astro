@@ -1,0 +1,22 @@
+---
+import { profile } from '../data/profile';
+import Icon from './Icon.astro';
+import { withBase } from '../lib/url';
+const capabilities = [
+  { title: 'Build the application', code: 'application/', tools: ['C# & .NET', 'Angular', 'Flutter', 'React'], context: 'Enterprise web, mobile and desktop.', detail: 'career-4' },
+  { title: 'Connect the business', code: 'integration/', tools: ['REST APIs', 'SAP RFC / ABAP', 'SQL Server', 'PMWeb'], context: 'Data and workflows across real systems.', detail: 'career-3' },
+  { title: 'Deliver on the cloud', code: 'infrastructure/', tools: ['Azure', 'API Management', 'Service Bus', 'Entra ID'], context: 'Application services, messaging and identity.', detail: 'career-3' },
+  { title: 'Keep intelligence local', code: 'intelligence/', tools: ['Python FastAPI', 'Qwen2.5-VL', 'ONNX Runtime', 'n8n'], context: 'On-device research and practical automation.', detail: 'accessflow' },
+];
+---
+<section id="stack" class="story-scene scene-stack" data-scene aria-labelledby="story-stack-title">
+  <div class="chapter-heading"><div><p class="scene-eyebrow">A toolkit, not a trophy cabinet</p><h2 id="story-stack-title">The right tool.<br />For the actual problem.</h2></div><p class="chapter-context">A decade of production experience.<br />Still learning. Still building.</p></div>
+  <div class="capability-grid">{capabilities.map(item => (
+    <article class="capability">
+      <p class="capability-path">{item.code}</p><h3>{item.title}</h3>
+      <ul>{item.tools.map(tool => <li>{tool}</li>)}</ul>
+      <a href={item.detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${item.detail}`} data-detail={item.detail}>{item.context}<Icon name="arrow-up-right" size={15} /></a>
+    </article>
+  ))}</div>
+  <div class="stack-footer"><p>See where the tools were used, not an invented proficiency score.</p><a class="story-link" href="#detail-stack" data-detail="stack">Explore all {profile.stack.items.length} tools &amp; practices <Icon name="arrow-up-right" size={16} /></a></div>
+</section>

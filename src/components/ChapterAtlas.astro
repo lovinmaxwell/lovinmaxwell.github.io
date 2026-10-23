@@ -1,0 +1,46 @@
+---
+import { storyChapters } from '../data/story';
+import { withBase } from '../lib/url';
+const descriptions = [
+  'Meet the person behind the systems.',
+  'How I turn complexity into clarity.',
+  'From engineering foundations to enterprise software.',
+  'Mobile workflows, SAP integration and local-first AI.',
+  'The capabilities and tools behind the work.',
+  'Based in Doha. Start a conversation.',
+];
+---
+<dialog id="chapter-atlas" class="chapter-atlas" aria-labelledby="atlas-title" data-atlas>
+  <div class="atlas-toolbar">
+    <span>Explore at your own pace</span>
+    <button type="button" data-atlas-close aria-label="Close chapter navigator">Close <kbd>Esc</kbd></button>
+  </div>
+  <div class="atlas-heading">
+    <h2 id="atlas-title">Choose your<br />point of entry.</h2>
+    <p>Follow the whole story.<br />Or go straight to what matters to you.</p>
+  </div>
+  <label class="atlas-search">
+    <span>Find a chapter</span>
+    <input type="search" data-atlas-search aria-label="Find a chapter" placeholder="Try journey, SAP, tools..." autocomplete="off" />
+    <kbd>/</kbd>
+  </label>
+  <nav class="atlas-grid" aria-label="Chapter overview">
+    {storyChapters.map((chapter, index) => (
+      <a href={`#${chapter.id}`} data-atlas-chapter={chapter.id} data-atlas-terms={`${chapter.label} ${descriptions[index]}`.toLowerCase()} class={`atlas-card atlas-${chapter.id}`}>
+        <div class="atlas-art" aria-hidden="true">
+          {index === 0 ? <img src={withBase('images/orbital-ribbon.webp')} width="1200" height="1200" alt="" loading="lazy" /> :
+            index === 1 ? <span class="atlas-type">Aa</span> :
+            index === 2 ? <span class="atlas-route"><i /><i /><i /><i /></span> :
+            index === 3 ? <span class="atlas-nodes"><i /><i /><i /></span> :
+            index === 4 ? <span class="atlas-layers"><i /><i /><i /></span> :
+            <span class="atlas-horizon"><i /><i /><i /><i /><i /></span>}
+          <span class="atlas-current">You are here</span>
+        </div>
+        <div class="atlas-card-title"><h3>{chapter.label}</h3><span aria-hidden="true">↗</span></div>
+        <p>{descriptions[index]}</p>
+      </a>
+    ))}
+  </nav>
+  <p class="atlas-empty" data-atlas-empty hidden>No chapters match. Try “journey”, “systems” or “Doha”.</p>
+  <p class="sr-only" role="status" data-atlas-results></p>
+</dialog>

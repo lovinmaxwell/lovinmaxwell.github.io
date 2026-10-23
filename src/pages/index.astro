@@ -1,40 +1,67 @@
 ---
 import Base from '../layouts/Base.astro';
-import Nav from '../components/Nav.astro';
-import Hero from '../components/Hero.astro';
-import Now from '../components/Now.astro';
-import About from '../components/About.astro';
-import Highlights from '../components/Highlights.astro';
-import Domains from '../components/Domains.astro';
-import Stack from '../components/Stack.astro';
-import Experience from '../components/Experience.astro';
-import Projects from '../components/Projects.astro';
-import Archive from '../components/Archive.astro';
-import OpenSource from '../components/OpenSource.astro';
-import Education from '../components/Education.astro';
-import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
-import CommandPalette from '../components/CommandPalette.astro';
-import TabBar from '../components/TabBar.astro';
+import VersionSwitch from '../components/VersionSwitch.astro';
+import ProjectViewer from '../components/ProjectViewer.astro';
+import CareerJourney from '../components/CareerJourney.astro';
+import StoryStack from '../components/StoryStack.astro';
+import QatarFinale from '../components/QatarFinale.astro';
+import OrbitalSculpture from '../components/OrbitalSculpture.astro';
+import SystemsShowcase from '../components/SystemsShowcase.astro';
+import ChapterAtlas from '../components/ChapterAtlas.astro';
+import { storyChapters as chapters } from '../data/story';
+import Icon from '../components/Icon.astro';
+import { profile } from '../data/profile';
+import { withBase } from '../lib/url';
+import { aboutSummary } from '../lib/seo';
+import '../styles/story.css';
+import '../styles/journey.css';
+import '../styles/experience.css';
+const current = profile.experience.jobs.find(job => job.current)!;
 ---
-
-<Base>
-  <Nav />
-  <main id="main">
-    <Hero />
-    <Now />
-    <About />
-    <Highlights />
-    <Domains />
-    <Stack />
-    <Experience />
-    <Projects />
-    <Archive />
-    <OpenSource />
-    <Education />
-    <Contact />
-  </main>
-  <Footer />
-  <TabBar />
-  <CommandPalette />
+<Base appearance="immersive">
+  <div class="story" data-story data-motion="off">
+    <div class="story-stage">
+      <div class="story-grain" aria-hidden="true" style={`background-image:url("${withBase('images/story-grain.png')}")`}></div>
+      <header class="story-header">
+        <a class="story-name" href="#top" data-chapter="top"><span class="name-symbol" aria-hidden="true">lm/</span>Lovin Maxwell<span class="story-available"><i></i>{profile.availability}</span></a>
+        <nav class="story-header-links" aria-label="Main navigation"><a href="#experience" data-chapter="experience">Journey</a><a href="#systems" data-chapter="systems">Systems</a><a href="#stack" data-chapter="stack">Stack</a><a href="#contact" data-chapter="contact">Contact</a></nav>
+        <div class="story-controls">
+          <button type="button" class="atlas-trigger" data-atlas-open aria-label="Explore chapters" aria-haspopup="dialog" aria-controls="chapter-atlas"><span class="atlas-trigger-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Explore</span><kbd>⌘ K</kbd></button>
+          <button type="button" class="motion-toggle" aria-pressed="false" aria-label="Enable animations" data-motion-toggle><span class="motion-bars" aria-hidden="true"><i></i><i></i><i></i></span><span data-motion-label>Motion off</span></button>
+          <VersionSwitch current="new" />
+        </div>
+      </header>
+      <main id="main" class="story-panels">
+        <section id="top" class="story-scene scene-intro" data-scene aria-labelledby="intro-title">
+          <div class="intro-copy">
+            <p class="scene-eyebrow intro-eyebrow">Solution architect &amp; full-stack engineer</p>
+            <h1 id="intro-title" aria-label={profile.name}><span>Lovin</span><span>Maxwell.</span></h1>
+            <p class="intro-statement">I turn complicated operations<br />into software that makes sense.</p>
+            <a class="story-link" href="#experience" data-chapter="experience">Explore the journey <Icon name="arrow-up-right" size={18} /></a>
+          </div>
+          <OrbitalSculpture />
+          <div class="intro-bottom"><a class="scroll-invitation" href="#about" data-chapter="about"><span class="scroll-stroke" aria-hidden="true"></span>Scroll to explore</a><p>Enterprise foundations.<br />Independent ambition.</p><span class="intro-location">Based in Doha, Qatar<br />Building across boundaries.</span></div>
+          <p class="sr-only" id="summary">{aboutSummary}</p>
+        </section>
+        <section id="about" class="story-scene scene-about" data-scene aria-labelledby="about-title">
+          <div class="about-copy"><p class="scene-eyebrow">The person behind the systems</p><h2 id="about-title">Complexity in.<br />Clarity out.</h2><p class="scene-body">The applications that don't speak to each other. The process everyone works around. The idea that needs someone to actually build it.</p><p class="scene-body about-resolution">I work across the interface, the business logic, and the integrations that make the whole thing useful.</p><a class="story-link" href="#experience" data-chapter="experience">Follow the career journey <Icon name="arrow-up-right" size={18} /></a></div>
+          <aside class="about-ledger" aria-label="Engineering background"><div><span>Foundation</span><strong>Electrical &amp; electronics</strong><small>Anna University / 2012–2016</small></div><div><span>Practice</span><strong>10+ years in software</strong><small>Applications, cloud &amp; integration</small></div><div><span>Currently</span><strong>{current.company}</strong><small>{current.role}</small></div></aside>
+        </section>
+        <CareerJourney />
+        <SystemsShowcase />
+        <StoryStack />
+        <QatarFinale />
+      </main>
+      <nav class="story-timeline" aria-label="Story chapters">
+        <div class="timeline-track" aria-hidden="true"><span data-story-progress></span></div>
+        {chapters.map((chapter, index) => <a href={`#${chapter.id}`} data-chapter={chapter.id}><span class="chapter-index">0{index + 1}</span>{chapter.label}</a>)}
+      </nav>
+    </div>
+  </div>
+  <ProjectViewer />
+  <ChapterAtlas />
+  <script>
+    import { initStory } from '../lib/story';
+    initStory();
+  </script>
 </Base>

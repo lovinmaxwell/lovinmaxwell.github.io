@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import VersionSwitch from './VersionSwitch.astro';
 import { profile } from '../data/profile';
 ---
 
@@ -40,8 +41,8 @@ import { profile } from '../data/profile';
         aria-keyshortcuts="Meta+K Control+K"
       >
         <Icon name="search" size={16} />
-        <span class="hidden text-sm min-[22.5rem]:inline">{profile.palette.button}</span>
-        <kbd class="kbd hidden sm:inline-flex">⌘K</kbd>
+        <span class="hidden text-sm min-[22.5rem]:inline lg:max-xl:hidden">{profile.palette.button}</span>
+        <kbd class="kbd hidden sm:inline-flex lg:max-xl:hidden">⌘K</kbd>
       </button>
 
       <button
@@ -55,9 +56,7 @@ import { profile } from '../data/profile';
         <Icon name="moon" size={16} class="theme-icon-moon" />
       </button>
 
-      <a href={profile.cta.hire.href} class="btn btn-primary tap-area h-10 rounded-lg px-3.5 max-lg:hidden lg:h-9">
-        {profile.cta.hire.label}
-      </a>
+      <VersionSwitch current="classic" />
 
     </div>
   </div>

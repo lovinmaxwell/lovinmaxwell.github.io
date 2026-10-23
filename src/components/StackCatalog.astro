@@ -1,0 +1,20 @@
+---
+import { profile } from '../data/profile';
+const { stack } = profile;
+---
+<div class="stack-console">
+  <div class="stack-console-bar"><span>Technology index</span><span data-stack-total aria-live="polite">{stack.items.length} tools &amp; practices</span></div>
+  <div class="stack-console-body">
+    <div class="stack-categories" role="group" aria-label="Technology categories">
+      <button type="button" data-story-filter="all" aria-pressed="true">All tools <span>{stack.items.length}</span></button>
+      {stack.categories.map(category => <button type="button" data-story-filter={category} aria-pressed="false">{category}<span>{stack.items.filter(item => item.category === category).length}</span></button>)}
+    </div>
+    <div class="stack-catalog">
+      {stack.categories.map(category => (
+        <section class="stack-group" data-story-category={category} aria-label={category}>
+          <h3>{category}</h3><ul>{stack.items.filter(item => item.category === category).map(item => <li><strong>{item.name}</strong>{item.detail && <span>{item.detail}</span>}{item.note && <small>{item.note}</small>}</li>)}</ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</div>
