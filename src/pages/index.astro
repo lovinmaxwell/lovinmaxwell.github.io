@@ -5,7 +5,7 @@ import ProjectViewer from '../components/ProjectViewer.astro';
 import CareerJourney from '../components/CareerJourney.astro';
 import StoryStack from '../components/StoryStack.astro';
 import QatarFinale from '../components/QatarFinale.astro';
-import OrbitalSculpture from '../components/OrbitalSculpture.astro';
+import NeuralCore from '../components/NeuralCore.astro';
 import SystemsShowcase from '../components/SystemsShowcase.astro';
 import ChapterAtlas from '../components/ChapterAtlas.astro';
 import { storyChapters as chapters } from '../data/story';
@@ -13,6 +13,8 @@ import Icon from '../components/Icon.astro';
 import { profile } from '../data/profile';
 import { withBase } from '../lib/url';
 import { aboutSummary } from '../lib/seo';
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 import '../styles/story.css';
 import '../styles/journey.css';
 import '../styles/experience.css';
@@ -21,6 +23,7 @@ const current = profile.experience.jobs.find(job => job.current)!;
 <Base appearance="immersive">
   <div class="story" data-story data-motion="off">
     <div class="story-stage">
+      <div class="story-field" aria-hidden="true" style={`--field-image:url("${withBase('images/ambient-field.webp')}")`}></div>
       <div class="story-grain" aria-hidden="true" style={`background-image:url("${withBase('images/story-grain.png')}")`}></div>
       <header class="story-header">
         <a class="story-name" href="#top" data-chapter="top"><span class="name-symbol" aria-hidden="true">lm/</span>Lovin Maxwell<span class="story-available"><i></i>{profile.availability}</span></a>
@@ -39,7 +42,7 @@ const current = profile.experience.jobs.find(job => job.current)!;
             <p class="intro-statement">I turn complicated operations<br />into software that makes sense.</p>
             <a class="story-link" href="#experience" data-chapter="experience">Explore the journey <Icon name="arrow-up-right" size={18} /></a>
           </div>
-          <OrbitalSculpture />
+          <NeuralCore />
           <div class="intro-bottom"><a class="scroll-invitation" href="#about" data-chapter="about"><span class="scroll-stroke" aria-hidden="true"></span>Scroll to explore</a><p>Enterprise foundations.<br />Independent ambition.</p><span class="intro-location">Based in Doha, Qatar<br />Building across boundaries.</span></div>
           <p class="sr-only" id="summary">{aboutSummary}</p>
         </section>

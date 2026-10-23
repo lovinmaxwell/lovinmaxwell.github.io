@@ -1,6 +1,8 @@
 ---
 import Icon from './Icon.astro';
 import { withBase } from '../lib/url';
+const chipIdle = withBase('images/node-chip-idle-232.webp');
+const chipActive = withBase('images/node-chip-active-232.webp');
 const systems = [
   {
     id: 'enterprise', label: 'Enterprise mobility', context: 'Hamad Medical Corporation',
@@ -49,7 +51,7 @@ const systems = [
   {systems.map(system => (
     <article class="system-walkthrough" data-system-panel={system.id}>
       <div class="system-context"><span>{system.context}</span><span>Architecture walkthrough</span><button type="button" class="system-reset" data-system-reset>Reset to overview</button></div>
-      <ol class="system-flow">{system.nodes.map(node => <li class="flow-node"><span class="flow-mark">{node.mark}</span><strong>{node.name}</strong><button type="button" class="flow-inspect" data-system-step data-step-title={node.name} data-step-description={node.explanation} aria-pressed="false" aria-controls={`system-explanation-${system.id}`}><span class="sr-only">Inspect {node.name}</span><span aria-hidden="true">↗</span></button><span>{node.detail}</span></li>)}</ol>
+      <ol class="system-flow">{system.nodes.map(node => <li class="flow-node"><span class="flow-chip" aria-hidden="true"><img src={chipIdle} alt="" width="232" height="179" loading="lazy" decoding="async" /><img src={chipActive} alt="" width="232" height="179" loading="lazy" decoding="async" /></span><span class="flow-mark">{node.mark}</span><strong>{node.name}</strong><button type="button" class="flow-inspect" data-system-step data-step-title={node.name} data-step-description={node.explanation} aria-pressed="false" aria-controls={`system-explanation-${system.id}`}><span class="sr-only">Inspect {node.name}</span><span aria-hidden="true">↗</span></button><span>{node.detail}</span></li>)}</ol>
       <div class="system-explanation" id={`system-explanation-${system.id}`} aria-live="polite" aria-atomic="true"><h3 data-system-heading>{system.title}</h3><p data-system-description>{system.description}</p></div>
       <div class="system-foot"><p>{system.note}</p><a href={system.detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${system.detail}`} class="story-link" data-detail={system.detail}>{system.link}<Icon name="arrow-up-right" size={16} /></a></div>
     </article>

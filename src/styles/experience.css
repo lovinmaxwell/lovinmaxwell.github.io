@@ -7,26 +7,6 @@
 .story-controls { gap: 16px; }
 .story-available { margin-left: 0; }
 .scene-intro { isolation: isolate; }
-.scene-intro::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(118deg, transparent 47%, #c0d6e410 47.2%, transparent 66%); }
-.orbital-art { top: 14%; height: 65%; width: 42%; right: 4%; background: radial-gradient(ellipse at 52% 38%, #718a9c50, transparent 67%), linear-gradient(155deg, #18232e, #080d13 78%); border-radius: 0; overflow: hidden; clip-path: polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px); }
-.orbital-art::before { content: ""; position: absolute; inset: auto 0 0; height: 28%; background: #060a10; clip-path: polygon(0 52%, 7% 52%, 7% 23%, 10% 18%, 13% 23%, 13% 70%, 21% 70%, 21% 42%, 29% 42%, 29% 62%, 35% 62%, 35% 12%, 40% 0, 45% 12%, 45% 58%, 54% 58%, 54% 34%, 62% 34%, 62% 67%, 70% 67%, 70% 21%, 77% 21%, 77% 51%, 87% 51%, 87% 36%, 94% 36%, 94% 65%, 100% 65%, 100% 100%, 0 100%); }
-.orbital-field { position: absolute; inset: 7% 0; perspective: 900px; }
-.orbital-object { position: absolute; inset: 3%; transform: rotateX(var(--orbit-y, 0deg)) rotateY(var(--orbit-x, 0deg)); transition: transform .65s cubic-bezier(.2,.8,.2,1); }
-.orbital-meridian, .orbital-equator { position: absolute; inset: 7% 12%; border: 1px solid #b6c2cc38; border-radius: 50%; }
-.orbital-meridian { transform: rotate(-32deg) scaleX(.62); border-style: dashed; }
-.orbital-equator { transform: rotate(-32deg) scaleY(.6); }
-.orbital-field::after { content: ""; position: absolute; inset: 8%; border-block: 1px solid #b6c2cc20; transform: rotate(-32deg); }
-.orbital-coordinate { position: absolute; left: 7%; right: 7%; display: flex; justify-content: space-between; gap: 20px; font: 9px/1.5 var(--font-mono); color: var(--muted); }
-.orbital-coordinate-top { top: 24px; }
-.orbital-coordinate-bottom { bottom: 24px; }
-.orbital-coordinate-top span:last-child { text-align: right; }
-.orbital-cross { position: absolute; color: var(--accent); font: 16px var(--font-mono); }
-.orbital-cross-a { top: 16%; right: 12%; }
-.orbital-cross-b { bottom: 17%; left: 12%; }
-.orbital-interaction { visibility: hidden; }
-@media (hover: hover) and (pointer: fine) {
-  [data-motion="on"] .orbital-interaction { visibility: visible; }
-}
 .story-timeline a { position: relative; }
 .story-timeline a::after { content: ""; position: absolute; inset: -20px 0 auto; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .25s; }
 .story-timeline a[aria-current]::after { transform: scaleX(1); }
@@ -97,7 +77,6 @@
 @media (width < 850px) {
   .story-header-links { display: none; }
   .story-header-links + .story-controls { margin-left: auto; }
-  .orbital-coordinate { font-size: 7px; }
 }
 @media (width < 700px) {
   .system-context > span:nth-child(2) { display: none; }
@@ -105,10 +84,6 @@
   .flow-inspect > span[aria-hidden] { top: 8px; right: 10px; font-size: 13px; }
   .story-controls { gap: 10px; }
   .atlas-trigger { font-size: 10px; gap: 6px; }
-  .orbital-art { width: calc(100% - 40px); height: 34%; right: 20px; top: 48%; }
-  .orbital-coordinate { left: 7%; right: 7%; }
-  .orbital-coordinate-top { display: none; }
-  .orbital-coordinate-bottom { bottom: 14px; }
   .story-timeline a::after { top: -12px; }
   .chapter-atlas { width: calc(100% - 20px); max-height: calc(100dvh - 20px); padding: 16px 20px 24px; border-radius: 3px; }
   .atlas-heading { margin-top: 14px; }
@@ -130,7 +105,6 @@
   .atlas-trigger { width: 30px; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .orbital-object, .story-timeline a::after, .story-link svg, .atlas-art, .flow-node { transition: none; }
   .story-link:hover svg { transform: none; }
 }
 html[data-story-motion="off"] .story-link svg { transition: none; transform: none; }

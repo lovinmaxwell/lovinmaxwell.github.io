@@ -8,6 +8,8 @@ import { homeLd } from '../lib/seo';
 // Preload the two Latin variable fonts the first screen uses. Vite hashes them to the same files the CSS loads.
 import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMonoLatin from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
 
 interface Props {
   appearance?: 'immersive';
@@ -65,15 +67,15 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
     <meta name="description" content={description} />
     <meta name="author" content={profile.name} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content={props.appearance ? '#0c1219' : seo.themeColorDark} />
+    <meta name="theme-color" content={props.appearance ? '#07090d' : seo.themeColorDark} />
     <meta name="generator" content={Astro.generator} />
 
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     {seo.googleSiteVerification && <meta name="google-site-verification" content={seo.googleSiteVerification} />}
     {seo.bingSiteVerification && <meta name="msvalidate.01" content={seo.bingSiteVerification} />}
 
-    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={props.appearance ? geistLatin : interLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={props.appearance ? geistMonoLatin : monoLatin} as="font" type="font/woff2" crossorigin />
 
     <link rel="icon" href={withBase('favicon.ico')} sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
@@ -133,7 +135,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
 
     <p id="toast" class="toast" role="status" aria-live="polite"></p>
 
-    <script is:inline define:vars={{ dark: props.appearance ? '#0c1219' : seo.themeColorDark, light: seo.themeColorLight }}>
+    <script is:inline define:vars={{ dark: props.appearance ? '#07090d' : seo.themeColorDark, light: seo.themeColorLight }}>
       (function () {
         var root = document.documentElement;
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

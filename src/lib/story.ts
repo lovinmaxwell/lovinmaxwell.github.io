@@ -1,6 +1,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { storyChapters, storyDuration as duration, galleryTimings } from '../data/story';
+import type { NeuralCore } from './neural-core';
 
 const chapterTimes = storyChapters.map(chapter => chapter.at);
 
@@ -34,6 +35,25 @@ export function initStory() {
   let currentScene = 0;
   let blockClickUntil = 0;
   const animated = () => root.dataset.motion === 'on';
+  // The WebGL core is an enhancement over the poster: wide screens with motion on only, loaded after the page settles.
+  const coreHost = root.querySelector<HTMLElement>('[data-core-model]');
+  const wide = matchMedia('(min-width: 768px)');
+  let core: NeuralCore | undefined;
+  let coreRequested = false;
+  const syncCore = () => core?.setRunning(animated() && currentScene === 0 && !document.hidden);
+  const mountCore = () => {
+    if (coreRequested || !coreHost || !animated() || !wide.matches || !('WebGL2RenderingContext' in window)) return;
+    coreRequested = true;
+    import('./neural-core')
+      .then(({ createNeuralCore }) => createNeuralCore(coreHost, coreHost.dataset.coreModel!))
+      .then(instance => { core = instance; syncCore(); })
+      .catch(error => console.warn('The 3D core could not start; keeping the still image.', error));
+  };
+  const scheduleCore = () => {
+    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(mountCore, { timeout: 2000 }) : setTimeout(mountCore, 600));
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true });
+  };
   const scrollForTime = (time: number, smooth = false) => {
     const trigger = timeline?.scrollTrigger;
     if (!trigger) return;
@@ -65,6 +85,7 @@ export function initStory() {
       if (link.dataset.chapter === scenes[index].id) link.setAttribute('aria-current', 'location');
       else link.removeAttribute('aria-current');
     });
+    syncCore();
   };
   const goTo = (id: string, smooth = true) => {
     const index = scenes.findIndex(scene => scene.id === id);
@@ -111,6 +132,7 @@ export function initStory() {
           chapterTimes.forEach((at, i) => { if (time >= at - 0.32) index = i; });
           if (index !== currentScene) activeScene(index);
           progress.style.transform = `scaleX(${time / duration})`;
+          core?.setOpen((time - 0.65) / 0.75);
         },
       });
       for (let i = 1; i < scenes.length; i++) {
@@ -121,9 +143,9 @@ export function initStory() {
       storyChapters.slice(1).forEach(chapter => {
         timeline!.to(stage, { backgroundColor: chapter.color, duration: 0.7 }, chapter.at - 0.7);
       });
-      timeline.to('.orbital-art', { xPercent: 12, yPercent: -15, rotate: -4, duration: 0.75 }, 0.65)
+      timeline.to('.core-art', { xPercent: 10, yPercent: -8, scale: 0.88, opacity: 0.6, duration: 0.75 }, 0.65)
         .fromTo('.flow-node', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4 }, 5.95)
-        .fromTo('.doha-art', { yPercent: 18, scale: 0.9 }, { yPercent: 0, scale: 1, duration: 1.1 }, 8.55)
+        .fromTo('.doha-art', { y: 40, opacity: 0.4 }, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out' }, 8.55)
         .to({}, { duration: 0.8 }, duration - 0.8);
       galleries.forEach(({ track, start, end, distance }) => {
         timeline!.fromTo(track, { x: 0 }, { x: () => -distance(), duration: end - start, ease: 'none' }, start);
@@ -132,6 +154,7 @@ export function initStory() {
       gsap.fromTo('.scene-intro h1 span', { yPercent: 55, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out' });
     }, root);
     ScrollTrigger.refresh();
+    scheduleCore();
   };
 
   let atlasOpener: HTMLElement | null = null;
@@ -214,10 +237,22 @@ export function initStory() {
     const rect = stage.getBoundingClientRect();
     stage.style.setProperty('--orbit-x', `${(event.clientX - rect.left) / rect.width * 16 - 8}deg`);
     stage.style.setProperty('--orbit-y', `${8 - (event.clientY - rect.top) / rect.height * 16}deg`);
+    core?.setPointer((event.clientX - rect.left) / rect.width * 2 - 1, (event.clientY - rect.top) / rect.height * 2 - 1);
   });
   stage.addEventListener('pointerleave', () => {
     stage.style.removeProperty('--orbit-x');
     stage.style.removeProperty('--orbit-y');
+    core?.setPointer(0, 0);
+  });
+  document.addEventListener('visibilitychange', syncCore);
+  wide.addEventListener('change', mountCore);
+  root.querySelectorAll<HTMLElement>('.capability').forEach(card => {
+    card.addEventListener('pointermove', event => {
+      if (!finePointer.matches) return;
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${event.clientX - rect.left}px`);
+      card.style.setProperty('--my', `${event.clientY - rect.top}px`);
+    });
   });
   let scrollFrame = 0;
   const updateDocumentProgress = () => {

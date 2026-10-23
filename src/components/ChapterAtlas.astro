@@ -28,7 +28,7 @@ const descriptions = [
     {storyChapters.map((chapter, index) => (
       <a href={`#${chapter.id}`} data-atlas-chapter={chapter.id} data-atlas-terms={`${chapter.label} ${descriptions[index]}`.toLowerCase()} class={`atlas-card atlas-${chapter.id}`}>
         <div class="atlas-art" aria-hidden="true">
-          {index === 0 ? <img src={withBase('images/orbital-ribbon.webp')} width="1200" height="1200" alt="" loading="lazy" /> :
+          {index === 0 ? <img src={withBase('images/hero-neural-core-poster-800.webp')} width="800" height="800" alt="" loading="lazy" /> :
             index === 1 ? <span class="atlas-type">Aa</span> :
             index === 2 ? <span class="atlas-route"><i /><i /><i /><i /></span> :
             index === 3 ? <span class="atlas-nodes"><i /><i /><i /></span> :

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const read = (path) => readFileSync(new URL(`../dist/${path}`, import.meta.url), 'utf8');
@@ -73,12 +73,14 @@ test('the full technology catalog remains and the archive is preserved in Origin
   assert.doesNotMatch(story, /id="detail-workbench"|data-detail="workbench"/);
 });
 
-test('the final scene celebrates the current Doha role with original stadium artwork', () => {
+test('the final scene celebrates the current Doha role with original skyline artwork', () => {
   const finale = text.slice(text.indexOf('id="contact"'), text.indexOf('aria-label="Story chapters"'));
   assert.ok(finale.includes('Based in Doha.'));
   assert.ok(finale.includes(profile.experience.find(job => job.current).company));
-  assert.ok(finale.includes('doha-lattice'));
+  assert.match(finale, /\/images\/finale-skyline\.webp/);
+  assert.match(finale, /\/images\/finale-skyline-1200\.webp 1200w/);
   assert.ok(finale.includes('qatar-mark'));
+  assert.doesNotMatch(finale, /doha-lattice/);
 });
 
 test('Work is hidden in the new view without removing original projects or contextual details', () => {
@@ -121,20 +123,27 @@ test('the cinematic enhancement starts from accessible static content', () => {
   assert.match(story, /<iframe data-study-src="\/case-studies\/jev-docai-routing\/"/);
 });
 
-test('the hero shows an original orbital sculpture rather than work imagery', () => {
+test('the hero shows an original neural core with a still poster and a lazy 3D enhancement', () => {
   const hero = story.slice(story.indexOf('id="top"'), story.indexOf('id="about"'));
-  assert.match(hero, /class="orbital-art"/);
-  assert.match(hero, /\/images\/orbital-ribbon.webp/);
+  assert.match(hero, /class="core-art"/);
+  assert.match(hero, /\/images\/hero-neural-core-poster\.webp/);
+  assert.match(hero, /data-core-model="\/models\/hero-neural-core\.glb"/);
   assert.doesNotMatch(hero, /composition-|holywhisper|document-routing|Explore the work/);
   assert.match(hero, /data-chapter="experience"/);
-  const image = readFileSync(new URL('../dist/images/orbital-ribbon.webp', import.meta.url));
-  assert.equal(image.toString('ascii', 8, 12), 'WEBP');
-  assert.ok(image.length > 10000);
-  assert.doesNotMatch(story, /signal-core|<canvas|data-model/);
-  assert.ok(!existsSync(new URL('../dist/models/signal-core.glb', import.meta.url)));
-  assert.ok(!existsSync(new URL('../dist/images/signal-core.webp', import.meta.url)));
-  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.ok(!manifest.dependencies.three && !manifest.devDependencies['@types/three']);
+  assert.doesNotMatch(story, /<canvas|orbital-ribbon/);
+  const poster = readFileSync(new URL('../dist/images/hero-neural-core-poster.webp', import.meta.url));
+  assert.equal(poster.toString('ascii', 8, 12), 'WEBP');
+  const model = readFileSync(new URL('../dist/models/hero-neural-core.glb', import.meta.url));
+  assert.equal(model.toString('ascii', 0, 4), 'glTF');
+  assert.ok(model.length < 1024 * 1024, 'The 3D model must stay under 1 MB');
+  assert.ok(!existsSync(new URL('../dist/images/orbital-ribbon.webp', import.meta.url)));
+  // three.js must only arrive through a dynamic import, never in the scripts the page loads up front.
+  const chunks = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter(name => name.endsWith('.js'));
+  const source = name => readFileSync(new URL(`../dist/_astro/${name}`, import.meta.url), 'utf8');
+  const entries = [...story.matchAll(/src="\/_astro\/([^"]+\.js)"/g)].map(match => match[1]);
+  assert.ok(entries.length > 0);
+  for (const entry of entries) assert.doesNotMatch(source(entry), /WebGLRenderer/);
+  assert.ok(chunks.some(name => source(name).includes('WebGLRenderer')), 'Missing the lazy 3D chunk');
   assert.ok(readFileSync(new URL('../dist/images/story-grain.png', import.meta.url)).length > 0);
 });
 
@@ -170,11 +179,11 @@ test('the visual chapter atlas exposes all six destinations and accessible searc
   assert.doesNotMatch(classic, /data-atlas-open|data-atlas-chapter/);
 });
 
-test('the spatial hero retains a static image and decorative-only orbital guides', () => {
-  assert.match(story, /class="orbital-art" aria-hidden="true"/);
-  for (const name of ['orbital-field', 'orbital-object', 'orbital-meridian', 'orbital-equator']) {
-    assert.ok(story.includes(`class="${name}"`));
-  }
+test('the spatial hero keeps its artwork decorative and the system chips stay silent', () => {
+  assert.match(story, /class="core-art" aria-hidden="true"/);
+  for (const name of ['core-object', 'core-poster']) assert.ok(story.includes(`class="${name}"`));
+  assert.equal([...story.matchAll(/class="flow-chip" aria-hidden="true"/g)].length, 12);
+  assert.match(story, /class="story-field" aria-hidden="true"/);
 });
 
 test('system boundaries have labeled inspection controls and live explanations', () => {
@@ -187,7 +196,7 @@ test('system boundaries have labeled inspection controls and live explanations',
   assert.match(story, /Inspect Flutter/);
 });
 
-test('the noir palette keeps readable text on dark framing and gunmetal panels', () => {
+test('the Signal Glass palette keeps readable text on the dark field and glass panels', () => {
   const css = readFileSync(new URL('../src/styles/story.css', import.meta.url), 'utf8');
   const chapters = readFileSync(new URL('../src/data/story.ts', import.meta.url), 'utf8');
   const token = name => {
@@ -217,5 +226,5 @@ test('the noir palette keeps readable text on dark framing and gunmetal panels',
   assert.ok(contrast(token('accent'), token('panel-highlight')) >= 4.5);
   assert.ok(contrast(token('focus'), token('panel-highlight')) >= 3);
   assert.doesNotMatch(css, /--paper|--ink|color-scheme: light/);
-  assert.match(story, /name="theme-color" content="#0c1219"/);
+  assert.match(story, /name="theme-color" content="#07090d"/);
 });

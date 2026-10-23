@@ -1,39 +1,22 @@
 ---
 import { profile } from '../data/profile';
 import Icon from './Icon.astro';
+import { withBase } from '../lib/url';
 const current = profile.experience.jobs.find(job => job.current)!;
 ---
 <section id="contact" class="story-scene scene-contact scene-doha" data-scene aria-labelledby="contact-title">
   <div class="doha-art" aria-hidden="true">
-    <svg viewBox="0 0 1200 740" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="doha-bowl" x1="600" y1="390" x2="600" y2="675" gradientUnits="userSpaceOnUse"><stop stop-color="#65636e"/><stop offset=".45" stop-color="#35343d"/><stop offset="1" stop-color="#121216"/></linearGradient>
-        <linearGradient id="doha-tower" x1="600" y1="120" x2="600" y2="540" gradientUnits="userSpaceOnUse"><stop stop-color="#67646f"/><stop offset="1" stop-color="#202026"/></linearGradient>
-        <radialGradient id="doha-glow"><stop stop-color="#98909d" stop-opacity=".12"/><stop offset="1" stop-color="#98909d" stop-opacity="0"/></radialGradient>
-        <pattern id="doha-lattice" width="40" height="48" patternUnits="userSpaceOnUse"><path d="M20 0 40 24 20 48 0 24Z" stroke="#c6c2cf" stroke-opacity=".3" stroke-width="1.5"/></pattern>
-        <pattern id="doha-windows" width="17" height="20" patternUnits="userSpaceOnUse"><path d="M5 4v6M12 4v6" stroke="#c6c2cf" stroke-opacity=".3"/></pattern>
-        <clipPath id="doha-facade"><path d="M160 468Q600 580 1040 468L982 606Q600 733 218 606Z"/></clipPath>
-      </defs>
-      <ellipse cx="650" cy="380" rx="570" ry="350" fill="url(#doha-glow)"/>
-      <g stroke="#9a95a2" stroke-opacity=".35" fill="url(#doha-tower)">
-        <path d="M320 475V260L345 237H390V475Z"/><path d="M411 475V175L443 143L475 175V475Z"/>
-        <path d="M500 475V310H550V475Z"/><path d="M578 475V213Q600 100 622 213V475Z"/>
-        <path d="M649 475V280L690 245L728 280V475Z"/><path d="M747 475V165L800 120L833 475Z"/>
-        <path d="M854 475V275L888 255L922 275V475Z"/><path d="M951 475V330H1005V475Z"/>
-      </g>
-      <g fill="url(#doha-windows)"><path d="M326 270H384V472H326ZM418 180H467V472H418ZM584 220H616V472H584ZM658 285H718V472H658ZM760 180H799V472H760ZM862 290H915V472H862Z"/></g>
-      <g stroke="#bcb9c5" opacity=".12"><path d="M240 447 175 115 430 429M930 440 1070 80 760 425M515 400 450 30 700 410"/></g>
-      <ellipse cx="600" cy="655" rx="425" ry="35" fill="#100b13" opacity=".7"/>
-      <path d="M160 468Q600 580 1040 468L982 606Q600 733 218 606Z" fill="url(#doha-bowl)" stroke="#77727f"/>
-      <g clip-path="url(#doha-facade)"><path d="M130 445H1060V720H130Z" fill="url(#doha-lattice)"/></g>
-      <ellipse cx="600" cy="468" rx="440" ry="109" fill="#33232d" stroke="#a39ca9" stroke-width="2"/>
-      <ellipse cx="600" cy="468" rx="380" ry="78" fill="#151419" stroke="#55424f" stroke-width="12"/>
-      <ellipse cx="600" cy="476" rx="300" ry="53" fill="#1c2021"/>
-      <g stroke="#9ea5a7" stroke-opacity=".45"><path d="m390 449 401 0 61 52H335Z"/><path d="M590 449V501"/><ellipse cx="590" cy="475" rx="35" ry="12"/></g>
-      <path d="M161 469Q600 583 1039 469" stroke="#d1cdd7" stroke-width="2"/>
-      <g fill="#d1cdd7">{Array.from({length:29},(_,i)=><circle cx={190+i*29.2} cy={478+74*Math.sin(i/28*Math.PI)} r="2.3"/>)}</g>
-      <path d="M270 682Q670 760 1090 634" stroke="#47313f" stroke-width="2"/>
-    </svg>
+    <img
+      class="finale-skyline"
+      src={withBase('images/finale-skyline.webp')}
+      srcset={`${withBase('images/finale-skyline-1200.webp')} 1200w, ${withBase('images/finale-skyline.webp')} 2400w`}
+      sizes="(width < 700px) 100vw, 64vw"
+      alt=""
+      width="2400"
+      height="1000"
+      loading="lazy"
+      decoding="async"
+    />
   </div>
   <div class="doha-copy">
     <p class="scene-eyebrow">The journey continues in Qatar.</p>
