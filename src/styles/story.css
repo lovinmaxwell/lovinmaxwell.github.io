@@ -243,7 +243,10 @@ html[data-appearance="immersive"] {
   .story-name { font-size: 12px; gap: 0; }
   .name-symbol, .story-header-links { display: none; }
   .story-controls, .story-header-links + .story-controls { margin-left: auto; gap: 7px; }
-  .motion-toggle, .sound-toggle { font-size: 9px; }
+  .motion-toggle { font-size: 9px; }
+  /* Phones get the speaker icon alone; the label stays for assistive tech through aria-label. */
+  .sound-toggle { gap: 0; padding: 4px 2px; }
+  .sound-toggle [data-sound-label] { display: none; }
   .motion-bars { display: none; }
   .story-scene { padding: 60px 20px 80px; min-height: 790px; }
   .scene-eyebrow { font-size: 10px; line-height: 1.8; }
@@ -336,7 +339,7 @@ html[data-appearance="immersive"] {
   .chapter-heading h2 { font-size: 26px; }
   .story-header { padding-inline: 12px; }
   .story-name { font-size: 10px; }
-  .motion-toggle, .sound-toggle { max-width: 35px; line-height: 1.2; }
+  .motion-toggle { max-width: 35px; line-height: 1.2; }
   .story-controls { gap: 3px; }
   .system-flow { gap: 16px; margin-block: 14px; }
   .flow-node { padding: 10px; }
