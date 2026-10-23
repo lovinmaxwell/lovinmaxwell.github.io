@@ -42,9 +42,11 @@ The stack chapter organizes tools around four engineering capabilities, with
 the complete categorized catalog in a secondary viewer. Work is hidden from
 the new view, including its navigation and archive viewer; projects and the
 full archive remain available in **Original** at `/classic/`.
-The final Doha chapter uses an original render of generic glass towers with
-signal lines, with a small Qatar flag accent. It does not depict real landmarks
-or use tournament branding.
+The final Doha chapter keeps the original football-stadium and skyline drawing
+(an inline SVG in `QatarFinale.astro`), recoloured in the mint and iris signal
+palette with a maroon stand ring and a small Qatar flag accent. With motion on,
+the floodlights sweep slowly and the rim lights pulse. It is inspired by the
+country's football atmosphere, not official tournament branding.
 
 The **Motion on/off** control remembers the visitor's choice. Reduced-motion
 preferences, short viewports, and no JavaScript use ordinary document flow;
@@ -86,7 +88,6 @@ live in OneDrive under
 - `public/models/hero-neural-core.glb` (about 0.56 MB, transmission and iridescence, no textures) and its poster `public/images/hero-neural-core-poster*.webp`;
 - `public/images/node-chip-{idle,active}*.webp`, the Systems node chips;
 - `public/images/ambient-field.webp`, the page backdrop;
-- `public/images/finale-skyline*.webp`, the Doha towers.
 
 The live core follows the pointer, opens as the About chapter arrives, and only
 renders while the hero is active and the tab is visible. Motion-off and

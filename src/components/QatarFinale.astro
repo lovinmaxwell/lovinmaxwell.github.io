@@ -1,22 +1,51 @@
 ---
 import { profile } from '../data/profile';
 import Icon from './Icon.astro';
-import { withBase } from '../lib/url';
 const current = profile.experience.jobs.find(job => job.current)!;
 ---
 <section id="contact" class="story-scene scene-contact scene-doha" data-scene aria-labelledby="contact-title">
   <div class="doha-art" aria-hidden="true">
-    <img
-      class="finale-skyline"
-      src={withBase('images/finale-skyline.webp')}
-      srcset={`${withBase('images/finale-skyline-1200.webp')} 1200w, ${withBase('images/finale-skyline.webp')} 2400w`}
-      sizes="(width < 700px) 100vw, 64vw"
-      alt=""
-      width="2400"
-      height="1000"
-      loading="lazy"
-      decoding="async"
-    />
+    <svg viewBox="0 0 1200 740" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="doha-glow" cx="50%" cy="58%" r="50%"><stop stop-color="#74e4d0" stop-opacity=".1"/><stop offset=".55" stop-color="#a5b1ff" stop-opacity=".05"/><stop offset="1" stop-color="#a5b1ff" stop-opacity="0"/></radialGradient>
+        <linearGradient id="doha-beam" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#74e4d0" stop-opacity=".2"/><stop offset="1" stop-color="#74e4d0" stop-opacity="0"/></linearGradient>
+        <linearGradient id="doha-beam-iris" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a5b1ff" stop-opacity=".18"/><stop offset="1" stop-color="#a5b1ff" stop-opacity="0"/></linearGradient>
+        <linearGradient id="doha-tower" x1="600" y1="100" x2="600" y2="480" gradientUnits="userSpaceOnUse"><stop stop-color="#3a4a5e"/><stop offset="1" stop-color="#0d1219"/></linearGradient>
+        <pattern id="doha-windows" width="17" height="20" patternUnits="userSpaceOnUse"><path d="M5 4v6M12 4v6" stroke="#9fe9dc" stroke-opacity=".2"/></pattern>
+        <linearGradient id="doha-bowl" x1="600" y1="440" x2="600" y2="690" gradientUnits="userSpaceOnUse"><stop stop-color="#1c2532"/><stop offset=".5" stop-color="#121821"/><stop offset="1" stop-color="#07090d"/></linearGradient>
+        <pattern id="doha-lattice" width="40" height="48" patternUnits="userSpaceOnUse"><path d="M20 0 40 24 20 48 0 24Z" stroke="#a5b1ff" stroke-opacity=".34" stroke-width="1.4"/></pattern>
+        <linearGradient id="doha-facade-fade" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#07090d" stop-opacity="0"/><stop offset="1" stop-color="#07090d" stop-opacity=".85"/></linearGradient>
+        <clipPath id="doha-facade"><path d="M160 468Q600 580 1040 468L982 606Q600 733 218 606Z"/></clipPath>
+        <linearGradient id="doha-signal" x1="160" y1="0" x2="1040" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#74e4d0" stop-opacity=".2"/><stop offset=".35" stop-color="#74e4d0"/><stop offset=".7" stop-color="#a5b1ff"/><stop offset="1" stop-color="#a5b1ff" stop-opacity=".2"/></linearGradient>
+        <radialGradient id="doha-pitch" cx="50%" cy="50%" r="50%"><stop stop-color="#74e4d0" stop-opacity=".22"/><stop offset="1" stop-color="#74e4d0" stop-opacity="0"/></radialGradient>
+        <filter id="doha-bloom" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <ellipse cx="620" cy="420" rx="600" ry="360" fill="url(#doha-glow)"/>
+      <g class="doha-beams">
+        <path class="doha-beam" d="M175 100 318 470 470 436Z" fill="url(#doha-beam)"/>
+        <path class="doha-beam" d="M450 24 548 440 700 420Z" fill="url(#doha-beam-iris)"/>
+        <path class="doha-beam" d="M1070 72 752 438 906 468Z" fill="url(#doha-beam)"/>
+      </g>
+      <g stroke="#74e4d0" stroke-opacity=".16" fill="url(#doha-tower)">
+        <path d="M320 475V260L345 237H390V475Z"/><path d="M411 475V175L443 143L475 175V475Z"/>
+        <path d="M500 475V310H550V475Z"/><path d="M578 475V213Q600 100 622 213V475Z"/>
+        <path d="M649 475V280L690 245L728 280V475Z"/><path d="M747 475V165L800 120L833 475Z"/>
+        <path d="M854 475V275L888 255L922 275V475Z"/><path d="M951 475V330H1005V475Z"/>
+      </g>
+      <g fill="url(#doha-windows)"><path d="M326 270H384V472H326ZM418 180H467V472H418ZM584 220H616V472H584ZM658 285H718V472H658ZM760 180H799V472H760ZM862 290H915V472H862Z"/></g>
+      <g class="doha-beacons" fill="#74e4d0" filter="url(#doha-bloom)"><circle cx="443" cy="143" r="2.4"/><circle cx="600" cy="124" r="2.4"/><circle cx="800" cy="120" r="2.4"/><circle cx="690" cy="245" r="2"/></g>
+      <ellipse cx="600" cy="660" rx="440" ry="38" fill="#74e4d0" opacity=".05"/>
+      <path d="M160 468Q600 580 1040 468L982 606Q600 733 218 606Z" fill="url(#doha-bowl)" stroke="#5a6678" stroke-opacity=".6"/>
+      <g clip-path="url(#doha-facade)"><path d="M130 445H1060V720H130Z" fill="url(#doha-lattice)"/><path d="M130 445H1060V720H130Z" fill="url(#doha-facade-fade)"/></g>
+      <ellipse cx="600" cy="468" rx="440" ry="109" fill="#141b25" stroke="url(#doha-signal)" stroke-width="2"/>
+      <ellipse cx="600" cy="468" rx="380" ry="78" fill="#0b0f15" stroke="#6b3550" stroke-opacity=".75" stroke-width="12"/>
+      <ellipse cx="600" cy="476" rx="300" ry="53" fill="#0c1716"/>
+      <ellipse cx="600" cy="476" rx="300" ry="53" fill="url(#doha-pitch)"/>
+      <g stroke="#74e4d0" stroke-opacity=".5"><path d="m390 449 401 0 61 52H335Z"/><path d="M590 449V501"/><ellipse cx="590" cy="475" rx="35" ry="12"/></g>
+      <path d="M161 469Q600 583 1039 469" stroke="url(#doha-signal)" stroke-width="2"/>
+      <g class="doha-lights" fill="#9ff0e2" filter="url(#doha-bloom)">{Array.from({length:29},(_,i)=><circle cx={190+i*29.2} cy={478+74*Math.sin(i/28*Math.PI)} r="2.3"/>)}</g>
+      <path d="M270 682Q670 760 1090 634" stroke="url(#doha-signal)" stroke-opacity=".35" stroke-width="1.5"/>
+    </svg>
   </div>
   <div class="doha-copy">
     <p class="scene-eyebrow">The journey continues in Qatar.</p>

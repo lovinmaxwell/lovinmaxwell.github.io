@@ -82,9 +82,20 @@ html:not(.js) .stack-console-body { display: block; }
 .contact-links { display: flex; gap: 25px; margin-top: 18px; font-size: 11px; color: var(--muted); }
 .contact-links a { padding-block: 8px; }
 .contact-footnote { color: var(--muted); max-width: 48ch; margin-top: 24px; font-size: 10px; line-height: 1.9; }
-/* Skyline band: anchored to the bottom of the finale and faded into the field on every edge. */
-.doha-art { position: absolute; inset: auto 0 0 auto; width: 64%; height: 78%; z-index: 0; pointer-events: none; mask-image: linear-gradient(to right, transparent, #000 30%), linear-gradient(to top, #000 70%, transparent); mask-composite: intersect; -webkit-mask-composite: source-in; }
-.doha-art img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 100%; }
+/* Stadium and skyline: an original drawing, recoloured in the signal palette and faded into the field. */
+.doha-art { position: absolute; width: 54%; right: 2%; top: 14%; bottom: 20%; z-index: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 72%, transparent); }
+.doha-art svg { width: 100%; height: 100%; }
+.doha-beam { transform-box: view-box; }
+.doha-beam:nth-child(1) { transform-origin: 175px 100px; }
+.doha-beam:nth-child(2) { transform-origin: 450px 24px; }
+.doha-beam:nth-child(3) { transform-origin: 1070px 72px; }
+[data-motion="on"] .doha-beam { animation: doha-sweep 7s ease-in-out infinite alternate; }
+[data-motion="on"] .doha-beam:nth-child(2) { animation-duration: 9s; animation-delay: -3s; }
+[data-motion="on"] .doha-beam:nth-child(3) { animation-duration: 8s; animation-direction: alternate-reverse; }
+[data-motion="on"] .doha-lights { animation: doha-pulse 3.2s ease-in-out infinite; }
+.scene-doha[aria-hidden="true"] :is(.doha-beam, .doha-lights) { animation-play-state: paused; }
+@keyframes doha-sweep { from { rotate: -4deg; } to { rotate: 4deg; } }
+@keyframes doha-pulse { 50% { opacity: .55; } }
 .doha-caption { position: absolute; bottom: 13%; right: 5%; display: grid; grid-template-columns: 26px auto; gap: 7px 12px; }
 .doha-caption > span:not(.qatar-mark) { font-size: 18px; letter-spacing: -.03em; }
 .doha-caption small { grid-column: 2; font: 9px var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
@@ -135,7 +146,7 @@ html:not(.js) .stack-console-body { display: block; }
   .contact-email { font-size: 12px; margin-top: 16px; padding-block: 10px; gap: 14px; }
   .contact-links { margin-top: 10px; font-size: 10px; }
   .contact-footnote { max-width: 100%; font-size: 9px; margin-top: 16px; }
-  .doha-art { width: 100%; height: 40%; mask-image: linear-gradient(to top, #000 60%, transparent); mask-composite: add; -webkit-mask-composite: source-over; }
+  .doha-art { width: calc(100% - 24px); right: 12px; top: 60%; bottom: 14%; }
   .doha-caption { right: 22px; bottom: 10%; grid-template-columns: 21px auto; gap: 5px 8px; }
   .doha-caption > span:not(.qatar-mark) { font-size: 14px; }
   .doha-caption small { font-size: 6px; }
@@ -161,6 +172,7 @@ html:not(.js) .stack-console-body { display: block; }
 }
 @media (prefers-reduced-motion: reduce) {
   .journey-stop, .capability, .capability::before, .contact-email { transition: none; }
+  .doha-beam, .doha-lights { animation: none !important; }
   .journey-stop:hover, .capability:hover, .contact-email:hover { translate: none; }
 }
 @media print {

@@ -73,14 +73,13 @@ test('the full technology catalog remains and the archive is preserved in Origin
   assert.doesNotMatch(story, /id="detail-workbench"|data-detail="workbench"/);
 });
 
-test('the final scene celebrates the current Doha role with original skyline artwork', () => {
+test('the final scene celebrates the current Doha role with original stadium artwork', () => {
   const finale = text.slice(text.indexOf('id="contact"'), text.indexOf('aria-label="Story chapters"'));
   assert.ok(finale.includes('Based in Doha.'));
   assert.ok(finale.includes(profile.experience.find(job => job.current).company));
-  assert.match(finale, /\/images\/finale-skyline\.webp/);
-  assert.match(finale, /\/images\/finale-skyline-1200\.webp 1200w/);
+  assert.ok(finale.includes('doha-lattice'));
   assert.ok(finale.includes('qatar-mark'));
-  assert.doesNotMatch(finale, /doha-lattice/);
+  assert.doesNotMatch(finale, /finale-skyline/);
 });
 
 test('Work is hidden in the new view without removing original projects or contextual details', () => {
