@@ -1,6 +1,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { storyChapters, storyDuration as duration, galleryTimings, stackSteps } from '../data/story';
+import { storyChapters, storyDuration as duration, galleryTimings, stackReveal } from '../data/story';
+import { initSkillTree } from './skill-tree';
 import type { NeuralCore } from './neural-core';
 
 const chapterTimes = storyChapters.map(chapter => chapter.at);
@@ -54,25 +55,6 @@ export function initStory() {
     if (document.readyState === 'complete') idle();
     else addEventListener('load', idle, { once: true });
   };
-  const stackApp = root.querySelector<HTMLElement>('[data-stack-app]')!;
-  const stackTabs = Array.from(stackApp.querySelectorAll<HTMLButtonElement>('[data-stack-tab]'));
-  const stackPanes = Array.from(stackApp.querySelectorAll<HTMLElement>('[data-stack-pane]'));
-  const stackDock = Array.from(stackApp.querySelectorAll<HTMLAnchorElement>('[data-stack-dock]'));
-  const stackPath = stackApp.querySelector<HTMLElement>('[data-stack-path]')!;
-  let stackStep = -1;
-  const selectStack = (step: number) => {
-    if (step === stackStep) return;
-    stackStep = step;
-    stackApp.dataset.step = String(step);
-    stackTabs.forEach((tab, i) => {
-      tab.setAttribute('aria-selected', String(i === step));
-      tab.tabIndex = i === step ? 0 : -1;
-    });
-    stackPanes.forEach((pane, i) => pane.classList.toggle('is-active', i === step));
-    stackDock.forEach((icon, i) => icon.classList.toggle('is-active', i === step));
-    stackPath.textContent = stackPanes[step].dataset.stackCode!;
-  };
-  const stackStepAt = (time: number) => stackSteps.reduce((best, at, i) => Math.abs(time - at) < Math.abs(time - stackSteps[best]) ? i : best, 0);
   const scrollForTime = (time: number, smooth = false) => {
     const trigger = timeline?.scrollTrigger;
     if (!trigger) return;
@@ -81,6 +63,11 @@ export function initStory() {
       behavior: smooth ? 'smooth' : 'instant',
     });
   };
+  // The Skill Tree runs the Stack chapter; a phone tab scrolls the story to that branch page.
+  const tree = initSkillTree(root.querySelector<HTMLElement>('[data-skill-tree]')!, {
+    compact, reduced,
+    scrollToStep: (step, steps) => scrollForTime(stackReveal.start + (step / steps) * 0.85 * (stackReveal.end - stackReveal.start) + 0.03),
+  });
   const activeScene = (index: number) => {
     currentScene = index;
     scenes.forEach((scene, i) => {
@@ -117,6 +104,7 @@ export function initStory() {
     timeline = undefined;
     root.dataset.motion = requestedMotion && !reduced.matches && !short.matches ? 'on' : 'off';
     document.documentElement.dataset.storyMotion = root.dataset.motion;
+    tree.setMode(animated());
     stage.style.removeProperty('--orbit-x');
     stage.style.removeProperty('--orbit-y');
     toggle.setAttribute('aria-pressed', String(animated()));
@@ -150,7 +138,7 @@ export function initStory() {
           let index = 0;
           chapterTimes.forEach((at, i) => { if (time >= at - 0.32) index = i; });
           if (index !== currentScene) activeScene(index);
-          selectStack(stackStepAt(time));
+          tree.setProgress((time - stackReveal.start) / (stackReveal.end - stackReveal.start));
           progress.style.transform = `scaleX(${time / duration})`;
           core?.setOpen((time - 0.65) / 0.75);
         },
@@ -165,8 +153,8 @@ export function initStory() {
       });
       timeline.to('.core-art', { xPercent: 10, yPercent: -8, scale: 0.88, opacity: 0.6, duration: 0.75 }, 0.65)
         .fromTo('.flow-node', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4 }, 5.95)
-        .fromTo('.stack-window', { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, 7.3)
-        .fromTo('.stack-dock', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 7.45)
+        .fromTo('.st-stage', { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, 7.3)
+        .fromTo('.st-hud', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 7.45)
         .fromTo('.doha-art', { y: 40, opacity: 0.4 }, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out' }, 9.95)
         .to({}, { duration: 0.8 }, duration - 0.8);
       galleries.forEach(({ track, start, end, distance }) => {
@@ -250,6 +238,7 @@ export function initStory() {
     event.preventDefault();
     if (atlas.open && command) atlas.close();
     else if (atlas.open) atlasSearch.focus();
+    else if (slash && scenes[currentScene].id === 'stack') tree.focusSearch();
     else openAtlas();
   });
 
@@ -268,41 +257,6 @@ export function initStory() {
   });
   document.addEventListener('visibilitychange', syncCore);
   wide.addEventListener('change', mountCore);
-  root.querySelectorAll<HTMLElement>('.stack-pane:not(.stack-index)').forEach(card => {
-    card.addEventListener('pointermove', event => {
-      if (!finePointer.matches) return;
-      const rect = card.getBoundingClientRect();
-      card.style.setProperty('--mx', `${event.clientX - rect.left}px`);
-      card.style.setProperty('--my', `${event.clientY - rect.top}px`);
-    });
-  });
-  // In the animated story a tab moves the scroll to its step; otherwise the window behaves as a plain tab list.
-  const chooseStack = (step: number) => {
-    if (animated()) scrollForTime(stackSteps[step]);
-    selectStack(step);
-  };
-  stackTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => chooseStack(index));
-    tab.addEventListener('keydown', event => {
-      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-      event.preventDefault();
-      const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight';
-      const next = event.key === 'Home' ? 0 : event.key === 'End' ? stackTabs.length - 1 :
-        (index + (forward ? 1 : -1) + stackTabs.length) % stackTabs.length;
-      chooseStack(next);
-      stackTabs[next].focus({ preventScroll: true });
-    });
-  });
-  selectStack(0);
-  const dock = stackApp.querySelector<HTMLElement>('.stack-dock')!;
-  dock.addEventListener('pointermove', event => {
-    if (!animated() || !finePointer.matches) return;
-    stackDock.forEach(icon => {
-      const rect = icon.getBoundingClientRect();
-      icon.style.setProperty('--dock-hover', String(Math.max(0, 1 - Math.abs(event.clientX - rect.left - rect.width / 2) / 120)));
-    });
-  });
-  dock.addEventListener('pointerleave', () => stackDock.forEach(icon => icon.style.removeProperty('--dock-hover')));
   let scrollFrame = 0;
   const updateDocumentProgress = () => {
     scrollFrame = 0;

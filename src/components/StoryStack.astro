@@ -1,76 +1,93 @@
 ---
 import { profile } from '../data/profile';
+import { logos } from '../lib/logos';
 import Icon from './Icon.astro';
 import { withBase } from '../lib/url';
-const capabilities = [
-  { id: 'application', short: 'App', title: 'Build the application', code: 'application/', tools: ['C# & .NET', 'Angular', 'Flutter', 'React'], context: 'Enterprise web, mobile and desktop.', detail: 'career-4' },
-  { id: 'integration', short: 'Integrate', title: 'Connect the business', code: 'integration/', tools: ['REST APIs', 'SAP RFC / ABAP', 'SQL Server', 'PMWeb'], context: 'Data and workflows across real systems.', detail: 'career-3' },
-  { id: 'infrastructure', short: 'Cloud', title: 'Deliver on the cloud', code: 'infrastructure/', tools: ['Azure', 'API Management', 'Service Bus', 'Entra ID'], context: 'Application services, messaging and identity.', detail: 'career-3' },
-  { id: 'intelligence', short: 'Local AI', title: 'Keep intelligence local', code: 'intelligence/', tools: ['Python FastAPI', 'Qwen2.5-VL', 'ONNX Runtime', 'n8n'], context: 'On-device research and practical automation.', detail: 'accessflow' },
-];
+// The Skill Tree: every verified tool is a node on one of four branches around the neural core.
+// Nodes start locked; hovering, tapping, focusing or scrolling lights them up. No scores, no levels.
+const { items, branches, groups, kicker, title } = profile.stack;
 const href = (detail: string) => detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${detail}`;
-const icon = (id: string) => withBase(`images/stack/stack-icon-${id}.webp`);
-const { items, categories } = profile.stack;
-const groups = categories.map(category => ({ category, tools: items.filter(item => item.category === category).map(item => item.name) }));
-const totals = `${capabilities.length} capabilities · ${categories.length} categories · ${items.length} tools & practices`;
+const branched = branches.map(branch => ({
+  branch,
+  pages: branch.pages.map(page => items.filter(item => page.includes(item.category))),
+}));
+const nodes = branched.flatMap(({ branch, pages }) => pages.flatMap((page, pageIndex) => page.map(item => ({ item, branch, pageIndex }))));
+const linked = (name: string) => Array.from(new Set(groups.filter(group => group.tools.includes(name)).flatMap(group => group.tools))).filter(tool => tool !== name);
+const search = (item: typeof items[number]) => [item.name, item.detail, item.note, item.category].filter(Boolean).join(' ').toLowerCase();
 ---
-<section id="stack" class="story-scene scene-stack" data-scene aria-labelledby="story-stack-title">
-  <div class="chapter-heading"><div><p class="scene-eyebrow">A toolkit, not a trophy cabinet</p><h2 id="story-stack-title">The right tool.<br />For the actual problem.</h2></div><p class="chapter-context">A decade of production experience.<br />Still learning. Still building.</p></div>
-  <div class="stack-app" data-stack-app>
-    <div class="stack-window">
-      <div class="stack-titlebar">
-        <span class="stack-lights" aria-hidden="true"><i></i><i></i><i></i></span>
-        <p>Stack</p>
-        <a class="stack-search" href="#detail-stack" data-detail="stack" data-stack-search-open><Icon name="search" size={14} />Search {items.length} tools</a>
+<section id="stack" class="story-scene scene-stack" data-scene aria-labelledby="story-stack-title" data-skill-tree>
+  <div class="st-head">
+    <div class="st-title"><p class="scene-eyebrow">{kicker}</p><h2 id="story-stack-title">{title}</h2></div>
+    <div class="st-tools">
+      <label class="st-field">
+        <Icon name="search" size={16} />
+        <input type="search" placeholder={`Search ${items.length} tools`} aria-label={`Search ${items.length} tools and practices`} autocomplete="off" spellcheck="false" data-st-query />
+        <kbd aria-hidden="true">/</kbd>
+        <span class="sr-only" role="status" data-st-found></span>
+      </label>
+      <div class="st-chips" role="group" aria-label="Show one branch">
+        <button type="button" class="st-chip" aria-pressed="true" data-st-filter="all">All</button>
+        {branches.map(branch => <button type="button" class="st-chip" aria-pressed="false" data-st-filter={branch.id} style={`--b: var(--branch-${branch.id})`}><i aria-hidden="true"></i>{branch.label}</button>)}
       </div>
-      <div class="stack-body">
-        <div class="stack-sidebar">
-          <p class="stack-label" id="stack-capabilities-label">Capabilities</p>
-          <div class="stack-tabs" role="tablist" aria-labelledby="stack-capabilities-label" aria-orientation="vertical">
-            {capabilities.map((item, index) => (
-              <button type="button" role="tab" id={`stack-tab-${item.id}`} aria-controls={`stack-panel-${item.id}`} aria-selected={String(index === 0)} tabindex={index === 0 ? 0 : -1} aria-label={item.title} data-stack-tab={index}>
-                <img src={icon(item.id)} width="22" height="22" alt="" decoding="async" /><span class="stack-tab-long">{item.title}</span><span class="stack-tab-short" aria-hidden="true">{item.short}</span>
-              </button>
-            ))}
-            <button type="button" role="tab" id="stack-tab-index" class="stack-tab-index" aria-controls="stack-panel-index" aria-selected="false" tabindex="-1" aria-label={`Index of all ${items.length} tools and practices`} data-stack-tab={capabilities.length}>
-              <span class="stack-index-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="stack-tab-long">Index · {items.length}</span><span class="stack-tab-short" aria-hidden="true">Index</span>
-            </button>
-          </div>
-          <ul class="stack-categories-list" aria-label="Open the index by category">
-            {groups.map(group => <li><a href="#detail-stack" data-detail="stack" data-stack-filter={group.category}>{group.category}<span>{group.tools.length}</span></a></li>)}
-          </ul>
-        </div>
-        <div class="stack-panes">
-          {capabilities.map((item, index) => (
-            <article class="stack-pane" role="tabpanel" id={`stack-panel-${item.id}`} aria-labelledby={`stack-tab-${item.id}`} data-stack-pane={index} data-stack-code={item.code}>
-              <img class="stack-pane-icon" src={icon(item.id)} width="160" height="160" alt="" decoding="async" loading="lazy" />
-              <div class="stack-pane-copy">
-                <p class="stack-pane-path">0{index + 1} / 0{capabilities.length} · {item.code}</p>
-                <h3>{item.title}</h3>
-                <p class="stack-pane-context">{item.context}</p>
-                <ul class="stack-chips">{item.tools.map(tool => <li>{tool}</li>)}</ul>
-                <a class="stack-pane-link" href={href(item.detail)} data-detail={item.detail}>See where this was used <Icon name="arrow-up-right" size={15} /></a>
-              </div>
-              <ol class="stack-rail" aria-hidden="true">{capabilities.map((_, step) => <li class:list={{ 'is-filled': step <= index }}></li>)}</ol>
-            </article>
-          ))}
-          <section class="stack-pane stack-index" role="tabpanel" id="stack-panel-index" aria-labelledby="stack-tab-index" data-stack-pane={capabilities.length} data-stack-code="index/">
-            <div class="stack-index-head"><div><h3>All tools &amp; practices</h3><p>The full list, not an invented proficiency score.</p></div><a class="stack-cta" href="#detail-stack" data-detail="stack">Explore all {items.length} tools &amp; practices <Icon name="arrow-up-right" size={16} /></a></div>
-            <div class="stack-index-grid">
-              {groups.map(group => (
-                <div class="stack-index-group">
-                  <h4><a href="#detail-stack" data-detail="stack" data-stack-filter={group.category}>{group.category}<span>{group.tools.length}</span></a></h4>
-                  <p>{group.tools.map(tool => <span>{tool}</span>)}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
-      <div class="stack-status"><span class="stack-path"><i></i><span data-stack-path>{capabilities[0].code}</span></span><span>{totals}</span></div>
     </div>
-    <nav class="stack-dock" aria-label="Where each capability was used">
-      {capabilities.map((item, index) => <a href={href(item.detail)} data-detail={item.detail} data-stack-dock={index} aria-label={`${item.title}: see where this was used`}><img src={icon(item.id)} width="56" height="56" alt="" decoding="async" /></a>)}
-    </nav>
+  </div>
+  <div class="st-tabs" role="group" aria-label="Branch" data-st-tabs>
+    {branches.map((branch, index) => <button type="button" aria-pressed={String(index === 0)} data-st-tab={branch.id} style={`--b: var(--branch-${branch.id})`}><i aria-hidden="true"></i>{branch.label}</button>)}
+  </div>
+  <div class="st-stage" data-st-stage>
+    <svg class="st-edges" aria-hidden="true" data-st-edges></svg>
+    <div class="st-core" aria-hidden="true" data-st-core>
+      <img src={withBase('images/hero-neural-core-poster-800.webp')} width="800" height="800" alt="" decoding="async" loading="lazy" />
+      <svg class="st-ring" data-st-ring></svg>
+    </div>
+    {branched.map(({ branch, pages }) => (
+      <>
+        <img class="st-hub" data-st-hub={branch.id} src={withBase(`images/stack/hub-${branch.id}.webp`)} width="52" height="52" alt="" decoding="async" loading="lazy" style={`--b: var(--branch-${branch.id})`} />
+        <div class="st-cap" data-st-cap={branch.id} style={`--b: var(--branch-${branch.id})`}>
+          <p class="st-cap-t"><span>{branch.label}</span> · <span data-st-cap-count>{pages.flat().length} tools</span></p>
+          <a class="st-cap-s" href={href(branch.detail)} data-detail={branch.detail}>{branch.title}<Icon name="arrow-up-right" size={13} /></a>
+          <div class="st-pager" data-st-pager hidden>
+            <button type="button" aria-label="Previous page" data-st-page-prev><Icon name="arrow-left" size={14} /></button>
+            <span data-st-page-label>1 / {pages.length}</span>
+            <button type="button" aria-label="Next page" data-st-page-next><Icon name="arrow-left" size={14} /></button>
+          </div>
+        </div>
+      </>
+    ))}
+    <div class="st-nodes" data-st-nodes>
+      {nodes.map(({ item, branch, pageIndex }, index) => (
+        <button type="button" class="st-node" aria-pressed="false" data-st-id={index} data-st-branch={branch.id} data-st-page={pageIndex} data-st-search={search(item)} data-st-category={item.category} data-st-detail={item.detail} data-st-note={item.note} data-st-linked={linked(item.name).join('|')} style={`--b: var(--branch-${branch.id})`}>
+          <span class="st-glyph" aria-hidden="true">{item.logo ? <svg viewBox={logos[item.logo].viewBox} set:html={logos[item.logo].body} /> : <span class="st-mono">{item.mono}</span>}</span>
+          <span class="st-name">{item.name}</span>
+        </button>
+      ))}
+    </div>
+    <div class="st-scrim" data-st-scrim hidden></div>
+    <div class="st-card glass" role="dialog" aria-labelledby="st-card-title" data-st-card hidden>
+      <button type="button" class="st-close" aria-label="Close" data-st-close><Icon name="x" size={16} /></button>
+      <div class="st-card-glyph" aria-hidden="true" data-st-card-glyph></div>
+      <h3 id="st-card-title" data-st-card-name></h3>
+      <p class="st-card-meta" data-st-card-meta></p>
+      <p class="st-card-detail" data-st-card-detail></p>
+      <div class="st-card-block" data-st-card-note hidden><span class="st-card-label">Used for</span><p></p></div>
+      <div class="st-card-block" data-st-card-links hidden><span class="st-card-label">Linked tools</span><div class="st-card-chips"></div></div>
+    </div>
+  </div>
+  <div class="st-hud" data-st-hud>
+    <p class="st-count"><span class="st-count-label">Discovered</span><span class="st-count-value" data-st-count aria-live="polite" aria-atomic="true">0 / {items.length}</span></p>
+    <p class="st-hint" data-st-hint>Hover, tap or scroll to light up a tool</p>
+    <div class="st-hud-actions">
+      <button type="button" class="st-reveal" data-st-reveal>Reveal all</button>
+      <a class="st-index" href="#detail-stack" data-detail="stack">Full index<Icon name="arrow-up-right" size={14} /></a>
+    </div>
+  </div>
+  <div class="st-list">
+    {branched.map(({ branch, pages }) => (
+      <div class="st-list-branch">
+        <h3>{branch.title}<small>{branch.label} · {pages.flat().length} tools</small></h3>
+        <ul>{pages.flat().map(item => <li><strong>{item.name}</strong>{item.detail && <span>{item.detail}</span>}</li>)}</ul>
+        <a href={href(branch.detail)} data-detail={branch.detail}>See where this was used</a>
+      </div>
+    ))}
   </div>
 </section>

@@ -13,7 +13,7 @@ npm run build    # outputs to dist/
 npm run preview  # serve the build locally
 ```
 
-The default homepage is a dark "Signal Glass" portfolio: frosted glass panels, mint and iris signal accents, and an original 3D neural core. The top-right
+The default homepage is a dark "Launch Orange" portfolio: frosted glass panels, a launch-orange and lime signal pair, and an original 3D neural core. The top-right
 **New / Original** links switch between `/` and `/classic/`; both work without
 JavaScript. The original layout keeps its light/dark preference. The new
 homepage is intentionally dark and does not change that saved preference.
@@ -38,16 +38,21 @@ not assumed relocation dates.
 Systems offers three selectable walkthroughs grounded in recorded work:
 enterprise mobility, SAP integration, and AccessFlow's local-first AI concept.
 Public role schematics are not presented as internal deployment diagrams.
-The stack chapter is a macOS-style "Stack" window: four capability tabs plus an
-index tab, a status bar and a dock linking each capability to where it was used.
-Scrolling steps through the tabs (`stackSteps` in `src/data/story.ts`); without
-animation they are an ordinary keyboard tab list. Icons are in
+The stack chapter is a Skill Tree: all 66 verified tools are nodes on four
+branches (App, Integrate, Cloud, Local AI) around the neural core, with "used
+together" links between them. Nodes start locked and light up on hover, focus,
+tap or scroll (`stackReveal` in `src/data/story.ts`); nothing ever re-locks, and
+there are no scores or levels, only an honest "Discovered n / 66" counter and a
+**Reveal all** button. Selecting a node opens a card with its branch, category,
+what it was used for and linked tools. Phones show one branch page at a time
+behind a segmented tab bar; without JavaScript the tree is a grouped list. The
+layout and game run in `src/lib/skill-tree.ts`; branch hub icons are in
 `public/images/stack/`. The complete categorized catalog, with search, stays in
 a secondary viewer. Work is hidden from
 the new view, including its navigation and archive viewer; projects and the
 full archive remain available in **Original** at `/classic/`.
 The final Doha chapter keeps the original football-stadium and skyline drawing
-(an inline SVG in `QatarFinale.astro`), recoloured in the mint and iris signal
+(an inline SVG in `QatarFinale.astro`), recoloured in the launch-orange and lime
 palette with a maroon stand ring and a small Qatar flag accent. With motion on,
 the floodlights sweep slowly and the rim lights pulse. It is inspired by the
 country's football atmosphere, not official tournament branding.
@@ -68,8 +73,8 @@ still come from the shared profile.
 - Images go in `public/` and are referenced relative to the site base, via `withBase()`, without a leading slash (for example `images/holywhisper/home.webp`).
 - Cinematic styling is in `src/styles/story.css`; shared theme tokens remain in `src/styles/global.css`.
 - Scroll, motion preferences, gallery interaction, and dialogs are in `src/lib/story.ts`.
-- Shared chapter positions and gallery timing are in `src/data/story.ts`.
-- Career, stack and Doha scenes are in `CareerJourney.astro`, `StoryStack.astro`, and `QatarFinale.astro`; their responsive styling is in `src/styles/journey.css`.
+- Shared chapter positions, gallery timing and the stack reveal window are in `src/data/story.ts`.
+- Career, stack and Doha scenes are in `CareerJourney.astro`, `StoryStack.astro`, and `QatarFinale.astro`; their responsive styling is in `src/styles/journey.css` and `src/styles/skill-tree.css`.
 - The hero core and Systems walkthroughs are in `NeuralCore.astro` and `SystemsShowcase.astro`; the three.js scene is in `src/lib/neural-core.ts` and is only imported on demand. The unmounted `WorkShowcase.astro` retains the previous Work presentation.
 - `StackCatalog.astro` preserves every shared technology entry, its category filters and a search field inside the stack viewer.
 - Dialog content is in `src/components/ProjectViewer.astro`; original sections are composed in `src/pages/classic.astro`.
@@ -107,9 +112,10 @@ Viewports at most 700px tall (800px on narrow screens) use document scrolling
 so the interactive diagrams never compete with the fixed chapter ruler.
 The atlas and spatial styling live in `ChapterAtlas.astro` and
 `src/styles/experience.css`; neither requires extra runtime dependencies.
-The Signal Glass direction uses a near-black field, translucent blurred panels
-with hairline borders, a mint (`--accent`) and iris (`--accent-2`) signal gradient
-for active states, and pill controls. Shared color tokens live at the top of
+The Launch Orange direction uses a near-black field, translucent blurred panels
+with hairline borders, a launch-orange (`--accent`) and lime (`--accent-2`) signal
+gradient for active states, four branch colours for the Skill Tree, and pill
+controls. Shared color tokens live at the top of
 `story.css`. Chapter background colors in `src/data/story.ts` match the static
 scene backgrounds, so scroll transitions and motion-off views share the same
 palette. Dialogs and the chapter atlas use the same surfaces; the Original route

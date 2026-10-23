@@ -1,0 +1,157 @@
+/* Skill Tree: the Stack chapter. Every verified tool is a node on one of four branches around the neural core.
+   Colour tokens come from story.css; --b carries the branch colour, --d the node diameter, set by skill-tree.ts. */
+.scene-stack { display: flex; flex-direction: column; gap: 14px; }
+.st-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.st-title h2 { font-size: clamp(30px, 3vw, 40px); line-height: 1.05; font-weight: 500; letter-spacing: -.035em; margin-top: 8px; }
+.st-tools { display: none; align-items: center; gap: 12px; flex-wrap: wrap; }
+.js .st-tools { display: flex; }
+.st-field { position: relative; display: flex; align-items: center; gap: 10px; width: 280px; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 80%, transparent); color: var(--subtle); transition: border-color .2s; }
+.st-field:focus-within { border-color: var(--accent); }
+.st-field input { flex: 1; min-width: 0; background: none; border: 0; color: var(--fg); font: 400 15px/1 var(--font-sans); outline: none; }
+.st-field input::placeholder { color: var(--subtle); }
+.st-field input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.st-field kbd { font: 500 12px/1 var(--font-mono); color: var(--subtle); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
+.st-field:focus-within kbd { display: none; }
+.st-chips { display: flex; gap: 6px; }
+.st-chip { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 80%, transparent); color: var(--muted); font: 500 12px var(--font-sans); cursor: pointer; transition: color .2s, border-color .2s, background .2s; }
+.st-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--b, var(--fg)); }
+.st-chip:hover { color: var(--fg); border-color: var(--line-strong); }
+.st-chip[aria-pressed="true"] { color: var(--fg); border-color: var(--fg); background: var(--raised); }
+.st-tabs { display: none; }
+/* Paged layout (phones, narrow windows, short desktops): a segmented tab bar picks the branch. */
+.js [data-st-layout="paged"] .st-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; width: fit-content; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 80%, transparent); }
+.st-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; min-width: 0; padding: 0 16px; border-radius: 999px; color: var(--muted); font: 500 12px var(--font-sans); white-space: nowrap; cursor: pointer; transition: background .2s, color .2s; }
+.st-tabs button i { width: 7px; height: 7px; border-radius: 50%; background: var(--b); flex: none; }
+.st-tabs button[aria-pressed="true"] { background: var(--raised); color: var(--fg); box-shadow: inset 0 0 0 1px var(--b); }
+.st-stage { position: relative; flex: 1; min-height: 0; }
+.st-edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.st-edges path, .st-edges line { fill: none; transition: opacity .35s, stroke .35s; }
+.st-core { position: absolute; width: var(--core, 92px); height: var(--core, 92px); translate: -50% -50%; border-radius: 50%; pointer-events: none; }
+.st-core::before { content: ""; position: absolute; inset: -40%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 91, 31, .22), transparent 68%); }
+.st-core img { position: relative; width: 100%; height: 100%; object-fit: cover; transform: scale(1.55); clip-path: circle(32.2% at 50% 50%); }
+.st-ring { position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); overflow: visible; }
+.st-ring line { stroke: var(--line); stroke-opacity: .6; stroke-width: 2; stroke-linecap: round; transition: stroke .3s, stroke-opacity .3s; }
+.st-ring line.on { stroke: var(--accent); stroke-opacity: 1; }
+.st-hub { position: absolute; width: var(--hub, 52px); height: var(--hub, 52px); translate: -50% -50%; border-radius: 50%; object-fit: cover; background: var(--bg); box-shadow: 0 0 0 1px var(--b), 0 0 0 5px color-mix(in srgb, var(--b) 12%, transparent); pointer-events: none; transition: opacity .3s; }
+.st-cap { position: absolute; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; max-width: 230px; transition: opacity .3s; }
+.st-cap-t { grid-column: 1; font: 500 12px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--b); white-space: nowrap; }
+.st-cap-s { grid-column: 1; display: inline-flex; align-items: center; gap: 6px; min-height: 28px; font: 400 13px/18px var(--font-sans); color: var(--muted); }
+.st-cap-s:hover { color: var(--fg); }
+.st-cap[data-side="right"] { text-align: right; }
+.st-cap[data-side="right"] .st-cap-s { justify-content: flex-end; }
+.st-hub.dim, .st-cap.dim { opacity: .22; }
+.st-pager { display: none; }
+[data-st-layout="paged"] .st-cap { max-width: none; align-items: center; }
+[data-st-layout="paged"] .st-pager { grid-column: 2; grid-row: 1 / span 2; display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--subtle); }
+.st-pager[hidden] { display: none; }
+.st-pager button { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); color: var(--fg); cursor: pointer; }
+.st-pager button:disabled { opacity: .35; cursor: default; }
+.st-pager [data-st-page-next] svg { rotate: 180deg; }
+.st-nodes { position: absolute; inset: 0; pointer-events: none; }
+.st-node[hidden], .st-hub[hidden], .st-cap[hidden], .st-core[hidden] { display: none; }
+.st-node { position: absolute; display: flex; align-items: center; gap: 8px; padding: 6px 0; translate: calc(var(--d, 24px) * -.5) -50%; color: var(--subtle); text-align: left; cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; transition: opacity .3s; }
+.st-node[data-side="left"] { flex-direction: row-reverse; translate: calc(-100% + var(--d, 24px) * .5) -50%; text-align: right; }
+.st-glyph { display: grid; place-items: center; flex: none; width: var(--d, 24px); height: var(--d, 24px); border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--subtle); transition: border-color .25s, color .25s, background .25s, box-shadow .25s, scale .25s var(--ease-out); }
+.st-glyph svg { width: calc(var(--d, 24px) * .54); height: calc(var(--d, 24px) * .54); fill: currentColor; opacity: .55; transition: opacity .25s; }
+.st-mono { font: 600 calc(var(--d, 24px) * .34) var(--font-mono); opacity: .6; transition: opacity .25s; }
+.st-name { font: 500 12px/14px var(--font-sans); color: var(--subtle); max-width: var(--lw, 120px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .25s; }
+.st-node.on .st-glyph { border-color: var(--b); color: var(--b); background: color-mix(in srgb, var(--b) 14%, var(--bg)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--b) 10%, transparent), 0 0 14px color-mix(in srgb, var(--b) 35%, transparent); }
+.st-node.on .st-glyph svg, .st-node.on .st-mono { opacity: 1; }
+.st-node.on .st-name { color: var(--fg); }
+.st-node:hover .st-glyph, .st-node:focus-visible .st-glyph { scale: 1.15; border-width: 2px; }
+.st-node:focus-visible { outline: none; }
+.st-node:focus-visible .st-name { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--accent); }
+.st-node[aria-pressed="true"] .st-glyph { border-width: 2px; color: var(--accent-ink); background: var(--b); box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--b), 0 0 24px color-mix(in srgb, var(--b) 55%, transparent); }
+.st-node[aria-pressed="true"] .st-glyph svg, .st-node[aria-pressed="true"] .st-mono { opacity: 1; }
+.st-node[aria-pressed="true"] .st-name { font-weight: 650; color: var(--fg); }
+.st-node.match .st-glyph { border: 2px solid var(--accent-2); color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, var(--bg)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 18%, transparent); }
+.st-node.match .st-glyph svg, .st-node.match .st-mono { opacity: 1; }
+.st-node.match .st-name { color: var(--fg); }
+.st-node.dim { opacity: .22; }
+.st-node.pop .st-glyph { animation: st-pop .38s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes st-pop { from { scale: .6; } to { scale: 1; } }
+/* Detail card: a non-modal dialog over the core on desktop, a bottom sheet on phones. */
+.st-scrim { position: absolute; inset: 0; z-index: 4; background: color-mix(in srgb, var(--bg) 55%, transparent); }
+.st-card { position: absolute; z-index: 5; left: 50%; width: var(--cw, 320px); translate: -50% 0; padding: 20px; border-radius: 20px; }
+.st-card[data-dock="below"] { top: var(--cy); }
+.st-card[data-dock="above"] { bottom: calc(100% - var(--cy)); }
+.st-close { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: var(--muted); cursor: pointer; transition: color .2s, background .2s; }
+.st-close::before { content: ""; position: absolute; inset: -6px; }
+.st-close:hover { color: var(--fg); background: var(--raised); }
+.st-card-glyph { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: color-mix(in srgb, var(--b) 14%, var(--bg)); color: var(--b); }
+.st-card-glyph svg { width: 22px; height: 22px; fill: currentColor; }
+.st-card-glyph .st-mono { font-size: 14px; opacity: 1; }
+.st-card h3 { margin-top: 14px; font: 600 18px/1.3 var(--font-sans); letter-spacing: -.02em; }
+.st-card-meta { margin-top: 4px; font: 500 11px/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--b); }
+.st-card-detail { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.st-card-detail:empty { display: none; }
+.st-card-block { margin-top: 14px; }
+.st-card-label { display: block; font: 500 11px/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--subtle); }
+.st-card-block p { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--fg); }
+.st-card-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.st-card-chips button { height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font: 500 12px var(--font-mono); letter-spacing: .04em; cursor: pointer; transition: color .2s, border-color .2s; }
+.st-card-chips button:hover { color: var(--fg); border-color: var(--line-strong); }
+/* HUD: the honest counter, a hint and the way to the full index. No scores. */
+.st-hud { display: none; align-items: center; justify-content: space-between; gap: 20px; min-height: 52px; padding-top: 12px; border-top: 1px solid var(--line); }
+.js .st-hud { display: flex; }
+.st-count { display: flex; align-items: baseline; gap: 12px; }
+.st-count-label { font: 500 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--subtle); }
+.st-count-value { font: 600 20px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.st-hint { font-size: 13px; color: var(--muted); }
+.st-hint[hidden] { display: none; }
+.st-hud-actions { display: flex; align-items: center; gap: 10px; }
+.st-reveal, .st-index { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); font-size: 13px; font-weight: 500; cursor: pointer; transition: border-color .2s, color .2s; }
+.st-reveal:hover { border-color: var(--line-strong); }
+.st-reveal:disabled { color: var(--subtle); cursor: default; }
+.st-index { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.st-index:hover { background: color-mix(in srgb, var(--accent) 88%, #fff); }
+/* Without JavaScript the tree is a grouped list. */
+.st-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin-top: 28px; }
+.js .st-list { display: none; }
+.st-list h3 { font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
+.st-list h3 small { display: block; margin-top: 4px; font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.st-list ul { list-style: none; padding: 0; margin: 14px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.st-list li { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.st-list li strong { font-weight: 500; }
+.st-list li span { color: var(--muted); }
+.st-list li span::before { content: " · "; }
+.st-list a { color: var(--accent); font-size: 13px; }
+html:not(.js) :is(.st-stage, .st-tabs) { display: none; }
+/* The chapter timeline is 78px tall and fixed to the bottom of the stage; keep the HUD above it. */
+[data-motion="on"] .scene-stack { padding-top: 88px; padding-bottom: 96px; }
+.story[data-motion="off"] .st-stage { flex: none; height: clamp(560px, 72vh, 760px); }
+@media (width < 700px) {
+  .scene-stack { gap: 10px; }
+  .st-head { flex-direction: column; align-items: stretch; gap: 10px; }
+  .st-title h2 { font-size: 26px; margin-top: 6px; }
+  .st-field { width: 100%; }
+  .st-field kbd, .st-chips { display: none; }
+  .js [data-st-layout="paged"] .st-tabs { width: auto; }
+  .st-tabs button { padding: 0; }
+  .st-scrim, .st-card { position: fixed; }
+  .st-scrim { inset: 0; z-index: 40; }
+  .st-card { z-index: 41; left: 8px; right: 8px; bottom: 8px; top: auto !important; width: auto; translate: none; border-radius: 28px; padding: 24px; }
+  .st-hud { flex-wrap: wrap; gap: 8px 16px; padding-top: 10px; min-height: 0; }
+  .st-hint { display: none; }
+  .st-count-value { font-size: 18px; }
+  .st-reveal, .st-index { min-height: 36px; padding: 0 12px; font-size: 12px; }
+  .st-list { grid-template-columns: 1fr; }
+  .story[data-motion="off"] .st-stage { height: auto; }
+  [data-motion="on"] .scene-stack { padding-top: 78px; padding-bottom: 84px; }
+}
+@media (height < 780px) and (width >= 700px) {
+  .scene-stack { gap: 8px; }
+  [data-motion="on"] .scene-stack { padding-top: 80px; padding-bottom: 90px; }
+  .st-title h2 { font-size: 28px; margin-top: 4px; }
+  .st-hud { min-height: 44px; padding-top: 8px; }
+  .st-name { font-size: 11.5px; line-height: 13px; }
+}
+@media (height < 800px) { .st-card [data-st-card-links] { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .st-node, .st-glyph, .st-glyph svg, .st-mono, .st-name, .st-edges path, .st-edges line, .st-ring line, .st-hub, .st-cap { transition: none; }
+  .st-node.pop .st-glyph { animation: none; }
+}
+@media print {
+  .st-tools, .st-tabs, .st-stage, .st-hud { display: none !important; }
+  .st-list { display: grid !important; }
+}

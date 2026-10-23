@@ -167,24 +167,29 @@ test('capabilities lead to work while the complete catalog remains in a secondar
   assert.doesNotMatch(stack, /data-story-category=/);
 });
 
-test('the Stack window is a labelled tab list with an index tab, a dock and a searchable catalog', () => {
+test('the Skill Tree renders every tool as a locked node with an honest counter, search and a no-script list', () => {
   const stack = story.slice(story.indexOf('id="stack"'), story.indexOf('id="contact"'));
-  assert.match(stack, /role="tablist"[^>]*aria-orientation="vertical"/);
-  const tabs = stack.match(/<button\b[^>]*role="tab"[^>]*>/g) ?? [];
-  assert.equal(tabs.length, 5);
-  for (const tab of tabs) {
-    const panel = tab.match(/aria-controls="([^"]+)"/)[1];
-    assert.match(stack, new RegExp(`role="tabpanel"[^>]*id="${panel}"`));
-  }
-  assert.equal(tabs.filter(tab => /aria-selected="true"/.test(tab)).length, 1);
-  assert.match(stack, /<nav class="stack-dock" aria-label="Where each capability was used"/);
-  assert.match(stack, /data-stack-search-open/);
+  const nodes = stack.match(/<button\b[^>]*class="st-node"[^>]*>/g) ?? [];
+  assert.equal(nodes.length, 66);
+  assert.ok(nodes.every(node => /aria-pressed="false"/.test(node) && /data-st-branch="(app|integrate|cloud|ai)"/.test(node)));
+  assert.match(stack, /^id="stack"[^>]*data-scene[^>]*data-skill-tree>/);
+  assert.match(stack, /type="search"[^>]*data-st-query/);
+  assert.match(stack, /role="status" data-st-found/);
+  assert.match(stack, /data-st-count aria-live="polite" aria-atomic="true">0 \/ 66</);
+  assert.match(stack, /<button type="button" class="st-reveal" data-st-reveal>Reveal all</);
+  assert.match(stack, /<svg class="st-edges" aria-hidden="true"/);
+  assert.match(stack, /role="dialog" aria-labelledby="st-card-title" data-st-card hidden/);
+  assert.equal((stack.match(/<button type="button" aria-pressed="(?:true|false)" data-st-tab=/g) ?? []).length, 4);
+  assert.equal((stack.match(/data-st-filter="/g) ?? []).length, 5);
+  assert.match(stack, /<div class="st-list">/);
+  assert.equal((stack.match(/<div class="st-list-branch">/g) ?? []).length, 4);
+  assert.doesNotMatch(stack, /XP|level |badge|streak|%</);
   assert.match(story, /type="search" data-stack-query/);
   assert.match(story, /data-stack-empty hidden/);
-  for (const id of ['application', 'integration', 'infrastructure', 'intelligence']) {
-    assert.ok(existsSync(new URL(`../dist/images/stack/stack-icon-${id}.webp`, import.meta.url)));
+  for (const id of ['app', 'integrate', 'cloud', 'ai']) {
+    assert.ok(existsSync(new URL(`../dist/images/stack/hub-${id}.webp`, import.meta.url)), `hub-${id}.webp`);
   }
-  assert.match(stack, /4 capabilities · 10 categories · 66 tools &amp; practices/);
+  assert.ok(!existsSync(new URL('../dist/images/stack/stack-icon-application.webp', import.meta.url)));
 });
 
 test('the visual chapter atlas exposes all six destinations and accessible search', () => {
@@ -215,7 +220,7 @@ test('system boundaries have labeled inspection controls and live explanations',
   assert.match(story, /Inspect Flutter/);
 });
 
-test('the Signal Glass palette keeps readable text on the dark field and glass panels', () => {
+test('the Launch Orange palette keeps readable text on the dark field and glass panels', () => {
   const css = readFileSync(new URL('../src/styles/story.css', import.meta.url), 'utf8');
   const chapters = readFileSync(new URL('../src/data/story.ts', import.meta.url), 'utf8');
   const token = name => {
@@ -245,5 +250,5 @@ test('the Signal Glass palette keeps readable text on the dark field and glass p
   assert.ok(contrast(token('accent'), token('panel-highlight')) >= 4.5);
   assert.ok(contrast(token('focus'), token('panel-highlight')) >= 3);
   assert.doesNotMatch(css, /--paper|--ink|color-scheme: light/);
-  assert.match(story, /name="theme-color" content="#07090d"/);
+  assert.match(story, /name="theme-color" content="#0b0b0c"/);
 });

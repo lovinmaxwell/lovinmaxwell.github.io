@@ -25,7 +25,7 @@ export async function createNeuralCore(host: HTMLElement, url: string): Promise<
   renderer.toneMappingExposure = 1;
   // Opaque, matching the poster's backdrop: with a transparent canvas three.js clears the glass's
   // transmission buffer to half-white, which turns the clear sphere milky. The CSS mask fades the edges.
-  renderer.setClearColor(0x08090d, 1);
+  renderer.setClearColor(0x0b0b0c, 1);
 
   const scene = new Scene();
   const pmrem = new PMREMGenerator(renderer);
@@ -56,6 +56,16 @@ export async function createNeuralCore(host: HTMLElement, url: string): Promise<
   };
   const core = glow('signal_core');
   const pulse = glow('signal_pulse');
+  // The GLB was exported in the teal Signal Glass palette; repaint the emissive parts to Launch Orange at runtime
+  // so the model matches the poster without re-exporting.
+  const paint = (entry: ReturnType<typeof glow>, hex: number) => {
+    if (!entry) return;
+    entry.material.color.setHex(hex);
+    entry.material.emissive.setHex(hex);
+  };
+  paint(core, 0xff5b1f);
+  paint(pulse, 0xff5b1f);
+  paint(glow('iris_filament'), 0xd7f65a);
 
   const canvas = renderer.domElement;
   canvas.className = 'core-canvas';

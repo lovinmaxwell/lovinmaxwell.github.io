@@ -34,6 +34,11 @@ export function profileJson(site: URL | undefined) {
         name: category,
         items: stack.items.filter((i) => i.category === category).map(itemName),
       })),
+      branches: stack.branches.map((branch) => ({
+        name: branch.title,
+        items: stack.items.filter((i) => branch.pages.flat().includes(i.category)).map(itemName),
+      })),
+      usedTogether: stack.groups.map((group) => ({ name: group.label, items: group.tools })),
       usedFor: stack.items.filter((i) => i.note).map((i) => ({ name: i.name, note: i.note })),
     },
     experience: profile.experience.jobs.map(({ role, company, type, location, period, current, bullets }) => ({
@@ -289,6 +294,10 @@ export function llmsFullTxt(site: URL | undefined): string {
     '### Used for',
     '',
     ...data.stack.usedFor.map((u) => `- ${u.name}: ${u.note}`),
+    '',
+    '### Used together',
+    '',
+    ...data.stack.usedTogether.map((g) => `- ${g.name}: ${g.items.join(', ')}`),
     '',
     '## Experience',
     '',
