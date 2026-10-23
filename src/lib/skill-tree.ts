@@ -18,8 +18,13 @@ export interface SkillTreeOptions {
   reduced: MediaQueryList;
   /** Scroll the story so the given phone step (0-based of `steps`) is in view. */
   scrollToStep(step: number, steps: number): void;
-  /** Interface sound for a moment; the page decides whether sound is on. */
-  sound?: (name: 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open' | 'card-close') => void;
+  /**
+   * Interface sound for a moment; the page decides whether sound is on and returns whether the cue will play, so the
+   * pulse can line its visual up with the sound. `branch` pitches the cue; `delay` is ms from now.
+   */
+  sound?: (name: 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open', options?: { branch?: BranchId; delay?: number }) => boolean;
+  /** Offer to turn sound on after an action that would have made a sound; `replay` repeats that action. */
+  inviteSound?: (replay: () => void) => void;
 }
 
 type BranchId = StackBranchId;
@@ -42,7 +47,8 @@ const SVG = 'http://www.w3.org/2000/svg';
 
 export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): SkillTree {
   const { compact, reduced } = options;
-  const sound = options.sound ?? (() => {});
+  const sound = options.sound ?? (() => false);
+  const inviteSound = options.inviteSound ?? (() => {});
   const q = <T extends Element>(selector: string) => section.querySelector<T>(selector)!;
   const stage = q<HTMLElement>('[data-st-stage]');
   const edgesSvg = q<SVGSVGElement>('[data-st-edges]');
@@ -342,7 +348,7 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
       node.el.classList.add('pop');
       setTimeout(() => node.el.classList.remove('pop'), 420);
     }
-    if (chime) sound('node-discover');
+    if (chime) sound('node-discover', { branch: node.branch });
     persist();
     paint();
   };
@@ -351,12 +357,18 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
   // Clicking a branch hub sends a signal from the core along the trunk, the bus and down each chain. The nodes it
   // reaches light up as it arrives, in order, so the branch reveals itself the way the connections run.
   const SPEED = 0.9; // px per ms
+  const TICK = 400; // ms into hub-pulse where its arrival tick lands
   const pulseBranch = (branch: BranchId) => {
     const hubEl = hubs.find(h => h.dataset.stHub === branch);
     const inBranch = nodes.filter(node => node.branch === branch && visible(node));
-    sound('hub-pulse');
     if (reduced.matches) { inBranch.forEach(node => discover(node, false, false)); return; }
-    hubEl?.classList.remove('zap'); void hubEl?.offsetWidth; hubEl?.classList.add('zap');
+    // The sound's arrival tick sits at 400 ms, so the visual reaches the hub then: a short trunk waits, a long one
+    // lets the sound start late instead.
+    const trunk = edges.find(edge => edge.branch === branch && edge.kind === 'trunk');
+    const trunkTime = trunk ? 40 + trunk.el.getTotalLength() / SPEED : 0;
+    const sounding = sound('hub-pulse', { branch, delay: Math.max(0, trunkTime - TICK) });
+    if (!sounding) inviteSound(() => pulseBranch(branch));
+    const offset = sounding ? Math.max(0, TICK - trunkTime) : 0;
     core.classList.remove('kick'); void core.offsetWidth; core.classList.add('kick');
     const arrival = new Map<number, number>();
     const run = (edge: Edge, start: number) => {
@@ -373,8 +385,9 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
       anim.onfinish = () => ghost.remove();
       return start + duration;
     };
-    const trunk = edges.find(edge => edge.branch === branch && edge.kind === 'trunk');
-    const t0 = trunk ? run(trunk, 0) : 0;
+    const t0 = trunk ? run(trunk, offset) : offset;
+    // The hub rings when the signal reaches it, which is also where the sound's tick lands.
+    setTimeout(() => { hubEl?.classList.remove('zap'); void hubEl?.offsetWidth; hubEl?.classList.add('zap'); }, t0);
     edges.filter(edge => edge.branch === branch && edge.kind === 'bus' && inBranch.some(n => n.id === edge.a)).forEach(edge => arrival.set(edge.a, run(edge, t0)));
     const chains = edges.filter(edge => edge.branch === branch && edge.kind === 'chain' && inBranch.some(n => n.id === edge.a) && inBranch.some(n => n.id === edge.b)).sort((x, y) => nodes[x.a].row - nodes[y.a].row);
     chains.forEach(edge => { const from = arrival.get(edge.a); if (from !== undefined) arrival.set(edge.b, run(edge, from)); });
@@ -427,7 +440,6 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
     node.el.setAttribute('aria-pressed', 'false');
     card.hidden = true;
     scrim.hidden = true;
-    sound('card-close');
     if (returnFocus || card.contains(document.activeElement)) node.el.focus({ preventScroll: true });
     paint();
   };

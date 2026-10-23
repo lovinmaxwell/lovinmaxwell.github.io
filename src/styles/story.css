@@ -59,6 +59,17 @@ html[data-appearance="immersive"] {
 .motion-bars i { width: 1px; height: 5px; background: currentColor; }
 .motion-bars i:nth-child(2) { height: 12px; }
 .motion-bars i:nth-child(3) { height: 8px; }
+/* Sound is one site-wide switch beside Motion. Off by default; the icon takes the accent when it is on. */
+.sound-toggle { display: none; align-items: center; gap: 8px; min-height: 44px; padding: 4px; color: var(--muted); font-size: 10px; cursor: pointer; }
+.story[data-initialized] .sound-toggle { display: flex; }
+.sound-toggle svg { flex: none; opacity: .7; }
+.sound-toggle .sound-icon-on, .story[data-sound="on"] .sound-toggle .sound-icon-off { display: none; }
+.story[data-sound="on"] .sound-toggle .sound-icon-on { display: block; color: var(--accent); opacity: 1; }
+/* The one-time invitation: appears for four seconds after the first click on the core or a hub with sound off. */
+.sound-invite { pointer-events: auto; padding: 5px 11px; border: 1px solid var(--line-strong); border-radius: 999px; background: color-mix(in oklab, var(--bg) 72%, transparent); color: var(--fg); font: 12px/1 var(--font-mono); letter-spacing: 0; text-transform: none; cursor: pointer; animation: invite-in .3s ease-out both; }
+.sound-invite:hover, .sound-invite:focus-visible { border-color: var(--accent); color: var(--accent); }
+.sound-invite[hidden] { display: none; }
+@keyframes invite-in { from { opacity: 0; translate: 0 6px; } }
 .story-panels { position: relative; }
 .story-scene { --scene-accent: var(--accent); position: relative; isolation: isolate; min-height: 820px; padding: 80px 5vw 110px; }
 .scene-eyebrow { color: var(--scene-accent, var(--accent)); font: 500 12px/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
@@ -232,7 +243,7 @@ html[data-appearance="immersive"] {
   .story-name { font-size: 12px; gap: 0; }
   .name-symbol, .story-header-links { display: none; }
   .story-controls, .story-header-links + .story-controls { margin-left: auto; gap: 7px; }
-  .motion-toggle { font-size: 9px; }
+  .motion-toggle, .sound-toggle { font-size: 9px; }
   .motion-bars { display: none; }
   .story-scene { padding: 60px 20px 80px; min-height: 790px; }
   .scene-eyebrow { font-size: 10px; line-height: 1.8; }
@@ -325,7 +336,7 @@ html[data-appearance="immersive"] {
   .chapter-heading h2 { font-size: 26px; }
   .story-header { padding-inline: 12px; }
   .story-name { font-size: 10px; }
-  .motion-toggle { max-width: 35px; line-height: 1.2; }
+  .motion-toggle, .sound-toggle { max-width: 35px; line-height: 1.2; }
   .story-controls { gap: 3px; }
   .system-flow { gap: 16px; margin-block: 14px; }
   .flow-node { padding: 10px; }

@@ -14,6 +14,34 @@ export function initStory() {
   const scenes = Array.from(root.querySelectorAll<HTMLElement>('[data-scene]'));
   const toggle = root.querySelector<HTMLButtonElement>('[data-motion-toggle]')!;
   const toggleLabel = root.querySelector<HTMLElement>('[data-motion-label]')!;
+  const soundToggle = root.querySelector<HTMLButtonElement>('[data-sound-toggle]');
+  const soundLabel = root.querySelector<HTMLElement>('[data-sound-label]');
+  const soundInvites = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-sound-invite]'));
+  // Sound: one switch in the header, remembered; the first click on the core or a hub with sound off earns one
+  // four-second invitation in the readout nearest the action, never on load and never twice in a session.
+  const syncSound = (on: boolean) => {
+    root.dataset.sound = on ? 'on' : 'off';
+    soundToggle?.setAttribute('aria-pressed', String(on));
+    soundToggle?.setAttribute('aria-label', on ? 'Turn sound off' : 'Turn sound on');
+    if (soundToggle) soundToggle.title = on ? 'Sound on' : 'Sound off';
+    if (soundLabel) soundLabel.textContent = on ? 'Sound on' : 'Sound off';
+    if (on) soundInvites.forEach(chip => { chip.hidden = true; });
+  };
+  syncSound(sfx.enabled);
+  sfx.onChange(syncSound);
+  soundToggle?.addEventListener('click', () => sfx.toggle());
+  addEventListener('pointerdown', () => sfx.prime(), { once: true, passive: true });
+  let invited = false;
+  let inviteTimer = 0;
+  const inviteSound = (chip: HTMLButtonElement | undefined, replay: () => void) => {
+    if (invited || sfx.enabled || !chip) return;
+    invited = true;
+    chip.hidden = false;
+    chip.onclick = () => { clearTimeout(inviteTimer); chip.hidden = true; sfx.setEnabled(true); replay(); };
+    inviteTimer = window.setTimeout(() => { chip.hidden = true; }, 4000);
+  };
+  const heroInvite = soundInvites.find(chip => chip.closest('.core-art'));
+  const treeInvite = soundInvites.find(chip => chip.closest('[data-skill-tree]'));
   const progress = root.querySelector<HTMLElement>('[data-story-progress]')!;
   const atlas = document.querySelector<HTMLDialogElement>('[data-atlas]')!;
   const atlasSearch = atlas.querySelector<HTMLInputElement>('[data-atlas-search]')!;
@@ -47,7 +75,14 @@ export function initStory() {
     if (coreRequested || !coreHost || !animated() || !wide.matches || !('WebGL2RenderingContext' in window)) return;
     coreRequested = true;
     import('./neural-core')
-      .then(({ createNeuralCore }) => createNeuralCore(coreHost, coreHost.dataset.coreModel!, { onInteract: kind => sfx.play(kind === 'pulse' ? 'hero-pulse' : kind) }))
+      .then(({ createNeuralCore }) => createNeuralCore(coreHost, coreHost.dataset.coreModel!, {
+        // Only the click speaks: dragging and the idle spin stay silent.
+        onInteract: kind => {
+          if (kind !== 'pulse') return;
+          if (sfx.enabled) sfx.play('hero-pulse');
+          else inviteSound(heroInvite, () => core?.pulse());
+        },
+      }))
       .then(instance => {
         core = instance;
         const hintEl = root.querySelector('.core-interaction');
@@ -71,7 +106,9 @@ export function initStory() {
   };
   // The Skill Tree runs the Stack chapter; a phone tab scrolls the story to that branch page.
   const tree = initSkillTree(root.querySelector<HTMLElement>('[data-skill-tree]')!, {
-    compact, reduced, sound: name => sfx.play(name),
+    compact, reduced,
+    sound: (name, options) => { const will = sfx.wouldPlay(name); if (will) sfx.play(name, options); return will; },
+    inviteSound: replay => inviteSound(treeInvite, replay),
     scrollToStep: (step, steps) => scrollForTime(stackReveal.start + (step / steps) * 0.85 * (stackReveal.end - stackReveal.start) + 0.03),
   });
   const activeScene = (index: number) => {

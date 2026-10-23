@@ -79,6 +79,7 @@ const search = (item: typeof items[number]) => [item.name, item.detail, item.not
   <div class="st-hud" data-st-hud>
     <p class="st-count"><span class="st-count-label">Discovered</span><span class="st-count-value" data-st-count aria-live="polite" aria-atomic="true">0 / {items.length}</span></p>
     <p class="st-hint" data-st-hint>Hover, tap or scroll to light up a tool</p>
+    <button type="button" class="sound-invite" data-sound-invite hidden>♪ Turn on sound</button>
     <div class="st-hud-actions">
       <button type="button" class="st-reveal" data-st-reveal>Reveal all</button>
       <a class="st-index" href="#detail-stack" data-detail="stack">Full index<Icon name="arrow-up-right" size={14} /></a>

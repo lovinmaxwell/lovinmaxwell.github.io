@@ -255,7 +255,7 @@ test('the Launch Orange palette keeps readable text on the dark field and glass 
   assert.match(story, /name="theme-color" content="#0b0b0c"/);
 });
 
-test('play and sound: the hero core is grabbable, hubs pulse, and sound is synthesised and off by default', () => {
+test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as five small files, off by default', () => {
   const scripts = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((file) => file.endsWith('.js')).map((file) => read(`_astro/${file}`)).join('\n');
   assert.match(story, /<span class="core-interaction">Move to explore<\/span>/);
   assert.match(scripts, /core-hit/);
@@ -263,8 +263,15 @@ test('play and sound: the hero core is grabbable, hubs pulse, and sound is synth
   assert.match(scripts, /Drag to spin · Click to pulse/);
   assert.match(scripts, /st-pulse/);
   assert.match(scripts, /portfolio-sound/);
-  for (const name of ['hero-pulse', 'hub-pulse', 'node-discover', 'reveal-all', 'card-open', 'card-close']) assert.ok(scripts.includes(`"${name}"`) || scripts.includes(`'${name}'`), `Missing sound ${name}`);
-  // No audio files ship: every sound is a Web Audio recipe.
-  assert.ok(!existsSync(new URL('../dist/audio', import.meta.url)) && !existsSync(new URL('../dist/sounds', import.meta.url)));
-  assert.match(scripts, /createOscillator/);
+  const names = ['hero-pulse', 'hub-pulse', 'node-discover', 'reveal-all', 'card-open'];
+  for (const name of names) {
+    assert.ok(scripts.includes(`"${name}"`) || scripts.includes(`'${name}'`), `Missing sound ${name}`);
+    for (const ext of ['ogg', 'mp3']) assert.ok(existsSync(new URL(`../dist/sound/${name}.${ext}`, import.meta.url)), `Missing dist/sound/${name}.${ext}`);
+  }
+  assert.ok(!scripts.includes(`"card-close"`) && !scripts.includes(`'card-close'`), 'Closing the card is silent');
+  // Design Studio's sound spec: one switch in the header, off by default; one-time invitation chips by the core and the tree.
+  assert.match(story, /<button type="button" class="sound-toggle" aria-pressed="false" aria-label="Turn sound on"/);
+  assert.equal((story.match(/data-sound-invite hidden>♪ Turn on sound<\/button>/g) ?? []).length, 2);
+  assert.match(scripts, /1\.122/); // per-branch pitch
+  assert.match(scripts, /createBufferSource/);
 });

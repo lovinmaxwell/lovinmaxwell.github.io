@@ -1,111 +1,180 @@
 /**
- * Interface sound, synthesised with Web Audio so no files ship. Off until the visitor opts in: browsers block
- * autoplay anyway and unasked-for sound is hostile. Design Studio's sound spec sets the recipes and the ceiling.
+ * Interface sound. Five short files from Design Studio's sound spec (2026-10-24), all on one D/A open fifth so
+ * overlapping cues never clash. Off until the visitor opts in: browsers block autoplay anyway and unasked-for sound
+ * is hostile. Nothing is fetched until sound is turned on; the AudioContext is created on that first gesture.
  */
-export type SfxName = 'hero-pulse' | 'grab' | 'release' | 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open' | 'card-close';
+export type SfxName = 'hero-pulse' | 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open';
+export type Branch = 'app' | 'integrate' | 'cloud' | 'ai';
 
-interface Voice {
-  type: OscillatorType;
-  /** Start and end frequency in Hz; the sweep is exponential. */
-  from: number; to: number;
-  /** Attack, hold and release in milliseconds. */
-  a: number; h: number; r: number;
-  gain: number;
-  /** Low-pass cutoff in Hz; omit for none. */
-  lp?: number;
-  /** Delay before the voice starts, ms. */
-  at?: number;
+export interface PlayOptions {
+  /** Branch pitch: hub and node cues are the same file at a different rate, so the branches are told apart. */
+  branch?: Branch;
+  /** Start this many milliseconds from now, for lining a cue up with a visual arrival. */
+  delay?: number;
+  /** Linear gain multiplier on top of the file's mastered level. */
+  gain?: number;
 }
-interface Recipe { voices: Voice[]; /** Minimum gap between two plays, ms. */ gap: number; }
 
-// Placeholder recipes until Design Studio's spec lands: short, low, no fanfares.
-const recipes: Record<SfxName, Recipe> = {
-  'hero-pulse': { gap: 120, voices: [
-    { type: 'sine', from: 196, to: 98, a: 6, h: 60, r: 520, gain: 0.5, lp: 1200 },
-    { type: 'triangle', from: 784, to: 1568, a: 4, h: 20, r: 260, gain: 0.08, lp: 3000, at: 30 },
-  ] },
-  grab: { gap: 200, voices: [{ type: 'sine', from: 330, to: 294, a: 4, h: 10, r: 70, gain: 0.08, lp: 1800 }] },
-  release: { gap: 200, voices: [{ type: 'sine', from: 294, to: 330, a: 4, h: 10, r: 90, gain: 0.07, lp: 1800 }] },
-  'hub-pulse': { gap: 160, voices: [
-    { type: 'triangle', from: 220, to: 440, a: 8, h: 40, r: 420, gain: 0.22, lp: 2400 },
-    { type: 'sine', from: 110, to: 110, a: 10, h: 120, r: 380, gain: 0.18, lp: 600 },
-  ] },
-  'node-discover': { gap: 45, voices: [{ type: 'sine', from: 1046, to: 1318, a: 2, h: 18, r: 70, gain: 0.07, lp: 4000 }] },
-  'reveal-all': { gap: 600, voices: [
-    { type: 'sine', from: 196, to: 392, a: 20, h: 200, r: 700, gain: 0.2, lp: 1600 },
-    { type: 'triangle', from: 587, to: 1174, a: 20, h: 100, r: 600, gain: 0.06, lp: 3200, at: 120 },
-  ] },
-  'card-open': { gap: 80, voices: [{ type: 'sine', from: 660, to: 880, a: 2, h: 14, r: 60, gain: 0.06, lp: 3000 }] },
-  'card-close': { gap: 80, voices: [{ type: 'sine', from: 880, to: 660, a: 2, h: 14, r: 60, gain: 0.05, lp: 3000 }] },
+/** Per-branch playbackRate: unison, +2, -2 and +5 semitones, all inside the D/A set. */
+export const BRANCH_RATE: Record<Branch, number> = { app: 1, integrate: 1.122, cloud: 0.891, ai: 1.335 };
+
+interface Rule {
+  /** Minimum gap between two triggers, ms. */
+  window: number;
+  /** Simultaneous voices allowed. */
+  voices: number;
+  /** What happens over the limit: drop the new trigger, steal the oldest voice, or restart. */
+  over: 'drop' | 'steal' | 'restart';
+  /** Random ±15 cents and ±1 dB per trigger so repeats never sound mechanical. */
+  vary: boolean;
+  /** Only the cues whose visuals still animate under reduced motion. */
+  reducedOk: boolean;
+}
+const RULES: Record<SfxName, Rule> = {
+  'hero-pulse': { window: 250, voices: 2, over: 'drop', vary: true, reducedOk: false },
+  'hub-pulse': { window: 200, voices: 2, over: 'steal', vary: true, reducedOk: false },
+  'node-discover': { window: 90, voices: 3, over: 'drop', vary: true, reducedOk: true },
+  'reveal-all': { window: Infinity, voices: 1, over: 'drop', vary: false, reducedOk: false },
+  'card-open': { window: 120, voices: 1, over: 'restart', vary: false, reducedOk: true },
 };
-const CEILING = 0.28;
+const NAMES = Object.keys(RULES) as SfxName[];
+const MASTER = 0.5;
 const STORAGE = 'portfolio-sound';
+const SOUND_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/sound/`;
+
+interface Voice { source: AudioBufferSourceNode; gain: GainNode; startedAt: number; }
 
 let context: AudioContext | undefined;
 let master: GainNode | undefined;
+let duck: GainNode | undefined;
 let enabled = false;
+let loading: Promise<void> | undefined;
+const buffers = new Map<SfxName, AudioBuffer>();
 const lastPlayed = new Map<SfxName, number>();
+const active = new Map<SfxName, Voice[]>();
+const discoverBurst: number[] = [];
+let discoverMutedUntil = 0;
 const listeners = new Set<(on: boolean) => void>();
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 try { enabled = localStorage.getItem(STORAGE) === 'on'; } catch { /* storage is optional */ }
+
+const format = (() => {
+  try {
+    const probe = document.createElement('audio');
+    return probe.canPlayType('audio/ogg; codecs=opus') ? 'ogg' : 'mp3';
+  } catch { return 'mp3'; }
+})();
 
 const ensure = () => {
   if (!('AudioContext' in window)) return undefined;
   if (!context) {
     context = new AudioContext();
     master = context.createGain();
-    master.gain.value = CEILING;
-    master.connect(context.destination);
+    master.gain.value = MASTER;
+    duck = context.createGain();
+    duck.connect(master).connect(context.destination);
   }
   if (context.state === 'suspended') void context.resume();
   return context;
 };
 
-const voice = (ctx: AudioContext, v: Voice) => {
-  const t0 = ctx.currentTime + (v.at ?? 0) / 1000;
-  const osc = ctx.createOscillator();
-  osc.type = v.type;
-  osc.frequency.setValueAtTime(v.from, t0);
-  const end = t0 + (v.a + v.h + v.r) / 1000;
-  if (v.to !== v.from) osc.frequency.exponentialRampToValueAtTime(v.to, end);
-  const env = ctx.createGain();
-  env.gain.setValueAtTime(0.0001, t0);
-  env.gain.exponentialRampToValueAtTime(v.gain, t0 + v.a / 1000);
-  env.gain.setValueAtTime(v.gain, t0 + (v.a + v.h) / 1000);
-  env.gain.exponentialRampToValueAtTime(0.0001, end);
-  let tail: AudioNode = env;
-  if (v.lp) {
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = v.lp;
-    env.connect(filter);
-    tail = filter;
+const load = () => {
+  const ctx = ensure();
+  if (!ctx) return Promise.resolve();
+  loading ??= Promise.all(NAMES.filter(name => !buffers.has(name)).map(async name => {
+    try {
+      const response = await fetch(`${SOUND_BASE}${name}.${format}`);
+      if (!response.ok) return;
+      buffers.set(name, await ctx.decodeAudioData(await response.arrayBuffer()));
+    } catch (error) {
+      console.warn(`Sound ${name} did not load.`, error);
+    }
+  })).then(() => undefined);
+  return loading;
+};
+
+const stop = (voice: Voice, fadeMs: number) => {
+  if (!context) return;
+  const now = context.currentTime;
+  voice.gain.gain.cancelScheduledValues(now);
+  voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+  voice.gain.gain.linearRampToValueAtTime(0.0001, now + fadeMs / 1000);
+  voice.source.stop(now + fadeMs / 1000 + 0.005);
+};
+
+const start = (name: SfxName, options: PlayOptions) => {
+  const ctx = ensure();
+  const buffer = buffers.get(name);
+  if (!ctx || !buffer || !duck) return;
+  const rule = RULES[name];
+  const voices = active.get(name) ?? [];
+  if (voices.length >= rule.voices) {
+    if (rule.over === 'drop') return;
+    const oldest = voices.shift()!;
+    stop(oldest, rule.over === 'steal' ? 30 : 5);
   }
-  osc.connect(env);
-  tail.connect(master!);
-  osc.start(t0);
-  osc.stop(end + 0.02);
-  osc.onended = () => { osc.disconnect(); env.disconnect(); tail.disconnect(); };
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.playbackRate.value = options.branch ? BRANCH_RATE[options.branch] : 1;
+  if (rule.vary) source.detune.value = Math.random() * 30 - 15;
+  const gain = ctx.createGain();
+  gain.gain.value = (options.gain ?? 1) * (rule.vary ? 10 ** ((Math.random() * 2 - 1) / 20) : 1);
+  source.connect(gain).connect(duck);
+  const at = ctx.currentTime + Math.max(0, options.delay ?? 0) / 1000;
+  source.start(at);
+  const voice: Voice = { source, gain, startedAt: at };
+  voices.push(voice);
+  active.set(name, voices);
+  source.onended = () => {
+    source.disconnect();
+    gain.disconnect();
+    const list = active.get(name);
+    if (list) active.set(name, list.filter(v => v !== voice));
+  };
+  if (name === 'reveal-all') {
+    // Other cues sit back while the swell plays.
+    duck.gain.setValueAtTime(1, at);
+    duck.gain.linearRampToValueAtTime(0.6, at + 0.05);
+    duck.gain.setValueAtTime(0.6, at + buffer.duration - 0.2);
+    duck.gain.linearRampToValueAtTime(1, at + buffer.duration);
+  }
 };
 
 export const sfx = {
   get enabled() { return enabled; },
+  /** Whether a cue would play right now: callers use this to line visuals up with the sound. */
+  wouldPlay(name: SfxName) { return enabled && (!reduced.matches || RULES[name].reducedOk); },
   setEnabled(on: boolean) {
     enabled = on;
     try { localStorage.setItem(STORAGE, on ? 'on' : 'off'); } catch { /* storage is optional */ }
-    if (on) ensure();
-    else if (context?.state === 'running') void context.suspend();
+    if (on) {
+      // Let the visitor hear what they just turned on: one quiet tick.
+      void load()?.then(() => { lastPlayed.delete('node-discover'); start('node-discover', { gain: 0.5 }); });
+    } else if (context?.state === 'running') {
+      void context.suspend();
+    }
     listeners.forEach(fn => fn(on));
   },
   toggle() { sfx.setEnabled(!enabled); },
   onChange(fn: (on: boolean) => void) { listeners.add(fn); return () => listeners.delete(fn); },
-  play(name: SfxName) {
-    if (!enabled) return;
-    const recipe = recipes[name];
+  /** Warm the context and buffers on a return visit (call from a user gesture). */
+  prime() { if (enabled) void load(); },
+  play(name: SfxName, options: PlayOptions = {}) {
+    if (!sfx.wouldPlay(name)) return;
+    const rule = RULES[name];
     const now = performance.now();
-    if (now - (lastPlayed.get(name) ?? -Infinity) < recipe.gap) return;
+    if (now - (lastPlayed.get(name) ?? -Infinity) < rule.window) return;
+    if (name === 'node-discover') {
+      // A fast hover sweep goes quiet instead of chattering: more than six in a second mutes the rest of that second.
+      if (now < discoverMutedUntil) return;
+      while (discoverBurst.length && now - discoverBurst[0] > 1000) discoverBurst.shift();
+      discoverBurst.push(now);
+      if (discoverBurst.length > 6) { discoverMutedUntil = discoverBurst[0] + 1000; discoverBurst.length = 0; return; }
+    }
     lastPlayed.set(name, now);
-    const ctx = ensure();
-    if (!ctx) return;
-    recipe.voices.forEach(v => voice(ctx, v));
+    if (buffers.has(name)) start(name, options);
+    else void load()?.then(() => start(name, { ...options, delay: Math.max(0, (options.delay ?? 0) - (performance.now() - now)) }));
   },
 };
+
+document.addEventListener('visibilitychange', () => { if (document.hidden && context?.state === 'running') void context.suspend(); });
