@@ -183,6 +183,8 @@ test('the Skill Tree renders every tool as a locked node with an honest counter,
   assert.equal((stack.match(/data-st-filter="/g) ?? []).length, 5);
   assert.match(stack, /<div class="st-list">/);
   assert.equal((stack.match(/<div class="st-list-branch">/g) ?? []).length, 4);
+  // Each branch hub is a real button that sends a pulse down its connections.
+  assert.equal((stack.match(/<button type="button" class="st-hub" data-st-hub="(?:app|integrate|cloud|ai)" aria-label="Send a pulse through the [A-Za-z ]+ branch"/g) ?? []).length, 4);
   assert.doesNotMatch(stack, /XP|level |badge|streak|%</);
   assert.match(story, /type="search" data-stack-query/);
   assert.match(story, /data-stack-empty hidden/);
@@ -251,4 +253,18 @@ test('the Launch Orange palette keeps readable text on the dark field and glass 
   assert.ok(contrast(token('focus'), token('panel-highlight')) >= 3);
   assert.doesNotMatch(css, /--paper|--ink|color-scheme: light/);
   assert.match(story, /name="theme-color" content="#0b0b0c"/);
+});
+
+test('play and sound: the hero core is grabbable, hubs pulse, and sound is synthesised and off by default', () => {
+  const scripts = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((file) => file.endsWith('.js')).map((file) => read(`_astro/${file}`)).join('\n');
+  assert.match(story, /<span class="core-interaction">Move to explore<\/span>/);
+  assert.match(scripts, /core-hit/);
+  assert.match(scripts, /is-grabbing/);
+  assert.match(scripts, /Drag to spin · Click to pulse/);
+  assert.match(scripts, /st-pulse/);
+  assert.match(scripts, /portfolio-sound/);
+  for (const name of ['hero-pulse', 'hub-pulse', 'node-discover', 'reveal-all', 'card-open', 'card-close']) assert.ok(scripts.includes(`"${name}"`) || scripts.includes(`'${name}'`), `Missing sound ${name}`);
+  // No audio files ship: every sound is a Web Audio recipe.
+  assert.ok(!existsSync(new URL('../dist/audio', import.meta.url)) && !existsSync(new URL('../dist/sounds', import.meta.url)));
+  assert.match(scripts, /createOscillator/);
 });

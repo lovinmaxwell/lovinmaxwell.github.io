@@ -4,7 +4,8 @@ import { logos } from '../lib/logos';
 import Icon from './Icon.astro';
 import { withBase } from '../lib/url';
 // The Skill Tree: every verified tool is a node on one of four branches around the neural core.
-// Nodes start locked; hovering, tapping, focusing or scrolling lights them up. No scores, no levels.
+// Nodes start locked; hovering, tapping, focusing or scrolling lights them up; a branch hub sends a pulse down its
+// connections and lights what it passes. No scores, no levels.
 const { items, branches, groups, kicker, title } = profile.stack;
 const href = (detail: string) => detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${detail}`;
 const branched = branches.map(branch => ({
@@ -42,7 +43,9 @@ const search = (item: typeof items[number]) => [item.name, item.detail, item.not
     </div>
     {branched.map(({ branch, pages }) => (
       <>
-        <img class="st-hub" data-st-hub={branch.id} src={withBase(`images/stack/hub-${branch.id}.webp`)} width="52" height="52" alt="" decoding="async" loading="lazy" style={`--b: var(--branch-${branch.id})`} />
+        <button type="button" class="st-hub" data-st-hub={branch.id} aria-label={`Send a pulse through the ${branch.label} branch`} title="Send a pulse" style={`--b: var(--branch-${branch.id})`}>
+          <img src={withBase(`images/stack/hub-${branch.id}.webp`)} width="52" height="52" alt="" decoding="async" loading="lazy" />
+        </button>
         <div class="st-cap" data-st-cap={branch.id} style={`--b: var(--branch-${branch.id})`}>
           <p class="st-cap-t"><span>{branch.label}</span> · <span data-st-cap-count>{pages.flat().length} tools</span></p>
           <a class="st-cap-s" href={href(branch.detail)} data-detail={branch.detail}>{branch.title}<Icon name="arrow-up-right" size={13} /></a>

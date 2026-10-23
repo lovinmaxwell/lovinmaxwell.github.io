@@ -18,6 +18,8 @@ export interface SkillTreeOptions {
   reduced: MediaQueryList;
   /** Scroll the story so the given phone step (0-based of `steps`) is in view. */
   scrollToStep(step: number, steps: number): void;
+  /** Interface sound for a moment; the page decides whether sound is on. */
+  sound?: (name: 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open' | 'card-close') => void;
 }
 
 type BranchId = StackBranchId;
@@ -40,6 +42,7 @@ const SVG = 'http://www.w3.org/2000/svg';
 
 export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): SkillTree {
   const { compact, reduced } = options;
+  const sound = options.sound ?? (() => {});
   const q = <T extends Element>(selector: string) => section.querySelector<T>(selector)!;
   const stage = q<HTMLElement>('[data-st-stage]');
   const edgesSvg = q<SVGSVGElement>('[data-st-edges]');
@@ -49,7 +52,7 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
   const found = q<HTMLElement>('[data-st-found]');
   const chips = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-st-filter]'));
   const tabs = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-st-tab]'));
-  const hubs = Array.from(section.querySelectorAll<HTMLImageElement>('[data-st-hub]'));
+  const hubs = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-st-hub]'));
   const caps = Array.from(section.querySelectorAll<HTMLElement>('[data-st-cap]'));
   const card = q<HTMLElement>('[data-st-card]');
   const scrim = q<HTMLElement>('[data-st-scrim]');
@@ -332,15 +335,57 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
   const persist = () => {
     try { sessionStorage.setItem(STORAGE, JSON.stringify(Array.from(discovered))); } catch { /* storage is optional */ }
   };
-  const discover = (node: Node, pop = true) => {
+  const discover = (node: Node, pop = true, chime = pop) => {
     if (discovered.has(node.id)) return;
     discovered.add(node.id);
     if (pop && !reduced.matches) {
       node.el.classList.add('pop');
       setTimeout(() => node.el.classList.remove('pop'), 420);
     }
+    if (chime) sound('node-discover');
     persist();
     paint();
+  };
+
+  /* ---------- hub pulse ---------- */
+  // Clicking a branch hub sends a signal from the core along the trunk, the bus and down each chain. The nodes it
+  // reaches light up as it arrives, in order, so the branch reveals itself the way the connections run.
+  const SPEED = 0.9; // px per ms
+  const pulseBranch = (branch: BranchId) => {
+    const hubEl = hubs.find(h => h.dataset.stHub === branch);
+    const inBranch = nodes.filter(node => node.branch === branch && visible(node));
+    sound('hub-pulse');
+    if (reduced.matches) { inBranch.forEach(node => discover(node, false, false)); return; }
+    hubEl?.classList.remove('zap'); void hubEl?.offsetWidth; hubEl?.classList.add('zap');
+    core.classList.remove('kick'); void core.offsetWidth; core.classList.add('kick');
+    const arrival = new Map<number, number>();
+    const run = (edge: Edge, start: number) => {
+      const len = edge.el.getTotalLength();
+      const duration = 40 + len / SPEED;
+      const ghost = document.createElementNS(SVG, 'path');
+      ghost.setAttribute('d', edge.el.getAttribute('d')!);
+      ghost.setAttribute('class', 'st-pulse');
+      ghost.style.stroke = `var(--branch-${branch})`;
+      const head = Math.min(len, Math.max(28, len * 0.45));
+      ghost.style.strokeDasharray = `${head} ${len + head}`;
+      edgesSvg.append(ghost);
+      const anim = ghost.animate([{ strokeDashoffset: head }, { strokeDashoffset: -len }], { duration, delay: start, easing: 'linear', fill: 'both' });
+      anim.onfinish = () => ghost.remove();
+      return start + duration;
+    };
+    const trunk = edges.find(edge => edge.branch === branch && edge.kind === 'trunk');
+    const t0 = trunk ? run(trunk, 0) : 0;
+    edges.filter(edge => edge.branch === branch && edge.kind === 'bus' && inBranch.some(n => n.id === edge.a)).forEach(edge => arrival.set(edge.a, run(edge, t0)));
+    const chains = edges.filter(edge => edge.branch === branch && edge.kind === 'chain' && inBranch.some(n => n.id === edge.a) && inBranch.some(n => n.id === edge.b)).sort((x, y) => nodes[x.a].row - nodes[y.a].row);
+    chains.forEach(edge => { const from = arrival.get(edge.a); if (from !== undefined) arrival.set(edge.b, run(edge, from)); });
+    arrival.forEach((at, id) => {
+      const node = nodes[id];
+      setTimeout(() => {
+        node.el.classList.add('zap');
+        setTimeout(() => node.el.classList.remove('zap'), 360);
+        discover(node, true, false);
+      }, at);
+    });
   };
 
   /* ---------- selection and the detail card ---------- */
@@ -382,6 +427,7 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
     node.el.setAttribute('aria-pressed', 'false');
     card.hidden = true;
     scrim.hidden = true;
+    sound('card-close');
     if (returnFocus || card.contains(document.activeElement)) node.el.focus({ preventScroll: true });
     paint();
   };
@@ -390,7 +436,8 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
     if (selected) selected.el.setAttribute('aria-pressed', 'false');
     selected = node;
     node.el.setAttribute('aria-pressed', 'true');
-    discover(node);
+    discover(node, true, false);
+    sound('card-open');
     fillCard(node);
     card.hidden = false;
     scrim.hidden = !isCompact();
@@ -433,6 +480,14 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
     });
     node.el.addEventListener('focus', () => discover(node));
   });
+  hubs.forEach(hub => hub.addEventListener('click', () => pulseBranch(hub.dataset.stHub as BranchId)));
+  stage.addEventListener('pointermove', event => {
+    if (event.pointerType !== 'mouse' || core.hidden) return;
+    const rect = stage.getBoundingClientRect();
+    core.style.setProperty('--tx', `${((event.clientX - rect.left) / rect.width - 0.5) * 10}px`);
+    core.style.setProperty('--ty', `${((event.clientY - rect.top) / rect.height - 0.5) * 10}px`);
+  });
+  stage.addEventListener('pointerleave', () => { core.style.removeProperty('--tx'); core.style.removeProperty('--ty'); });
   card.querySelector('[data-st-close]')!.addEventListener('click', () => deselect(true));
   scrim.addEventListener('click', () => deselect());
   section.addEventListener('keydown', event => {
@@ -474,11 +529,12 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
   });
   reveal.addEventListener('click', () => {
     reveal.disabled = true;
+    sound('reveal-all');
     const order = scrollOrder();
     let delay = 0;
     order.forEach(node => {
       if (discovered.has(node.id)) return;
-      setTimeout(() => discover(node), delay);
+      setTimeout(() => discover(node, true, false), delay);
       delay += 12;
     });
   });
@@ -503,7 +559,7 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
       const count = Math.floor(p * total);
       if (count <= scrollCount) return;
       scrollCount = count;
-      scrollOrder().slice(0, count).forEach(node => discover(node));
+      scrollOrder().slice(0, count).forEach(node => discover(node, true, false));
     },
     setMode(next) {
       animated = next;

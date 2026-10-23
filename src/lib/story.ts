@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { storyChapters, storyDuration as duration, galleryTimings, stackReveal } from '../data/story';
 import { initSkillTree } from './skill-tree';
 import type { NeuralCore } from './neural-core';
+import { sfx } from './sfx';
 
 const chapterTimes = storyChapters.map(chapter => chapter.at);
 
@@ -46,8 +47,13 @@ export function initStory() {
     if (coreRequested || !coreHost || !animated() || !wide.matches || !('WebGL2RenderingContext' in window)) return;
     coreRequested = true;
     import('./neural-core')
-      .then(({ createNeuralCore }) => createNeuralCore(coreHost, coreHost.dataset.coreModel!))
-      .then(instance => { core = instance; syncCore(); })
+      .then(({ createNeuralCore }) => createNeuralCore(coreHost, coreHost.dataset.coreModel!, { onInteract: kind => sfx.play(kind === 'pulse' ? 'hero-pulse' : kind) }))
+      .then(instance => {
+        core = instance;
+        const hintEl = root.querySelector('.core-interaction');
+        if (hintEl) hintEl.textContent = 'Drag to spin · Click to pulse';
+        syncCore();
+      })
       .catch(error => console.warn('The 3D core could not start; keeping the still image.', error));
   };
   const scheduleCore = () => {
@@ -65,7 +71,7 @@ export function initStory() {
   };
   // The Skill Tree runs the Stack chapter; a phone tab scrolls the story to that branch page.
   const tree = initSkillTree(root.querySelector<HTMLElement>('[data-skill-tree]')!, {
-    compact, reduced,
+    compact, reduced, sound: name => sfx.play(name),
     scrollToStep: (step, steps) => scrollForTime(stackReveal.start + (step / steps) * 0.85 * (stackReveal.end - stackReveal.start) + 0.03),
   });
   const activeScene = (index: number) => {

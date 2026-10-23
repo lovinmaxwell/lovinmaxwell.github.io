@@ -88,6 +88,10 @@ html[data-appearance="immersive"] {
 .core-canvas { opacity: 0; scale: .92; transition: opacity 1.2s var(--ease-out), scale 1.2s var(--ease-out); }
 .core-object.is-live .core-canvas { opacity: 1; scale: 1; }
 .core-object.is-live .core-poster { opacity: 0; }
+/* Once the 3D core is live it can be played with: the hit area is the sphere itself, so the hero copy stays clickable. */
+.core-hit { position: absolute; inset: 0; clip-path: circle(40%); pointer-events: none; cursor: grab; touch-action: pan-y; }
+.core-object.is-live .core-hit { pointer-events: auto; }
+.core-object.is-grabbing .core-hit { cursor: grabbing; }
 [data-motion="on"] .core-object:not(.is-live) .core-poster { animation: core-breathe 9s ease-in-out infinite; }
 .scene-intro[aria-hidden="true"] .core-poster { animation-play-state: paused; }
 @keyframes core-breathe { 50% { translate: 0 -8px; } }
