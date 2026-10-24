@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
 
 const read = (path) => readFileSync(new URL(`../dist/${path}`, import.meta.url), 'utf8');
@@ -146,12 +146,11 @@ test('the hero shows an original neural core with a still poster and a lazy 3D e
   assert.ok(readFileSync(new URL('../dist/images/story-grain.png', import.meta.url)).length > 0);
 });
 
-test('systems walkthroughs represent actual work and distinguish concepts from deployments', () => {
-  for (const id of ['enterprise', 'sap', 'local-ai']) {
-    assert.ok(story.includes(`data-system-select="${id}"`));
-    assert.ok(story.includes(`data-system-panel="${id}"`));
-  }
-  for (const name of ['Flutter', 'PMWeb', 'ABAP RFC', 'SAP RE-FX', 'Human review']) assert.ok(text.includes(name));
+test('systems blueprints represent actual work and distinguish concepts from deployments', () => {
+  assert.equal(story.match(/data-blueprint="\d+"/g)?.length, 8);
+  assert.equal(story.match(/data-bp-panel="\d+"/g)?.length, 8);
+  assert.match(story, /<dialog\b[^>]*\bclass="bp-viewer"/);
+  for (const name of ['Flutter', 'PMWeb', 'ABAP RFC', 'SAP RE-FX']) assert.ok(text.includes(name));
   assert.match(text, /not an internal deployment diagram/);
   assert.match(text, /Conceptual flow for a product in development/);
 });
@@ -205,21 +204,37 @@ test('the visual chapter atlas exposes all six destinations and accessible searc
   assert.doesNotMatch(classic, /data-atlas-open|data-atlas-chapter/);
 });
 
-test('the spatial hero keeps its artwork decorative and the system chips stay silent', () => {
+test('the spatial hero keeps its artwork decorative and the blueprint loops stay silent', () => {
   assert.match(story, /class="core-art" aria-hidden="true"/);
   for (const name of ['core-object', 'core-poster']) assert.ok(story.includes(`class="${name}"`));
-  assert.equal([...story.matchAll(/class="flow-chip" aria-hidden="true"/g)].length, 12);
+  assert.equal([...story.matchAll(/<img class="bp-poster" src="\/architecture\/0\d-[a-z-]+-poster\.webp" alt=""/g)].length, 8);
+  // Videos are added by script only, muted and hidden from assistive tech, so no-JS visitors fetch posters alone.
+  assert.doesNotMatch(story, /<video/);
   assert.match(story, /class="story-field" aria-hidden="true"/);
 });
 
-test('system boundaries have labeled inspection controls and live explanations', () => {
-  assert.equal([...story.matchAll(/\sdata-system-step(?:\s|>)/g)].length, 12);
-  for (const id of ['enterprise', 'sap', 'local-ai']) {
-    assert.ok(story.includes(`aria-controls="system-explanation-${id}"`));
-    assert.ok(story.includes(`id="system-explanation-${id}" aria-live="polite" aria-atomic="true"`));
+test('every blueprint loop ships in both alpha formats with a poster, inside a small budget', () => {
+  const loops = [...story.matchAll(/data-loop="\/architecture\/([\w-]+)"/g)].map(match => match[1]);
+  assert.equal(loops.length, 8);
+  let total = 0;
+  for (const loop of loops) {
+    for (const ext of ['webm', 'mp4', '-poster.webp']) {
+      const file = new URL(`../dist/architecture/${loop}${ext.startsWith('-') ? ext : `.${ext}`}`, import.meta.url);
+      assert.ok(existsSync(file), `${loop} ${ext} is missing`);
+      const size = statSync(file).size;
+      assert.ok(size <= 300_000, `${loop} ${ext} is ${size} bytes`);
+      total += size;
+    }
   }
-  assert.match(story, /Reset to overview/);
-  assert.match(story, /Inspect Flutter/);
+  assert.ok(total <= 2_000_000, `architecture loops total ${total} bytes`);
+});
+
+test('blueprint walk-throughs have labeled step controls and live explanations', () => {
+  assert.equal([...story.matchAll(/data-bp-step-text aria-live="polite" aria-atomic="true"/g)].length, 8);
+  assert.equal([...story.matchAll(/data-bp-step="1">Next step/g)].length, 8);
+  assert.equal([...story.matchAll(/role="img" aria-label="/g)].length >= 8, true);
+  assert.match(story, /aria-label="Close blueprint"/);
+  assert.match(story, /Previous blueprint/);
 });
 
 test('the Launch Orange palette keeps readable text on the dark field and glass panels', () => {

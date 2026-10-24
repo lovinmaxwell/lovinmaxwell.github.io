@@ -77,6 +77,33 @@ export function initStory() {
   let core: NeuralCore | undefined;
   let coreRequested = false;
   const syncCore = () => core?.setRunning(animated() && currentScene === 0 && !document.hidden);
+  // The Blender loops replace each tile's poster once it plays. Never fetched with reduced motion or motion switched off;
+  // short screens keep them, since only the scroll timeline is too much there. Safari gets HEVC alpha, the rest VP9 alpha.
+  const systemsScene = scenes.findIndex(scene => scene.id === 'systems');
+  const loopFrames = Array.from(root.querySelectorAll<HTMLElement>('[data-loop]'));
+  const loopExt = navigator.vendor === 'Apple Computer, Inc.' ? 'mp4' : 'webm';
+  const inView = new Set<HTMLElement>();
+  let loopsOpen = false;
+  const syncLoops = () => {
+    const allowed = requestedMotion && !reduced.matches && !document.hidden && !loopsOpen && (!animated() || currentScene === systemsScene);
+    loopFrames.forEach(frame => {
+      let video = frame.querySelector('video');
+      if (!allowed || !inView.has(frame)) { video?.pause(); return; }
+      if (!video) {
+        video = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'auto' });
+        video.setAttribute('aria-hidden', 'true');
+        video.addEventListener('playing', () => frame.classList.add('is-playing'), { once: true });
+        video.src = `${frame.dataset.loop}.${loopExt}`;
+        frame.append(video);
+      }
+      video.play().catch(() => { /* Autoplay refused (Low Power Mode, data saver): the poster stays. */ });
+    });
+  };
+  const loopWatcher = new IntersectionObserver(entries => {
+    entries.forEach(entry => entry.isIntersecting ? inView.add(entry.target as HTMLElement) : inView.delete(entry.target as HTMLElement));
+    syncLoops();
+  }, { rootMargin: '120px 0px' });
+  loopFrames.forEach(frame => loopWatcher.observe(frame));
   const mountCore = () => {
     if (coreRequested || !coreHost || !animated() || !wide.matches || !('WebGL2RenderingContext' in window)) return;
     coreRequested = true;
@@ -144,6 +171,7 @@ export function initStory() {
       else link.removeAttribute('aria-current');
     });
     syncCore();
+    syncLoops();
   };
   const goTo = (id: string, smooth = true) => {
     const index = scenes.findIndex(scene => scene.id === id);
@@ -308,7 +336,7 @@ export function initStory() {
     stage.style.removeProperty('--orbit-y');
     core?.setPointer(0, 0);
   });
-  document.addEventListener('visibilitychange', syncCore);
+  document.addEventListener('visibilitychange', () => { syncCore(); syncLoops(); });
   wide.addEventListener('change', mountCore);
   let scrollFrame = 0;
   const updateDocumentProgress = () => {
@@ -458,44 +486,136 @@ export function initStory() {
   stackQuery.addEventListener('input', () => filterStack('all'));
   filterStack('all');
 
-  const systemButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-system-select]'));
-  const systemPanels = Array.from(root.querySelectorAll<HTMLElement>('[data-system-panel]'));
-  const selectSystem = (id: string) => {
-    systemButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.systemSelect === id)));
-    systemPanels.forEach(panel => { panel.hidden = panel.dataset.systemPanel !== id; });
-  };
-  systemButtons.forEach(button => button.addEventListener('click', () => selectSystem(button.dataset.systemSelect!)));
-  selectSystem('enterprise');
-  systemPanels.forEach(panel => {
-    const heading = panel.querySelector<HTMLElement>('[data-system-heading]')!;
-    const description = panel.querySelector<HTMLElement>('[data-system-description]')!;
-    const originalHeading = heading.textContent;
-    const originalDescription = description.textContent;
-    const steps = Array.from(panel.querySelectorAll<HTMLButtonElement>('[data-system-step]'));
-    const reset = panel.querySelector<HTMLButtonElement>('[data-system-reset]')!;
-    const inspectStep = (selected?: HTMLButtonElement) => {
-      steps.forEach(button => {
-        const active = button === selected;
-        button.setAttribute('aria-pressed', String(active));
-        button.closest('.flow-node')!.classList.toggle('is-inspected', active);
-      });
-      heading.textContent = selected ? selected.dataset.stepTitle! : originalHeading;
-      description.textContent = selected ? selected.dataset.stepDescription! : originalDescription;
-      reset.disabled = !selected;
+  const bpViewer = document.querySelector<HTMLDialogElement>('[data-bp-viewer]')!;
+  const bpSlot = bpViewer.querySelector<HTMLElement>('[data-bp-slot]')!;
+  const bpPanels = Array.from(root.querySelectorAll<HTMLElement>('[data-bp-panel]'));
+  const bpTiles = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-blueprint]'));
+  const bpHome = root.querySelector<HTMLElement>('[data-bp-panels]')!;
+  let bpCurrent = -1;
+  let bpOpener: HTMLElement | null = null;
+  // Each panel keeps its own step and moves a packet along the edge into the current hop.
+  const bpSteps = bpPanels.map(panel => {
+    const canvas = panel.querySelector<HTMLElement>('.bp-canvas')!;
+    const svg = canvas.querySelector<SVGSVGElement>('svg')!;
+    const hops = canvas.dataset.hops!.split(' ');
+    const texts = Array.from(panel.querySelectorAll<HTMLElement>('.bp-steps li')).map(li => li.textContent!);
+    const count = panel.querySelector<HTMLElement>('[data-bp-step-count]')!;
+    const text = panel.querySelector<HTMLElement>('[data-bp-step-text]')!;
+    const [back, next] = Array.from(panel.querySelectorAll<HTMLButtonElement>('[data-bp-step]'));
+    const nodes = Array.from(svg.querySelectorAll<SVGGElement>('[data-node]'));
+    const edges = Array.from(svg.querySelectorAll<SVGPathElement>('.bp-edge'));
+    let step = 0;
+    let packet: SVGCircleElement | null = null;
+    let frame = 0;
+    const travel = (edge: SVGPathElement, reverse: boolean) => {
+      cancelAnimationFrame(frame);
+      packet ??= svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'circle'));
+      packet.setAttribute('class', 'bp-packet');
+      packet.setAttribute('r', '5');
+      const length = edge.getTotalLength();
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / 360);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const point = edge.getPointAtLength(length * (reverse ? 1 - eased : eased));
+        packet!.setAttribute('cx', String(point.x));
+        packet!.setAttribute('cy', String(point.y));
+        packet!.style.opacity = t < 1 ? '1' : '0';
+        if (t < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
     };
-    steps.forEach((button, index) => {
-      button.addEventListener('click', () => inspectStep(button));
-      button.addEventListener('keydown', event => {
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-        event.preventDefault();
-        const next = event.key === 'Home' ? 0 : event.key === 'End' ? steps.length - 1 :
-          (index + (event.key === 'ArrowRight' ? 1 : -1) + steps.length) % steps.length;
-        steps[next].focus({ preventScroll: true });
-        inspectStep(steps[next]);
+    const show = (index: number, move = false) => {
+      const previous = step;
+      step = Math.max(0, Math.min(hops.length - 1, index));
+      const lit = new Set(hops.slice(0, step + 1));
+      nodes.forEach(node => {
+        const id = node.dataset.node!;
+        node.classList.toggle('is-cur', id === hops[step]);
+        node.classList.toggle('is-lit', lit.has(id) && id !== hops[step]);
+        node.classList.toggle('is-dim', !lit.has(id));
       });
-    });
-    reset.addEventListener('click', () => inspectStep());
-    inspectStep();
+      edges.forEach(edge => {
+        const on = lit.has(edge.dataset.from!) && lit.has(edge.dataset.to!);
+        edge.classList.toggle('is-lit', on);
+        edge.classList.toggle('is-dim', !on);
+      });
+      count.textContent = `Step ${step + 1} of ${hops.length}`;
+      text.textContent = texts[step];
+      back.disabled = step === 0;
+      next.disabled = step === hops.length - 1;
+      if (move && step !== previous && animated()) {
+        const [a, b] = [hops[previous], hops[step]];
+        const edge = edges.find(e => (e.dataset.from === a && e.dataset.to === b) || (e.dataset.from === b && e.dataset.to === a));
+        if (edge) travel(edge, edge.dataset.from === b);
+      }
+    };
+    back.addEventListener('click', () => show(step - 1, true));
+    next.addEventListener('click', () => show(step + 1, true));
+    return { panel, show, edges, reset: () => { cancelAnimationFrame(frame); if (packet) packet.style.opacity = '0'; show(0); } };
+  });
+  bpSteps.forEach(entry => entry.show(0));
+  const bpPlace = (index: number) => {
+    if (bpCurrent >= 0) bpHome.appendChild(bpPanels[bpCurrent]);
+    bpCurrent = (index + bpPanels.length) % bpPanels.length;
+    const entry = bpSteps[bpCurrent];
+    entry.reset();
+    bpSlot.replaceChildren(entry.panel);
+    bpSlot.scrollTop = 0;
+    bpViewer.setAttribute('aria-labelledby', `bp-title-${entry.panel.dataset.bpPanel}`);
+    bpViewer.removeAttribute('aria-label');
+    if (animated()) {
+      entry.edges.forEach((edge, i) => {
+        const length = edge.getTotalLength();
+        edge.animate([{ strokeDasharray: `${length}`, strokeDashoffset: length }, { strokeDasharray: `${length}`, strokeDashoffset: 0 }],
+          { duration: 500, delay: 120 + i * 30, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+      });
+    }
+  };
+  const bpOpen = (index: number, tile?: HTMLElement) => {
+    if (document.querySelector('dialog[open]')) return;
+    bpOpener = tile ?? null;
+    bpPlace(index);
+    bpViewer.showModal();
+    loopsOpen = true;
+    syncLoops();
+    document.documentElement.classList.add('story-viewer-open');
+    if (sfx.wouldPlay('card-open')) sfx.play('card-open');
+    if (tile && animated()) {
+      const from = tile.getBoundingClientRect();
+      const to = bpViewer.getBoundingClientRect();
+      const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+      const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+      bpViewer.animate([
+        { transform: `translate(${dx}px, ${dy}px) scale(${from.width / to.width}, ${from.height / to.height})`, opacity: .4 },
+        { transform: 'none', opacity: 1 },
+      ], { duration: 420, easing: 'cubic-bezier(.65,0,.35,1)' });
+    }
+    bpSteps[bpCurrent].panel.querySelector<HTMLButtonElement>('[data-bp-step="1"]')!.focus({ preventScroll: true });
+  };
+  bpTiles.forEach((tile, index) => tile.addEventListener('click', event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (performance.now() < blockClickUntil) return;
+    bpOpen(index, tile);
+  }));
+  bpViewer.querySelector('[data-bp-close]')!.addEventListener('click', () => bpViewer.close());
+  bpViewer.querySelectorAll<HTMLButtonElement>('[data-bp-move]').forEach(button => button.addEventListener('click', () => bpPlace(bpCurrent + Number(button.dataset.bpMove))));
+  bpViewer.addEventListener('click', event => { if (event.target === bpViewer) bpViewer.close(); });
+  bpViewer.addEventListener('keydown', event => {
+    event.stopPropagation();
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    bpPlace(bpCurrent + (event.key === 'ArrowRight' ? 1 : -1));
+  });
+  bpViewer.addEventListener('close', () => {
+    loopsOpen = false;
+    syncLoops();
+    document.documentElement.classList.remove('story-viewer-open');
+    if (bpCurrent >= 0) bpHome.appendChild(bpPanels[bpCurrent]);
+    bpOpener?.focus({ preventScroll: true });
+    bpCurrent = -1;
+    if (location.hash.startsWith('#blueprint-')) history.replaceState(null, '', location.pathname + location.search);
   });
 
   let opener: HTMLElement | null = null;
@@ -532,6 +652,12 @@ export function initStory() {
     });
   });
   const followHash = () => {
+    const blueprint = bpTiles.findIndex(tile => tile.hash === location.hash);
+    if (blueprint >= 0) {
+      goTo('systems', false);
+      if (!bpViewer.open) bpOpen(blueprint, bpTiles[blueprint]);
+      return;
+    }
     const detailLink = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-detail]')).find(link => link.hash === location.hash);
     if (detailLink) {
       const scene = detailLink.closest<HTMLElement>('[data-scene]');

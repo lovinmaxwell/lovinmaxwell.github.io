@@ -1,59 +1,78 @@
 ---
-import Icon from './Icon.astro';
-import { withBase } from '../lib/url';
-const chipIdle = withBase('images/node-chip-idle-232.webp');
-const chipActive = withBase('images/node-chip-active-232.webp');
-const systems = [
-  {
-    id: 'enterprise', label: 'Enterprise mobility', context: 'Hamad Medical Corporation',
-    title: 'From a mobile action to an enterprise workflow.',
-    description: 'REST APIs connect Flutter mobile apps to PMWeb for asset management and approvals. SQL integration also brings Oracle procedure results into those workflows.',
-    nodes: [
-      { name: 'Flutter', detail: 'Mobile interface', mark: 'UI', explanation: 'Flutter applications bring asset management and approval workflows to a mobile interface. REST APIs connect that interface to PMWeb.' },
-      { name: 'REST APIs', detail: 'Application boundary', mark: 'API', explanation: 'The API boundary connects mobile actions to enterprise workflows, linking Flutter applications with PMWeb rather than leaving them as separate tools.' },
-      { name: 'PMWeb', detail: 'Assets & approvals', mark: 'SYS', explanation: 'PMWeb is the enterprise workflow side of this integration: asset management and approvals connected to the mobile applications.' },
-      { name: 'SQL / Oracle', detail: 'Data integration', mark: 'DB', explanation: 'SQL integration brings Oracle procedure results into the workflow. This is a schematic of the integration responsibilities, not an internal database design.' },
-    ],
-    note: 'Schematic of responsibilities described in the role, not an internal deployment diagram.',
-    detail: 'career-4', link: 'Explore the enterprise work',
-  },
-  {
-    id: 'sap', label: 'SAP integration', context: 'Al Shareef Holding',
-    title: 'Less manual uploading. More connected operations.',
-    description: 'Custom middleware moves leasing data into SAP RE-FX over RFC. I built both the ABAP function modules and the .NET integration.',
-    nodes: [
-      { name: 'Leasing data', detail: 'Business records', mark: 'IN', explanation: 'Leasing records are the starting point. The integration replaces manual uploading with a connection to SAP real estate workflows.' },
-      { name: '.NET', detail: 'Custom middleware', mark: 'API', explanation: 'Custom .NET middleware moves leasing data toward SAP. I built this integration alongside the ABAP function modules it calls.' },
-      { name: 'ABAP RFC', detail: 'Function modules', mark: 'RFC', explanation: 'ABAP function modules provide the SAP-side connection over RFC. Both sides of the boundary were part of my implementation work.' },
-      { name: 'SAP RE-FX', detail: 'Real estate workflows', mark: 'ERP', explanation: 'SAP RE-FX receives the leasing data for real estate workflows. The role records about 90% less manual upload effort from this integration.' },
-    ],
-    note: 'About 90% less manual upload effort, as recorded in this role.',
-    detail: 'career-3', link: 'Explore the integration work',
-  },
-  {
-    id: 'local-ai', label: 'Local-first AI', context: 'AccessFlow / In development',
-    title: 'Read the document. Keep the data on the device.',
-    description: 'A local-first visitor check-in pipeline combines image preparation, OCR and MRZ parsing, with human confirmation for uncertain fields.',
-    nodes: [
-      { name: 'Capture', detail: 'OpenCV preparation', mark: 'IN', explanation: 'The AccessFlow concept starts with image preparation using OpenCV, before a document enters the local reading pipeline. The product is in development.' },
-      { name: 'Read', detail: 'OCR / MRZ / VLM', mark: 'AI', explanation: 'The proposed local-first reading pipeline combines OCR, machine-readable zone parsing and vision-language models. This walkthrough does not process real documents.' },
-      { name: 'Confirm', detail: 'Human review', mark: 'OK', explanation: 'Uncertain fields are presented for human confirmation. The concept keeps a person in the check-in flow rather than treating every extracted value as correct.' },
-      { name: 'Check in', detail: 'Visitor form', mark: 'OUT', explanation: 'Confirmed information feeds the visitor check-in form in the proposed flow. No live visitor data or production results are shown here.' },
-    ],
-    note: 'Conceptual flow for a product in development. No live visitor data is shown.',
-    detail: 'accessflow', link: 'Explore AccessFlow',
-  },
-];
+import { blueprints, kinds } from '../data/architectures';
+import { schematic } from '../lib/blueprint-svg';
+const pad = (n: number) => String(n).padStart(2, '0');
+const total = pad(blueprints.length);
 ---
 <section id="systems" class="story-scene scene-systems" data-scene aria-labelledby="systems-title">
-  <div class="chapter-heading"><div><p class="scene-eyebrow">Architecture, in practice</p><h2 id="systems-title">Make the pieces work together.</h2></div></div>
-  <div class="system-selectors" role="group" aria-label="System walkthroughs">{systems.map((system, index) => <button type="button" data-system-select={system.id} aria-pressed={index === 0 ? 'true' : 'false'}>{system.label}</button>)}</div>
-  {systems.map(system => (
-    <article class="system-walkthrough" data-system-panel={system.id}>
-      <div class="system-context"><span>{system.context}</span><span>Architecture walkthrough</span><button type="button" class="system-reset" data-system-reset>Reset to overview</button></div>
-      <ol class="system-flow">{system.nodes.map(node => <li class="flow-node"><span class="flow-chip" aria-hidden="true"><img src={chipIdle} alt="" width="232" height="179" loading="lazy" decoding="async" /><img src={chipActive} alt="" width="232" height="179" loading="lazy" decoding="async" /></span><span class="flow-mark">{node.mark}</span><strong>{node.name}</strong><button type="button" class="flow-inspect" data-system-step data-step-title={node.name} data-step-description={node.explanation} aria-pressed="false" aria-controls={`system-explanation-${system.id}`}><span class="sr-only">Inspect {node.name}</span><span aria-hidden="true">↗</span></button><span>{node.detail}</span></li>)}</ol>
-      <div class="system-explanation" id={`system-explanation-${system.id}`} aria-live="polite" aria-atomic="true"><h3 data-system-heading>{system.title}</h3><p data-system-description>{system.description}</p></div>
-      <div class="system-foot"><p>{system.note}</p><a href={system.detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${system.detail}`} class="story-link" data-detail={system.detail}>{system.link}<Icon name="arrow-up-right" size={16} /></a></div>
-    </article>
-  ))}
+  <div class="chapter-heading">
+    <div><p class="scene-eyebrow">Architecture, in practice</p><h2 id="systems-title">Make the pieces work together.</h2></div>
+    <p class="chapter-context">Eight blueprints from real roles and products. Open one to walk its flow.</p>
+  </div>
+  <ul class="bp-grid" aria-label="Architecture blueprints">
+    {blueprints.map(bp => {
+      const k = kinds[bp.kind];
+      const concept = bp.status === 'Concept';
+      return (
+        <li>
+          <a class="bp-tile" href={`#blueprint-${pad(bp.n)}`} data-blueprint={bp.n} style={`--k:${k.color}`}>
+            <span class="bp-num">{pad(bp.n)}</span>
+            <span class:list={['bp-status', { 'is-concept': concept, 'is-default': bp.status === 'Delivered' }]}>{concept ? 'Concept · in development' : bp.status}</span>
+            <span class="bp-art" data-loop={`/architecture/${pad(bp.n)}-${bp.loop}`}>
+              <img class="bp-poster" src={`/architecture/${pad(bp.n)}-${bp.loop}-poster.webp`} alt="" width="480" height="360" loading="lazy" decoding="async" />
+            </span>
+            <span class="bp-meta">
+              <span class="bp-kind">{k.label}</span>
+              <strong class="bp-name">{bp.name}</strong>
+              <span class="bp-source">{bp.source}</span>
+            </span>
+            <span class="bp-open" aria-hidden="true">Open flow ↗</span>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+  <div class="bp-panels" data-bp-panels>
+    {blueprints.map(bp => {
+      const k = kinds[bp.kind];
+      return (
+        <article class="bp-panel" id={`blueprint-${pad(bp.n)}`} data-bp-panel={bp.n} aria-labelledby={`bp-title-${bp.n}`} style={`--k:${k.color}`}>
+          <div class="bp-info">
+            <p class="bp-count">{pad(bp.n)} / {total}</p>
+            <p class="bp-chips"><span class="bp-kind">{k.label}</span><span class:list={['bp-status', { 'is-concept': bp.status === 'Concept' }]}>{bp.status}</span></p>
+            <h3 id={`bp-title-${bp.n}`}>{bp.name}</h3>
+            <p class="bp-source">{bp.source}</p>
+            <p class="bp-shape">Shape · {bp.shape}</p>
+            <p class="bp-proof">{bp.proof}</p>
+            <ul class="bp-pieces" aria-label="Technology">{bp.pieces.map(piece => <li>{piece}</li>)}</ul>
+            <p class="bp-note">{bp.status === 'Concept'
+              ? 'Conceptual flow for a product in development. No live visitor data is shown.'
+              : 'Schematic of responsibilities described in the role, not an internal deployment diagram.'}</p>
+            <div class="bp-walk">
+              <p class="bp-walk-title">Walk-through · {bp.walk}</p>
+              <ol class="bp-steps">{bp.hops.map(([, text]) => <li>{text}</li>)}</ol>
+              <div class="bp-step-card" data-bp-step-card>
+                <p class="bp-step-count" data-bp-step-count>Step 1 of {bp.hops.length}</p>
+                <p class="bp-step-text" data-bp-step-text aria-live="polite" aria-atomic="true">{bp.hops[0][1]}</p>
+                <div class="bp-step-actions">
+                  <button type="button" data-bp-step="-1">← Previous step</button>
+                  <button type="button" data-bp-step="1">Next step →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figure class="bp-canvas" data-hops={bp.hops.map(([id]) => id).join(' ')} set:html={schematic(bp)} />
+        </article>
+      );
+    })}
+  </div>
 </section>
+<dialog class="bp-viewer" data-bp-viewer aria-label="Architecture blueprint">
+  <button type="button" class="bp-close" data-bp-close aria-label="Close blueprint">×</button>
+  <div class="bp-slot" data-bp-slot></div>
+  <footer class="bp-foot">
+    <button type="button" data-bp-move="-1">← Previous blueprint</button>
+    <span class="bp-hint">Esc closes · ← → move between blueprints</span>
+    <button type="button" data-bp-move="1">Next blueprint →</button>
+  </footer>
+</dialog>
