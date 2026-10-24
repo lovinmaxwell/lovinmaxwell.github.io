@@ -255,7 +255,7 @@ test('the Launch Orange palette keeps readable text on the dark field and glass 
   assert.match(story, /name="theme-color" content="#0b0b0c"/);
 });
 
-test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as five small files, off by default', () => {
+test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as seven small files, off by default', () => {
   const scripts = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((file) => file.endsWith('.js')).map((file) => read(`_astro/${file}`)).join('\n');
   assert.match(story, /<span class="core-interaction">Move to explore<\/span>/);
   assert.match(scripts, /core-hit/);
@@ -263,7 +263,7 @@ test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as
   assert.match(scripts, /Drag to spin · Click to pulse/);
   assert.match(scripts, /st-pulse/);
   assert.match(scripts, /portfolio-sound/);
-  const names = ['hero-pulse', 'hub-pulse', 'node-discover', 'reveal-all', 'card-open'];
+  const names = ['hero-pulse', 'hub-pulse', 'node-discover', 'reveal-all', 'card-open', 'scene-shift', 'timeline-step'];
   for (const name of names) {
     assert.ok(scripts.includes(`"${name}"`) || scripts.includes(`'${name}'`), `Missing sound ${name}`);
     for (const ext of ['ogg', 'mp3']) assert.ok(existsSync(new URL(`../dist/sound/${name}.${ext}`, import.meta.url)), `Missing dist/sound/${name}.${ext}`);
@@ -274,4 +274,7 @@ test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as
   assert.equal((story.match(/data-sound-invite hidden>♪ Turn on sound<\/button>/g) ?? []).length, 2);
   assert.match(scripts, /1\.122/); // per-branch pitch
   assert.match(scripts, /createBufferSource/);
+  // Chapter shifts and timeline stops wait for the first gesture and climb the D pentatonic one milestone at a time.
+  assert.match(scripts, /\[0,2,5,7,9,12\]/);
+  assert.equal((story.match(/data-horizontal-item/g) ?? []).length, 6, 'Six career stops, six pentatonic steps');
 });

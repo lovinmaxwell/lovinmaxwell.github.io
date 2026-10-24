@@ -1,9 +1,9 @@
 /**
- * Interface sound. Five short files from Design Studio's sound spec (2026-10-24), all on one D/A open fifth so
+ * Interface sound. Seven short files from Design Studio's sound spec (2026-10-24), all on one D/A open fifth so
  * overlapping cues never clash. Off until the visitor opts in: browsers block autoplay anyway and unasked-for sound
  * is hostile. Nothing is fetched until sound is turned on; the AudioContext is created on that first gesture.
  */
-export type SfxName = 'hero-pulse' | 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open';
+export type SfxName = 'hero-pulse' | 'hub-pulse' | 'node-discover' | 'reveal-all' | 'card-open' | 'scene-shift' | 'timeline-step';
 export type Branch = 'app' | 'integrate' | 'cloud' | 'ai';
 
 export interface PlayOptions {
@@ -13,6 +13,8 @@ export interface PlayOptions {
   delay?: number;
   /** Linear gain multiplier on top of the file's mastered level. */
   gain?: number;
+  /** Explicit playbackRate (wins over branch): the timeline climbs a step per milestone, going back drops a tone. */
+  rate?: number;
 }
 
 /** Per-branch playbackRate: unison, +2, -2 and +5 semitones, all inside the D/A set. */
@@ -36,6 +38,10 @@ const RULES: Record<SfxName, Rule> = {
   'node-discover': { window: 90, voices: 3, over: 'drop', vary: true, reducedOk: true },
   'reveal-all': { window: Infinity, voices: 1, over: 'drop', vary: false, reducedOk: false },
   'card-open': { window: 120, voices: 1, over: 'restart', vary: false, reducedOk: true },
+  // Scrubbing through chapters steals the previous shift instead of stacking; the classic page has no crossfade to follow.
+  'scene-shift': { window: 350, voices: 1, over: 'steal', vary: true, reducedOk: false },
+  // A quiet stop per milestone; dragging fast across the timeline drops the ones that land inside the window.
+  'timeline-step': { window: 110, voices: 2, over: 'drop', vary: true, reducedOk: true },
 };
 const NAMES = Object.keys(RULES) as SfxName[];
 const MASTER = 0.5;
@@ -106,6 +112,9 @@ const start = (name: SfxName, options: PlayOptions) => {
   const ctx = ensure();
   const buffer = buffers.get(name);
   if (!ctx || !buffer || !duck) return;
+  // A context the browser has not let run yet (a returning visitor who has only scrolled) would queue every cue and
+  // release them all on the first click. Those cues are dropped instead; ensure() has already asked it to resume.
+  if (ctx.state !== 'running') return;
   const rule = RULES[name];
   const voices = active.get(name) ?? [];
   if (voices.length >= rule.voices) {
@@ -115,7 +124,7 @@ const start = (name: SfxName, options: PlayOptions) => {
   }
   const source = ctx.createBufferSource();
   source.buffer = buffer;
-  source.playbackRate.value = options.branch ? BRANCH_RATE[options.branch] : 1;
+  source.playbackRate.value = options.rate ?? (options.branch ? BRANCH_RATE[options.branch] : 1);
   if (rule.vary) source.detune.value = Math.random() * 30 - 15;
   const gain = ctx.createGain();
   gain.gain.value = (options.gain ?? 1) * (rule.vary ? 10 ** ((Math.random() * 2 - 1) / 20) : 1);

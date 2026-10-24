@@ -6,6 +6,8 @@ import type { NeuralCore } from './neural-core';
 import { sfx } from './sfx';
 
 const chapterTimes = storyChapters.map(chapter => chapter.at);
+// The career timeline climbs the D pentatonic one milestone at a time (D E G A B D), all inside the sound set's D/A fifth.
+const STEP_RATE = [0, 2, 5, 7, 9, 12].map(semitones => 2 ** (semitones / 12));
 
 export function initStory() {
   const root = document.querySelector<HTMLElement>('[data-story]');
@@ -31,6 +33,9 @@ export function initStory() {
   sfx.onChange(syncSound);
   soundToggle?.addEventListener('click', () => sfx.toggle());
   addEventListener('pointerdown', () => sfx.prime(), { once: true, passive: true });
+  // Cues that follow scrolling (chapter shifts, timeline stops) wait for the first gesture, so landing on a hash stays quiet.
+  let gestured = false;
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(type => addEventListener(type, () => { gestured = true; }, { once: true, passive: true, capture: true }));
   let invited = false;
   let inviteTimer = 0;
   const inviteSound = (chip: HTMLButtonElement | undefined, replay: () => void) => {
@@ -62,6 +67,7 @@ export function initStory() {
   let requestedMotion = preference !== 'off' && !reduced.matches;
   let context: gsap.Context | undefined;
   let timeline: gsap.core.Timeline | undefined;
+  const stopWatchers: Array<() => void> = [];
   let currentScene = 0;
   let blockClickUntil = 0;
   const animated = () => root.dataset.motion === 'on';
@@ -112,7 +118,10 @@ export function initStory() {
     scrollToStep: (step, steps) => scrollForTime(stackReveal.start + (step / steps) * 0.85 * (stackReveal.end - stackReveal.start) + 0.03),
   });
   const activeScene = (index: number) => {
+    const previous = currentScene;
     currentScene = index;
+    // The chapter crossfade speaks once per shift, a tone lower on the way back.
+    if (index !== previous && gestured && animated()) sfx.play('scene-shift', { rate: index > previous ? 1 : 0.891 });
     scenes.forEach((scene, i) => {
       if (animated()) {
         scene.inert = i !== index;
@@ -181,6 +190,7 @@ export function initStory() {
           let index = 0;
           chapterTimes.forEach((at, i) => { if (time >= at - 0.32) index = i; });
           if (index !== currentScene) activeScene(index);
+          stopWatchers.forEach(watch => watch());
           tree.setProgress((time - stackReveal.start) / (stackReveal.end - stackReveal.start));
           progress.style.transform = `scaleX(${time / duration})`;
           core?.setOpen((time - 0.65) / 0.75);
@@ -355,6 +365,22 @@ export function initStory() {
   galleries.forEach(({ id, viewport: gallery, track, start: galleryStart, end: galleryEnd, distance }) => {
     let dragStart: { x: number; progress: number } | null = null;
     let dragged = false;
+    // The timeline speaks each time another milestone takes the lead: the travel is split evenly across the stops, so one
+    // arrow press is exactly one step, and each step sits one note higher than the last.
+    const stops = track.querySelectorAll('[data-horizontal-item]').length;
+    const leadingStop = () => {
+      const offset = animated() ? -Number(gsap.getProperty(track, 'x')) : gallery.scrollLeft;
+      return Math.round(gsap.utils.clamp(0, 1, offset / Math.max(1, distance())) * (stops - 1));
+    };
+    let lastStop = leadingStop();
+    const watchStop = () => {
+      const index = leadingStop();
+      if (index === lastStop) return;
+      lastStop = index;
+      if (gestured) sfx.play('timeline-step', { rate: STEP_RATE[Math.min(index, STEP_RATE.length - 1)] });
+    };
+    stopWatchers.push(watchStop);
+    gallery.addEventListener('scroll', () => { if (!animated()) requestAnimationFrame(watchStop); }, { passive: true });
     const moveGallery = (direction: number) => {
       const pieces = Array.from(track.querySelectorAll<HTMLElement>('[data-horizontal-item]'));
       if (!animated()) {
