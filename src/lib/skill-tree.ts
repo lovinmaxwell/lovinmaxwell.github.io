@@ -284,6 +284,7 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
     section.dataset.stLayout = paged ? 'paged' : 'radial';
     if (paged) layoutPaged(W, H); else { stage.style.height = ''; layoutDesktop(W, H); }
     tabs.forEach(tab => tab.setAttribute('aria-pressed', String(paged && tab.dataset.stTab === steps[step].branch)));
+    placeOverlay();
     positionCard();
     paint();
   };
@@ -402,6 +403,18 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
   };
 
   /* ---------- selection and the detail card ---------- */
+  // `will-change: transform` on the scrolling story scene (story.css) creates a containing block for any
+  // descendant `position: fixed` element, so the mobile bottom-sheet card never actually pins to the real
+  // viewport while it lives inside the scene. Move it to <body> on phones, where fixed positioning works as
+  // written in skill-tree.css; put it back in the stage on desktop, where positionCard() docks it by `--cy`.
+  const movedToBody = () => scrim.parentElement === document.body;
+  const placeOverlay = () => {
+    if (isCompact()) {
+      if (!movedToBody()) { document.body.append(scrim, card); }
+    } else if (movedToBody()) {
+      stage.append(scrim, card);
+    }
+  };
   const positionCard = () => {
     if (!selected || isCompact()) { card.style.removeProperty('--cy'); return; }
     // Dock on whichever side of the node has room; on a short stage, slide the card so it stays inside.
@@ -451,6 +464,7 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
     discover(node, true, false);
     sound('card-open');
     fillCard(node);
+    placeOverlay();
     card.hidden = false;
     scrim.hidden = !isCompact();
     positionCard();
