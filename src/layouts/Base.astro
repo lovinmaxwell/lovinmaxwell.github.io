@@ -67,7 +67,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
     <meta name="description" content={description} />
     <meta name="author" content={profile.name} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content={props.appearance ? '#07090d' : seo.themeColorDark} />
+    <meta name="theme-color" content={props.appearance ? '#0b0b0c' : seo.themeColorDark} />
     <meta name="generator" content={Astro.generator} />
 
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
@@ -135,7 +135,7 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
 
     <p id="toast" class="toast" role="status" aria-live="polite"></p>
 
-    <script is:inline define:vars={{ dark: props.appearance ? '#07090d' : seo.themeColorDark, light: seo.themeColorLight }}>
+    <script is:inline define:vars={{ dark: props.appearance ? '#0b0b0c' : seo.themeColorDark, light: seo.themeColorLight }}>
       (function () {
         var root = document.documentElement;
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

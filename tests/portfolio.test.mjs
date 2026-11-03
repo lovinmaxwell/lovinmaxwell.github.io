@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
 
 const read = (path) => readFileSync(new URL(`../dist/${path}`, import.meta.url), 'utf8');
@@ -146,12 +146,11 @@ test('the hero shows an original neural core with a still poster and a lazy 3D e
   assert.ok(readFileSync(new URL('../dist/images/story-grain.png', import.meta.url)).length > 0);
 });
 
-test('systems walkthroughs represent actual work and distinguish concepts from deployments', () => {
-  for (const id of ['enterprise', 'sap', 'local-ai']) {
-    assert.ok(story.includes(`data-system-select="${id}"`));
-    assert.ok(story.includes(`data-system-panel="${id}"`));
-  }
-  for (const name of ['Flutter', 'PMWeb', 'ABAP RFC', 'SAP RE-FX', 'Human review']) assert.ok(text.includes(name));
+test('systems blueprints represent actual work and distinguish concepts from deployments', () => {
+  assert.equal(story.match(/data-blueprint="\d+"/g)?.length, 8);
+  assert.equal(story.match(/data-bp-panel="\d+"/g)?.length, 8);
+  assert.match(story, /<dialog\b[^>]*\bclass="bp-viewer"/);
+  for (const name of ['Flutter', 'PMWeb', 'ABAP RFC', 'SAP RE-FX']) assert.ok(text.includes(name));
   assert.match(text, /not an internal deployment diagram/);
   assert.match(text, /Conceptual flow for a product in development/);
 });
@@ -167,24 +166,31 @@ test('capabilities lead to work while the complete catalog remains in a secondar
   assert.doesNotMatch(stack, /data-story-category=/);
 });
 
-test('the Stack window is a labelled tab list with an index tab, a dock and a searchable catalog', () => {
+test('the Skill Tree renders every tool as a locked node with an honest counter, search and a no-script list', () => {
   const stack = story.slice(story.indexOf('id="stack"'), story.indexOf('id="contact"'));
-  assert.match(stack, /role="tablist"[^>]*aria-orientation="vertical"/);
-  const tabs = stack.match(/<button\b[^>]*role="tab"[^>]*>/g) ?? [];
-  assert.equal(tabs.length, 5);
-  for (const tab of tabs) {
-    const panel = tab.match(/aria-controls="([^"]+)"/)[1];
-    assert.match(stack, new RegExp(`role="tabpanel"[^>]*id="${panel}"`));
-  }
-  assert.equal(tabs.filter(tab => /aria-selected="true"/.test(tab)).length, 1);
-  assert.match(stack, /<nav class="stack-dock" aria-label="Where each capability was used"/);
-  assert.match(stack, /data-stack-search-open/);
+  const nodes = stack.match(/<button\b[^>]*class="st-node"[^>]*>/g) ?? [];
+  assert.equal(nodes.length, 66);
+  assert.ok(nodes.every(node => /aria-pressed="false"/.test(node) && /data-st-branch="(app|integrate|cloud|ai)"/.test(node)));
+  assert.match(stack, /^id="stack"[^>]*data-scene[^>]*data-skill-tree>/);
+  assert.match(stack, /type="search"[^>]*data-st-query/);
+  assert.match(stack, /role="status" data-st-found/);
+  assert.match(stack, /data-st-count aria-live="polite" aria-atomic="true">0 \/ 66</);
+  assert.match(stack, /<button type="button" class="st-reveal" data-st-reveal>Reveal all</);
+  assert.match(stack, /<svg class="st-edges" aria-hidden="true"/);
+  assert.match(stack, /role="dialog" aria-labelledby="st-card-title" data-st-card hidden/);
+  assert.equal((stack.match(/<button type="button" aria-pressed="(?:true|false)" data-st-tab=/g) ?? []).length, 4);
+  assert.equal((stack.match(/data-st-filter="/g) ?? []).length, 5);
+  assert.match(stack, /<div class="st-list">/);
+  assert.equal((stack.match(/<div class="st-list-branch">/g) ?? []).length, 4);
+  // Each branch hub is a real button that sends a pulse down its connections.
+  assert.equal((stack.match(/<button type="button" class="st-hub" data-st-hub="(?:app|integrate|cloud|ai)" aria-label="Send a pulse through the [A-Za-z ]+ branch"/g) ?? []).length, 4);
+  assert.doesNotMatch(stack, /XP|level |badge|streak|%</);
   assert.match(story, /type="search" data-stack-query/);
   assert.match(story, /data-stack-empty hidden/);
-  for (const id of ['application', 'integration', 'infrastructure', 'intelligence']) {
-    assert.ok(existsSync(new URL(`../dist/images/stack/stack-icon-${id}.webp`, import.meta.url)));
+  for (const id of ['app', 'integrate', 'cloud', 'ai']) {
+    assert.ok(existsSync(new URL(`../dist/images/stack/hub-${id}.webp`, import.meta.url)), `hub-${id}.webp`);
   }
-  assert.match(stack, /4 capabilities · 10 categories · 66 tools &amp; practices/);
+  assert.ok(!existsSync(new URL('../dist/images/stack/stack-icon-application.webp', import.meta.url)));
 });
 
 test('the visual chapter atlas exposes all six destinations and accessible search', () => {
@@ -198,24 +204,40 @@ test('the visual chapter atlas exposes all six destinations and accessible searc
   assert.doesNotMatch(classic, /data-atlas-open|data-atlas-chapter/);
 });
 
-test('the spatial hero keeps its artwork decorative and the system chips stay silent', () => {
+test('the spatial hero keeps its artwork decorative and the blueprint loops stay silent', () => {
   assert.match(story, /class="core-art" aria-hidden="true"/);
   for (const name of ['core-object', 'core-poster']) assert.ok(story.includes(`class="${name}"`));
-  assert.equal([...story.matchAll(/class="flow-chip" aria-hidden="true"/g)].length, 12);
+  assert.equal([...story.matchAll(/<img class="bp-poster" src="\/architecture\/0\d-[a-z-]+-poster\.webp" alt=""/g)].length, 8);
+  // Videos are added by script only, muted and hidden from assistive tech, so no-JS visitors fetch posters alone.
+  assert.doesNotMatch(story, /<video/);
   assert.match(story, /class="story-field" aria-hidden="true"/);
 });
 
-test('system boundaries have labeled inspection controls and live explanations', () => {
-  assert.equal([...story.matchAll(/\sdata-system-step(?:\s|>)/g)].length, 12);
-  for (const id of ['enterprise', 'sap', 'local-ai']) {
-    assert.ok(story.includes(`aria-controls="system-explanation-${id}"`));
-    assert.ok(story.includes(`id="system-explanation-${id}" aria-live="polite" aria-atomic="true"`));
+test('every blueprint loop ships in both alpha formats with a poster, inside a small budget', () => {
+  const loops = [...story.matchAll(/data-loop="\/architecture\/([\w-]+)"/g)].map(match => match[1]);
+  assert.equal(loops.length, 8);
+  let total = 0;
+  for (const loop of loops) {
+    for (const ext of ['webm', 'mp4', '-poster.webp']) {
+      const file = new URL(`../dist/architecture/${loop}${ext.startsWith('-') ? ext : `.${ext}`}`, import.meta.url);
+      assert.ok(existsSync(file), `${loop} ${ext} is missing`);
+      const size = statSync(file).size;
+      assert.ok(size <= 300_000, `${loop} ${ext} is ${size} bytes`);
+      total += size;
+    }
   }
-  assert.match(story, /Reset to overview/);
-  assert.match(story, /Inspect Flutter/);
+  assert.ok(total <= 2_000_000, `architecture loops total ${total} bytes`);
 });
 
-test('the Signal Glass palette keeps readable text on the dark field and glass panels', () => {
+test('blueprint walk-throughs have labeled step controls and live explanations', () => {
+  assert.equal([...story.matchAll(/data-bp-step-text aria-live="polite" aria-atomic="true"/g)].length, 8);
+  assert.equal([...story.matchAll(/data-bp-step="1">Next step/g)].length, 8);
+  assert.equal([...story.matchAll(/role="img" aria-label="/g)].length >= 8, true);
+  assert.match(story, /aria-label="Close blueprint"/);
+  assert.match(story, /Previous blueprint/);
+});
+
+test('the Launch Orange palette keeps readable text on the dark field and glass panels', () => {
   const css = readFileSync(new URL('../src/styles/story.css', import.meta.url), 'utf8');
   const chapters = readFileSync(new URL('../src/data/story.ts', import.meta.url), 'utf8');
   const token = name => {
@@ -245,5 +267,29 @@ test('the Signal Glass palette keeps readable text on the dark field and glass p
   assert.ok(contrast(token('accent'), token('panel-highlight')) >= 4.5);
   assert.ok(contrast(token('focus'), token('panel-highlight')) >= 3);
   assert.doesNotMatch(css, /--paper|--ink|color-scheme: light/);
-  assert.match(story, /name="theme-color" content="#07090d"/);
+  assert.match(story, /name="theme-color" content="#0b0b0c"/);
+});
+
+test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as seven small files, off by default', () => {
+  const scripts = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((file) => file.endsWith('.js')).map((file) => read(`_astro/${file}`)).join('\n');
+  assert.match(story, /<span class="core-interaction">Move to explore<\/span>/);
+  assert.match(scripts, /core-hit/);
+  assert.match(scripts, /is-grabbing/);
+  assert.match(scripts, /Drag to spin · Click to pulse/);
+  assert.match(scripts, /st-pulse/);
+  assert.match(scripts, /portfolio-sound/);
+  const names = ['hero-pulse', 'hub-pulse', 'node-discover', 'reveal-all', 'card-open', 'scene-shift', 'timeline-step'];
+  for (const name of names) {
+    assert.ok(scripts.includes(`"${name}"`) || scripts.includes(`'${name}'`), `Missing sound ${name}`);
+    for (const ext of ['ogg', 'mp3']) assert.ok(existsSync(new URL(`../dist/sound/${name}.${ext}`, import.meta.url)), `Missing dist/sound/${name}.${ext}`);
+  }
+  assert.ok(!scripts.includes(`"card-close"`) && !scripts.includes(`'card-close'`), 'Closing the card is silent');
+  // Design Studio's sound spec: one switch in the header, off by default; one-time invitation chips by the core and the tree.
+  assert.match(story, /<button type="button" class="sound-toggle" aria-pressed="false" aria-label="Turn sound on"/);
+  assert.equal((story.match(/data-sound-invite hidden>♪ Turn on sound<\/button>/g) ?? []).length, 2);
+  assert.match(scripts, /1\.122/); // per-branch pitch
+  assert.match(scripts, /createBufferSource/);
+  // Chapter shifts and timeline stops wait for the first gesture and climb the D pentatonic one milestone at a time.
+  assert.match(scripts, /\[0,2,5,7,9,12\]/);
+  assert.equal((story.match(/data-horizontal-item/g) ?? []).length, 6, 'Six career stops, six pentatonic steps');
 });

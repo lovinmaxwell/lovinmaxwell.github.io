@@ -111,6 +111,27 @@ export type LogoKey =
   | 'ios'
   | 'electron';
 
+export type StackBranchId = 'app' | 'integrate' | 'cloud' | 'ai';
+
+/** One branch of the Skill Tree: a group of categories read as a capability. */
+export interface StackBranch {
+  id: StackBranchId;
+  /** Short chip label, e.g. "Local AI". */
+  label: string;
+  /** The capability line, e.g. "Keep intelligence local". */
+  title: string;
+  /** Categories per mobile page, inner page first. Desktop shows every page as one column set. */
+  pages: StackCategory[][];
+  /** Where this capability was used: a career or project viewer. */
+  detail: string;
+}
+
+/** Tools that shipped together on one real project or product. Only verified combinations. */
+export interface StackGroup {
+  label: string;
+  tools: string[];
+}
+
 export interface StackItem {
   name: string;
   /** Short qualifier shown after the name, e.g. "BLoC, Riverpod". */
@@ -561,6 +582,24 @@ export const profile = {
         logos: ['csharp', 'dotnet', 'azure', 'sqlserver'],
       },
     ] satisfies { tier: StackTier; title: string; text: string; logos: LogoKey[] }[],
+    // Skill Tree branches. Every tool belongs to exactly one branch through its category.
+    branches: [
+      { id: 'app', label: 'App', title: 'Build the application', pages: [['Backend'], ['Frontend', 'E-commerce', 'Mobile']], detail: 'career-4' },
+      { id: 'integrate', label: 'Integrate', title: 'Connect the business', pages: [['ERP / Integration', 'Architecture'], ['Data']], detail: 'career-3' },
+      { id: 'cloud', label: 'Cloud', title: 'Deliver on the cloud', pages: [['Azure', 'Delivery']], detail: 'career-3' },
+      { id: 'ai', label: 'Local AI', title: 'Keep intelligence local', pages: [['AI & Automation']], detail: 'accessflow' },
+    ] satisfies StackBranch[],
+    // Linked tools: combinations backed by the notes and projects above, nothing inferred.
+    groups: [
+      { label: 'AccessFlow', tools: ['Custom OCR model research', 'Qwen2.5-VL', 'PaddleOCR / RapidOCR', 'ONNX Runtime', 'Ollama / vLLM', 'Python FastAPI', 'React', 'TypeScript'] },
+      { label: 'Retail POS', tools: ['.NET', 'WCF', 'MVVM', 'Dependency injection'] },
+      { label: 'CRM delivery', tools: ['.NET', 'Angular', 'SQL Server', 'Code review'] },
+      { label: 'Flutter apps', tools: ['Flutter', 'Android', 'iOS', 'REST', 'PMWeb'] },
+      { label: 'HolyWhisper', tools: ['Dart', 'Firebase', 'ObjectBox'] },
+      { label: 'SAP RE-FX', tools: ['SAP RFC', 'SAP ABAP', 'Middleware'] },
+      { label: 'Cursor plugins', tools: ['Agents & MCP', 'Claude / Cursor agent tooling'] },
+      { label: 'Desktop apps', tools: ['Desktop', 'Flutter', 'WPF', 'Electron'] },
+    ] satisfies StackGroup[],
     items: [
       // AI & Automation
       {
