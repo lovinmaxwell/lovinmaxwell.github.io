@@ -560,6 +560,11 @@ export function initSkillTree(section: HTMLElement, options: SkillTreeOptions): 
   new ResizeObserver(scheduleLayout).observe(stage);
   compact.addEventListener('change', scheduleLayout);
   window.addEventListener('resize', scheduleLayout);
+  // On phones the card is a fixed bottom sheet (skill-tree.css), so it stays pinned to the viewport
+  // instead of scrolling with the page; close it once the chapter itself has mostly scrolled away.
+  new IntersectionObserver(([entry]) => {
+    if (selected && isCompact() && entry.intersectionRatio < 0.2) deselect();
+  }, { threshold: [0, 0.2, 1] }).observe(section);
   if (reduced.matches) nodes.forEach(node => discover(node, false));
   layout();
 
