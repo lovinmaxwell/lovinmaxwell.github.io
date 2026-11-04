@@ -319,3 +319,19 @@ test('the agent-build route mirrors the classic sections with a swarm-build over
   for (const entry of entries) assert.doesNotMatch(source(entry), /WebGLRenderer/);
   assert.ok(chunks.some((name) => source(name).includes('data-ab-layer')), 'Missing the agent-build script chunk');
 });
+
+test('the agent-build Tour scrolls instantly and never double-counts a built layer', () => {
+  const chunks = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((name) => name.endsWith('.js'));
+  const source = (name) => readFileSync(new URL(`../dist/_astro/${name}`, import.meta.url), 'utf8');
+  const abChunk = chunks.map(source).find((code) => code.includes('data-ab-layer'));
+  assert.ok(abChunk, 'Missing the agent-build script chunk');
+
+  // Bug 1: scroll-behavior:smooth in global.css otherwise fights a plain scrollTo(0, y) every frame,
+  // so the Tour must pass an explicit instant behavior to override it.
+  assert.match(abChunk, /scrollTo\(\{[^}]*behavior:\s*["']instant["']/);
+
+  // Bug 2: a layer already marked ab-built must never be counted again, whether a worker finishes it
+  // mid-build or the section is fast-finished after scrolling away; built must never exceed total.
+  const guards = [...abChunk.matchAll(/ab-built["']\)\|\|\([^)]*classList\.add\(["']ab-built["']\)/g)];
+  assert.ok(guards.length >= 2, 'Both the worker path and the fast-finish path must guard against re-counting a built layer');
+});

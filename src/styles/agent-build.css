@@ -11,6 +11,13 @@
   contain: strict;
 }
 
+/* During the opening hold, the hero tagline (which otherwise manages its own visibility
+   unconditionally on load) is hidden too, so the page reads as truly empty behind the tile. */
+body.ab-opening [data-tagline-rotator] {
+  opacity: 0;
+  transition: none;
+}
+
 .ab-cursor {
   position: absolute;
   top: 0;
@@ -37,8 +44,8 @@
 
 .ab-select {
   position: absolute;
-  border: 1.5px solid var(--ab-color, #fcee0a);
-  background: color-mix(in srgb, var(--ab-color, #fcee0a) 10%, transparent);
+  border: 1.5px solid var(--ab-color, #4da8ff);
+  background: color-mix(in srgb, var(--ab-color, #4da8ff) 10%, transparent);
   border-radius: 3px;
   opacity: 0;
   transition: opacity 0.18s ease;
@@ -58,7 +65,7 @@
   position: absolute;
   width: 6px;
   height: 6px;
-  background: var(--ab-color, #fcee0a);
+  background: var(--ab-color, #4da8ff);
   border-radius: 1px;
 }
 
@@ -73,7 +80,7 @@
   left: -1.5px;
   padding: 1px 6px;
   border-radius: 3px;
-  background: var(--ab-color, #fcee0a);
+  background: var(--ab-color, #4da8ff);
   color: #0a0a0b;
   font: 600 10px/1.6 var(--font-mono, ui-monospace, monospace);
   white-space: nowrap;
@@ -341,7 +348,7 @@ main#main .kicker::before {
 .ab-ruler {
   position: fixed;
   z-index: 59;
-  background: var(--ab-color, #fcee0a);
+  background: var(--ab-color, #4da8ff);
   opacity: 0;
   transition: opacity 0.15s ease;
 }

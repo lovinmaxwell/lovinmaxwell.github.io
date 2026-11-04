@@ -65,21 +65,32 @@ function classify(el: HTMLElement): LayerKind {
   return 'text';
 }
 
-/** Picks the outermost elements matching the layer selector, never a descendant of an already-picked one. */
-function discoverLayers(section: HTMLElement): PageLayer[] {
+/**
+ * Picks the outermost elements matching the layer selector, never a descendant of an
+ * already-picked one. Pure read (no DOM writes): run() batches the data-ab-layer/ab-building
+ * writes separately afterwards so this never forces a layout read/write interleave across sections.
+ */
+function discoverLayers(section: HTMLElement, picked: Set<HTMLElement>): PageLayer[] {
   const candidates = section.querySelectorAll<HTMLElement>('h1, h2, h3, h4, p, a, button, img, li, blockquote');
-  const picked: PageLayer[] = [];
+  const layers: PageLayer[] = [];
   for (const el of Array.from(candidates)) {
-    if (el.closest('[data-ab-layer]')) continue;
+    let nested = false;
+    for (let ancestor = el.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      if (picked.has(ancestor)) {
+        nested = true;
+        break;
+      }
+    }
+    if (nested) continue;
     // Decorative content (e.g. the hero's rotating tagline) manages its own visibility
     // independently of build state; forcing it to opacity: 1 would fight that.
     if (el.closest('[aria-hidden="true"]')) continue;
     const rect = el.getBoundingClientRect();
     if (rect.width < 4 || rect.height < 4) continue;
-    el.setAttribute('data-ab-layer', '');
-    picked.push({ el, kind: classify(el) });
+    picked.add(el);
+    layers.push({ el, kind: classify(el) });
   }
-  return picked;
+  return layers;
 }
 
 function resetPageForReplay(sections: HTMLElement[]): void {
@@ -99,6 +110,38 @@ function positionBox(el: HTMLElement, rect: Rect): void {
   el.style.top = `${rect.top}px`;
   el.style.width = `${rect.width}px`;
   el.style.height = `${rect.height}px`;
+}
+
+/**
+ * Overlay chrome (select boxes, guides, headline ghosts, typing carets, drop markers) is
+ * positioned from a live target element's rect, not a one-off snapshot, so it stays attached
+ * to its layer while the visitor scrolls past it mid-build. motionTick's rAF loop calls
+ * syncTrackedBoxes() every frame; reads happen before writes so one element's position write
+ * never forces a layout recalc before the next element's rect read.
+ */
+const trackedBoxes = new Map<HTMLElement, { target: HTMLElement; kind: 'box' | 'h' | 'v' | 'point' }>();
+
+function trackBox(el: HTMLElement, target: HTMLElement, kind: 'box' | 'h' | 'v' | 'point' = 'box'): void {
+  trackedBoxes.set(el, { target, kind });
+}
+
+function untrackBox(el: HTMLElement): void {
+  trackedBoxes.delete(el);
+}
+
+function syncTrackedBoxes(): void {
+  if (trackedBoxes.size === 0) return;
+  const updates: Array<[HTMLElement, Rect, 'box' | 'h' | 'v' | 'point']> = [];
+  for (const [el, { target, kind }] of trackedBoxes) updates.push([el, target.getBoundingClientRect(), kind]);
+  for (const [el, rect, kind] of updates) {
+    if (kind === 'box') positionBox(el, rect);
+    else if (kind === 'h') el.style.top = `${rect.top}px`;
+    else if (kind === 'v') el.style.left = `${rect.left}px`;
+    else {
+      el.style.left = `${rect.left + rect.width / 2}px`;
+      el.style.top = `${rect.top + rect.height / 2}px`;
+    }
+  }
 }
 
 export function initAgentBuild(): void {
@@ -141,16 +184,21 @@ function run(sections: HTMLElement[]): void {
   const pill = buildPill();
   document.body.appendChild(pill.el);
 
-  // Whole-page honest counting: discover (and hide) every layer on the page up front,
-  // before any building starts, so the counter and progress are never per-section guesses.
+  // Whole-page honest counting: discover every layer on the page up front, before any building
+  // starts, so the counter and progress are never per-section guesses. Reads and writes are kept
+  // in separate passes (read all rects, then write all attributes, then write all classes) so
+  // discovering one section's layers never forces a layout recalc off a previous section's
+  // freshly-hidden elements.
   const sectionLayers = new Map<HTMLElement, PageLayer[]>();
   let totalLayers = 0;
+  const pickedLayers = new Set<HTMLElement>();
   for (const section of sections) {
-    const layers = discoverLayers(section);
+    const layers = discoverLayers(section, pickedLayers);
     sectionLayers.set(section, layers);
     totalLayers += layers.length;
-    section.classList.add('ab-building');
   }
+  for (const el of pickedLayers) el.setAttribute('data-ab-layer', '');
+  for (const section of sections) section.classList.add('ab-building');
 
   let builtLayers = 0;
   let sectionsCompleted = 0;
@@ -161,23 +209,34 @@ function run(sections: HTMLElement[]): void {
 
   const mobile = isMobile();
   const poolSize = mobile ? 6 : AGENT_NAMES.length;
-  const concurrency = mobile ? 2 : 10;
+  const concurrency = mobile ? 4 : 18;
 
   const agents: Agent[] = Array.from({ length: poolSize }, (_, i) => {
     const name = AGENT_NAMES[i % AGENT_NAMES.length]!;
     const color = CURSOR_COLORS[i % CURSOR_COLORS.length]!;
     const el = buildAgentCursorEl(name, color);
     overlay.appendChild(el);
-    return { name, color, el, x: 0, y: 0, tx: 0, ty: 0, busy: false, nextWanderAt: 0 };
+    // nextWanderAt starts at Infinity, not now: motionTick's first rAF must not immediately
+    // call scheduleWander and fight openingBurst's synchronous centered placement below.
+    return { name, color, el, x: 0, y: 0, tx: 0, ty: 0, busy: false, nextWanderAt: Infinity };
   });
 
   function wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms / (speed * boost)));
   }
 
+  let waitingForScroll = false;
+
   function updatePill(): void {
     const active = agents.filter((a) => a.busy).length;
-    pill.agents.textContent = `${active} agents`;
+    waitingForScroll = active === 0 && sectionsCompleted > 0 && sectionsCompleted < sections.length && !done;
+    if (waitingForScroll) {
+      pill.agents.textContent = 'Scroll to keep building';
+      pill.tourBtn.classList.add('is-emphasized');
+    } else {
+      pill.agents.textContent = `${active} agents`;
+      pill.tourBtn.classList.remove('is-emphasized');
+    }
     pill.layers.textContent = `${builtLayers} / ${totalLayers} layers`;
     const pct = totalLayers === 0 ? 0 : Math.round((builtLayers / totalLayers) * 100);
     pill.progressFill.style.setProperty('--ab-progress', `${pct}%`);
@@ -200,12 +259,18 @@ function run(sections: HTMLElement[]): void {
       a.y += (a.ty - a.y) * 0.14;
       a.el.style.transform = `translate(${a.x}px, ${a.y}px)`;
     }
+    syncTrackedBoxes();
     motionRaf = requestAnimationFrame(motionTick);
   }
 
   function scheduleWander(a: Agent, now: number): void {
     a.nextWanderAt = now + 900 + Math.random() * 1400;
     const vw = window.innerWidth;
+    if (waitingForScroll) {
+      a.tx = Math.random() * vw;
+      a.ty = window.innerHeight - 36 + Math.random() * 24;
+      return;
+    }
     const topBand = 80 + Math.random() * Math.min(window.innerHeight - 160, 520);
     const r = Math.random();
     if (pointer && r < 0.3) {
@@ -235,8 +300,10 @@ function run(sections: HTMLElement[]): void {
   async function buildLayer(layer: PageLayer, agent: Agent): Promise<void> {
     const rect = layer.el.getBoundingClientRect();
     if (rect.width < 4 || rect.height < 4) {
-      layer.el.classList.add('ab-built');
-      onProgress();
+      if (!layer.el.classList.contains('ab-built')) {
+        layer.el.classList.add('ab-built');
+        onProgress();
+      }
       return;
     }
 
@@ -244,52 +311,63 @@ function run(sections: HTMLElement[]): void {
     agent.tx = rect.left + 6;
     agent.ty = rect.top + 6;
     updatePill();
-    await wait(150);
+    await wait(1300 + Math.random() * 900);
 
     const select = buildSelectBox();
-    select.el.style.setProperty('--ab-color', agent.color);
     overlay.appendChild(select.el);
     positionBox(select.el, rect);
+    trackBox(select.el, layer.el, 'box');
     select.badge.textContent = `${Math.round(rect.width)} x ${Math.round(rect.height)}`;
     select.el.classList.add('is-on');
 
     const guides = buildGuides(rect);
     overlay.appendChild(guides.h);
     overlay.appendChild(guides.v);
+    trackBox(guides.h, layer.el, 'h');
+    trackBox(guides.v, layer.el, 'v');
     requestAnimationFrame(() => {
       guides.h.classList.add('is-on');
       guides.v.classList.add('is-on');
     });
 
     if (Math.random() < 0.15) {
+      untrackBox(select.el);
       select.el.classList.add('is-wrong');
       const off = 12 + Math.random() * 10;
       positionBox(select.el, { left: rect.left - off, top: rect.top - off / 2, width: rect.width + off, height: rect.height + off / 2 });
-      await wait(170);
+      await wait(1000 + Math.random() * 500);
       select.el.classList.remove('is-wrong');
-      positionBox(select.el, rect);
+      positionBox(select.el, layer.el.getBoundingClientRect());
+      trackBox(select.el, layer.el, 'box');
     }
 
-    await wait(190);
+    await wait(2000 + Math.random() * 1100);
     guides.h.classList.remove('is-on');
     guides.v.classList.remove('is-on');
 
     if (layer.kind === 'heading') await revealHeading(layer.el, rect, overlay, agent.color, wait);
     else if (layer.kind === 'text') await revealText(layer.el, rect, overlay, wait);
-    else if (layer.kind === 'button') await revealButton(rect, overlay, agent.color, wait);
+    else if (layer.kind === 'button') await revealButton(layer.el, rect, overlay, agent.color, wait);
     else await revealGeneric(rect, overlay, wait);
 
     select.el.classList.remove('is-on');
-    await wait(50);
+    await wait(550 + Math.random() * 400);
+    untrackBox(select.el);
+    untrackBox(guides.h);
+    untrackBox(guides.v);
     select.el.remove();
     guides.h.remove();
     guides.v.remove();
 
-    layer.el.classList.add('ab-built');
-    onProgress();
+    if (!layer.el.classList.contains('ab-built')) {
+      layer.el.classList.add('ab-built');
+      onProgress();
+    }
     agent.busy = false;
     updatePill();
   }
+
+  const cancelledSections = new Set<HTMLElement>();
 
   async function buildSection(section: HTMLElement): Promise<void> {
     if (section.dataset.abDone) return;
@@ -302,14 +380,17 @@ function run(sections: HTMLElement[]): void {
     const workers = Array.from({ length: workerCount }, () =>
       (async () => {
         while (true) {
+          if (cancelledSections.has(section)) break;
           if (i >= layers.length) break;
           const layer = layers[i++]!;
 
           let agent = pickIdleAgent();
           while (!agent) {
+            if (cancelledSections.has(section)) return;
             await wait(60);
             agent = pickIdleAgent();
           }
+          if (cancelledSections.has(section)) return;
           await buildLayer(layer, agent);
         }
       })(),
@@ -317,11 +398,13 @@ function run(sections: HTMLElement[]): void {
     await Promise.all(workers);
     section.classList.remove('ab-building');
     sectionsCompleted++;
+    updatePill();
     if (sectionsCompleted === sections.length) finish(false);
   }
 
   function fastFinishSection(section: HTMLElement): void {
     if (section.dataset.abDone !== '1' || !section.classList.contains('ab-building')) return;
+    cancelledSections.add(section);
     const layers = sectionLayers.get(section) ?? [];
     for (const layer of layers) {
       if (!layer.el.classList.contains('ab-built')) {
@@ -399,7 +482,7 @@ function run(sections: HTMLElement[]): void {
     const step = (now: number) => {
       if (!touring) return;
       const p = Math.min(1, (now - t0) / duration);
-      window.scrollTo(0, start + distance * p);
+      window.scrollTo({ top: start + distance * p, behavior: 'instant' });
       if (p < 1) tourRaf = requestAnimationFrame(step);
       else stopTour();
     };
@@ -428,7 +511,11 @@ function run(sections: HTMLElement[]): void {
   function finish(wasSkipped: boolean): void {
     if (done) return;
     done = true;
-    stopTour();
+    // Sections finish early during the Tour (fastFinishSection races ahead of the scroll
+    // as each section passes the viewport), so a natural completion here must not cut the
+    // scroll off before it reaches the real end of the page. Skip is the one case that must
+    // stay instant, so only it forces the tour to stop.
+    if (wasSkipped) stopTour();
     cancelAnimationFrame(motionRaf);
     overlay.remove();
     sessionStorage.setItem(SESSION_KEY, '1');
@@ -450,6 +537,10 @@ function run(sections: HTMLElement[]): void {
 }
 
 async function openingBurst(overlay: HTMLElement, agents: Agent[], wait: (ms: number) => Promise<void>): Promise<void> {
+  // ab-opening hides decorative chrome (the hero tagline) that manages its own visibility,
+  // so the page is truly empty while the tile holds centre stage.
+  document.body.classList.add('ab-opening');
+
   const brand = document.querySelector<HTMLElement>('a[href="#top"]');
   const tile = document.createElement('div');
   tile.className = 'ab-logo-tile';
@@ -465,19 +556,24 @@ async function openingBurst(overlay: HTMLElement, agents: Agent[], wait: (ms: nu
     a.ty = cy;
     a.el.style.opacity = '0';
   }
-  requestAnimationFrame(() => {
-    for (const a of agents) a.el.style.opacity = '1';
-  });
-  await wait(260);
 
+  // Tile alone, held, before anything else appears.
+  requestAnimationFrame(() => tile.classList.add('is-on'));
+  await wait(1000);
+
+  tile.classList.add('is-out');
+  for (const a of agents) a.el.style.opacity = '1';
   for (const a of agents) {
     a.tx = cx + (Math.random() - 0.5) * Math.min(900, window.innerWidth * 0.8);
     a.ty = cy + (Math.random() - 0.5) * 420;
   }
-  await wait(500);
-  tile.classList.add('is-out');
+  document.body.classList.remove('ab-opening');
   await wait(260);
   tile.remove();
+
+  // Natural wander cadence resumes only now, so motionTick can't race the burst above.
+  const resumeAt = performance.now();
+  for (const a of agents) a.nextWanderAt = resumeAt + 600 + Math.random() * 1200;
 }
 
 async function revealGeneric(rect: Rect, overlay: HTMLElement, wait: (ms: number) => Promise<void>): Promise<void> {
@@ -486,7 +582,7 @@ async function revealGeneric(rect: Rect, overlay: HTMLElement, wait: (ms: number
   overlay.appendChild(sk);
   positionBox(sk, rect);
   sk.classList.add('is-on');
-  await wait(230);
+  await wait(2000 + Math.random() * 1000);
   sk.remove();
 }
 
@@ -505,9 +601,11 @@ async function revealHeading(
   ghost.style.color = color;
   overlay.appendChild(ghost);
   positionBox(ghost, rect);
-  await wait(160);
+  trackBox(ghost, el, 'box');
+  await wait(1300 + Math.random() * 700);
   ghost.classList.add('is-snap');
-  await wait(160);
+  await wait(1300 + Math.random() * 700);
+  untrackBox(ghost);
   ghost.remove();
 }
 
@@ -523,6 +621,7 @@ async function revealText(el: HTMLElement, rect: Rect, overlay: HTMLElement, wai
   typer.style.lineHeight = cs.lineHeight;
   overlay.appendChild(typer);
   positionBox(typer, rect);
+  trackBox(typer, el, 'box');
 
   const steps = Math.min(full.length, 22);
   const chunk = Math.max(1, Math.ceil(full.length / steps));
@@ -531,12 +630,19 @@ async function revealText(el: HTMLElement, rect: Rect, overlay: HTMLElement, wai
     const caret = document.createElement('span');
     caret.className = 'ab-caret';
     typer.appendChild(caret);
-    await wait(14);
+    await wait(130 + Math.random() * 90);
   }
+  untrackBox(typer);
   typer.remove();
 }
 
-async function revealButton(rect: Rect, overlay: HTMLElement, color: string, wait: (ms: number) => Promise<void>): Promise<void> {
+async function revealButton(
+  el: HTMLElement,
+  rect: Rect,
+  overlay: HTMLElement,
+  color: string,
+  wait: (ms: number) => Promise<void>,
+): Promise<void> {
   const plus = document.createElement('div');
   plus.className = 'ab-drop';
   plus.style.setProperty('--ab-color', color);
@@ -544,9 +650,11 @@ async function revealButton(rect: Rect, overlay: HTMLElement, color: string, wai
   plus.style.left = `${rect.left + rect.width / 2}px`;
   plus.style.top = `${rect.top + rect.height / 2}px`;
   overlay.appendChild(plus);
-  await wait(150);
+  trackBox(plus, el, 'point');
+  await wait(1000 + Math.random() * 500);
   plus.classList.add('is-gone');
-  await wait(110);
+  await wait(700 + Math.random() * 400);
+  untrackBox(plus);
   plus.remove();
 }
 

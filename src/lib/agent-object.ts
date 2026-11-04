@@ -12,7 +12,7 @@ export interface AgentObject {
 
 const cameraHome = new Vector3(0, 0.2, 3.4);
 
-/** A small original, procedural object: a faceted graphite core inside a yellow accent ring. */
+/** A small original, procedural object: a smooth glossy graphite core with a thin blue accent ring. */
 export async function createAgentObject(host: HTMLElement): Promise<AgentObject> {
   const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
@@ -22,27 +22,28 @@ export async function createAgentObject(host: HTMLElement): Promise<AgentObject>
 
   const scene = new Scene();
   const pmrem = new PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.5;
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.06).texture;
+  scene.environmentIntensity = 0.65;
   pmrem.dispose();
   const camera = new PerspectiveCamera(36, 1, 0.1, 50);
 
+  // High subdivision so the facets disappear into a smooth sphere-like form under the lighting.
   const core = new Mesh(
-    new IcosahedronGeometry(1, 1),
-    new MeshPhysicalMaterial({ color: 0x15151a, metalness: 0.75, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.12 })
+    new IcosahedronGeometry(1, 5),
+    new MeshPhysicalMaterial({ color: 0x17171c, metalness: 0.8, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.06 })
   );
   scene.add(core);
 
   const ring = new Mesh(
-    new TorusGeometry(1.65, 0.035, 16, 96),
-    new MeshPhysicalMaterial({ color: 0xfcee0a, emissive: 0xfcee0a, emissiveIntensity: 0.55, metalness: 0.4, roughness: 0.3 })
+    new TorusGeometry(1.58, 0.022, 20, 128),
+    new MeshPhysicalMaterial({ color: 0x4da8ff, emissive: 0x2f7fe0, emissiveIntensity: 0.4, metalness: 0.5, roughness: 0.25 })
   );
   ring.rotation.x = MathUtils.degToRad(72);
   scene.add(ring);
 
   const halo = new Mesh(
-    new RingGeometry(1.9, 1.94, 96),
-    new MeshPhysicalMaterial({ color: 0xfcee0a, transparent: true, opacity: 0.18, metalness: 0, roughness: 1 })
+    new RingGeometry(1.82, 1.85, 128),
+    new MeshPhysicalMaterial({ color: 0x4da8ff, transparent: true, opacity: 0.12, metalness: 0, roughness: 1 })
   );
   halo.rotation.x = ring.rotation.x;
   scene.add(halo);
