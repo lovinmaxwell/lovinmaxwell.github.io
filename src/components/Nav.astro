@@ -2,6 +2,12 @@
 import Icon from './Icon.astro';
 import VersionSwitch from './VersionSwitch.astro';
 import { profile } from '../data/profile';
+
+interface Props {
+  current?: 'new' | 'classic' | 'agent-build';
+}
+
+const { current = 'classic' } = Astro.props;
 ---
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md">
@@ -56,7 +62,7 @@ import { profile } from '../data/profile';
         <Icon name="moon" size={16} class="theme-icon-moon" />
       </button>
 
-      <VersionSwitch current="classic" />
+      <VersionSwitch current={current} />
 
     </div>
   </div>

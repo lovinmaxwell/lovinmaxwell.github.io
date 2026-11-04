@@ -2,7 +2,7 @@
 import { withBase } from '../lib/url';
 
 interface Props {
-  current: 'new' | 'classic';
+  current: 'new' | 'classic' | 'agent-build';
 }
 
 const { current } = Astro.props;
@@ -11,6 +11,7 @@ const { current } = Astro.props;
 <nav class="version-switch" aria-label="Portfolio version">
   <a href={withBase('/')} aria-current={current === 'new' ? 'page' : undefined}>New</a>
   <a href={withBase('classic/')} aria-current={current === 'classic' ? 'page' : undefined}>Original</a>
+  <a href={withBase('agent-build/')} aria-current={current === 'agent-build' ? 'page' : undefined}>Agent build</a>
 </nav>
 
 <style>

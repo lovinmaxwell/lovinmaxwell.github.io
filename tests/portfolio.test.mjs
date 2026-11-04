@@ -5,6 +5,7 @@ import { test } from 'node:test';
 const read = (path) => readFileSync(new URL(`../dist/${path}`, import.meta.url), 'utf8');
 const story = read('index.html');
 const classic = read('classic/index.html');
+const agentBuild = read('agent-build/index.html');
 const sections = ['top', 'about', 'highlights', 'domains', 'stack', 'experience', 'projects', 'archive', 'open-source', 'contact', 'ask'];
 
 test('the new and original designs have separate routes and a shared canonical', () => {
@@ -292,4 +293,29 @@ test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as
   // Chapter shifts and timeline stops wait for the first gesture and climb the D pentatonic one milestone at a time.
   assert.match(scripts, /\[0,2,5,7,9,12\]/);
   assert.equal((story.match(/data-horizontal-item/g) ?? []).length, 6, 'Six career stops, six pentatonic steps');
+});
+
+test('the agent-build route mirrors the classic sections with a swarm-build overlay, excluded from the sitemap', () => {
+  assert.match(agentBuild, /aria-label="Portfolio version"/);
+  assert.match(agentBuild, /href="\/agent-build\/" aria-current="page"/);
+  assert.match(agentBuild, /rel="canonical" href="https:\/\/lovinmaxwell\.github\.io\/"/);
+  const ids = new Set([...agentBuild.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
+  for (const section of sections) assert.ok(ids.has(section), `Missing ${section}`);
+  assert.doesNotMatch(read('sitemap-0.xml'), /\/agent-build\//);
+  assert.doesNotMatch(read('sitemap-0.xml'), /\/classic\//);
+
+  // The overlay is built entirely by script; the server-rendered markup never hides real content by default.
+  // (Inlined CSS legitimately contains the literal attribute selector, so strip <style> blocks before checking the DOM.)
+  const agentBuildWithoutStyles = agentBuild.replace(/<style>[\s\S]*?<\/style>/g, '');
+  assert.doesNotMatch(agentBuildWithoutStyles, /class="ab-overlay"/);
+  assert.doesNotMatch(agentBuildWithoutStyles, /data-ab-layer/);
+  assert.match(agentBuild, /<script type="module" src="\/_astro\/[^"]+\.js"><\/script>/);
+
+  // three.js/NeuralCore must stay out of the agent-build page's eagerly loaded scripts.
+  const chunks = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((name) => name.endsWith('.js'));
+  const source = (name) => readFileSync(new URL(`../dist/_astro/${name}`, import.meta.url), 'utf8');
+  const entries = [...agentBuild.matchAll(/src="\/_astro\/([^"]+\.js)"/g)].map((match) => match[1]);
+  assert.ok(entries.length > 0);
+  for (const entry of entries) assert.doesNotMatch(source(entry), /WebGLRenderer/);
+  assert.ok(chunks.some((name) => source(name).includes('data-ab-layer')), 'Missing the agent-build script chunk');
 });
