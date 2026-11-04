@@ -38,4 +38,18 @@ const { current } = Astro.props;
 
   a:hover { color: var(--fg); }
   a[aria-current] { background: var(--fg); color: var(--bg); }
+
+  @media (width < 26rem) {
+    .version-switch {
+      gap: 1px;
+      padding: 1px;
+      font-size: 10px;
+    }
+
+    a {
+      min-height: 28px;
+      padding: 0 5px;
+      letter-spacing: -0.01em;
+    }
+  }
 </style>

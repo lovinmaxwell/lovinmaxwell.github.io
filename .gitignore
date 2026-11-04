@@ -8,3 +8,6 @@ notes/
 # Local design references (Mobbin etc.) — do not publish
 .design-refs/
 .superpowers/
+
+# Playwright MCP debug output (console logs, page snapshots, ad-hoc captures)
+.playwright-mcp/

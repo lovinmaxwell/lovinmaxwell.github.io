@@ -213,6 +213,7 @@
     gap: 6px;
     padding: 6px 8px;
     font-size: 11px;
+    bottom: calc(var(--tabbar, 4rem) + var(--tabbar-gap, 0.75rem) * 2 + env(safe-area-inset-bottom));
   }
 
   .ab-progress {
@@ -230,6 +231,218 @@
 html,
 body {
   overflow-x: clip;
+}
+
+/* --------------------------------------------------------------------------------------------
+   Visual language: a distinct build-tool look (near-black, grid, Geist, two-tone headline,
+   numbered eyebrows, a sharp white CTA), not the classic page's. appearance="immersive" repaints
+   --accent orange for the New page; put Lovin's real yellow back for this page's number accent. */
+
+body {
+  --accent: #fcee0a;
+  --focus: #fcee0a;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+}
+
+#main {
+  position: relative;
+  z-index: 1;
+}
+
+/* Two-tone headline: the first line reads as white already (--fg); flatten the last name's
+   yellow underline into a plain grey line instead. */
+.hero-title .marker {
+  background-image: none;
+  color: #6b6a66;
+}
+
+/* Numbered mono eyebrows: a running count replaces the plain accent dot, number stays yellow. */
+main#main {
+  counter-reset: ab-kicker;
+}
+
+main#main .kicker::before {
+  counter-increment: ab-kicker;
+  content: counter(ab-kicker, decimal-leading-zero);
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Sharp-cornered white primary button, beating both the base rounded-xl and the <64rem pill. */
+.btn-primary {
+  background: #ffffff;
+  color: #0b0b0c;
+  border-color: color-mix(in srgb, #ffffff 70%, transparent);
+  border-radius: 0 !important;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 0 4px color-mix(in srgb, #ffffff 24%, transparent);
+}
+
+/* Contact's mailto CTA becomes a plain white card rather than a pill button. */
+#contact .btn-primary {
+  display: flex;
+  height: auto;
+  justify-content: flex-start;
+  padding: 1.25rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Opening burst: a centered logo tile the agents stack around before scattering to work. */
+.ab-logo-tile {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 62;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font: 600 1.1rem/1.2 var(--font-mono, ui-monospace, monospace);
+  color: var(--fg);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.ab-logo-tile.is-on {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.ab-logo-tile.is-out {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Pixel rulers that cross the viewport while a rect is measured/placed. */
+.ab-ruler {
+  position: fixed;
+  z-index: 59;
+  background: var(--ab-color, #fcee0a);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ab-ruler.is-on {
+  opacity: 0.45;
+}
+
+.ab-ruler-h {
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+.ab-ruler-v {
+  top: 0;
+  height: 100%;
+  width: 1px;
+}
+
+/* A select box that briefly measures the wrong rect before correcting, in red. */
+.ab-select.is-wrong {
+  border-color: #f87171;
+  background: color-mix(in srgb, #f87171 10%, transparent);
+}
+
+.ab-select.is-wrong .ab-corner {
+  background: #f87171;
+}
+
+.ab-select.is-wrong .ab-select-badge {
+  background: #f87171;
+  color: #1a0505;
+}
+
+/* Heading reveal: a faint ghost double that snaps into the real position. */
+.ab-ghost.is-snap {
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.22s ease;
+}
+
+/* Typed-caret effect for short text layers. */
+.ab-typing {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--fg);
+  opacity: 0;
+}
+
+.ab-typing.is-on {
+  opacity: 1;
+}
+
+.ab-caret {
+  display: inline-block;
+  width: 2px;
+  margin-left: 1px;
+  background: var(--ab-color, #fcee0a);
+  animation: ab-caret-blink 0.9s step-end infinite;
+}
+
+@keyframes ab-caret-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* A "+" drop-target badge that appears just before a button settles into place. */
+.ab-drop {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ab-color, #fcee0a);
+  color: #0a0a0b;
+  font: 700 12px/1 var(--font-mono, ui-monospace, monospace);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.ab-drop.is-on {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ab-drop.is-gone {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+/* Replay affordance: same pill-button look, slightly brighter to invite a re-run. */
+.ab-pill .ab-replay {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ab-pill .ab-replay:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

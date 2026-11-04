@@ -71,33 +71,35 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
-      <div class="card col-span-2 p-5!">
-        <p class="label flex items-center gap-2">
-          <span class="size-1.5 rounded-full bg-ok-dot" aria-hidden="true"></span>
-          {profile.hero.nowLabel}
-        </p>
-        <p class="mt-3 text-[0.9375rem] leading-snug font-medium">{now.role}</p>
-        <p class="mt-1 text-sm text-muted">
-          {now.company}{now.location ? `, ${now.location}` : ''}
-        </p>
+    <slot name="side">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="card col-span-2 p-5!">
+          <p class="label flex items-center gap-2">
+            <span class="size-1.5 rounded-full bg-ok-dot" aria-hidden="true"></span>
+            {profile.hero.nowLabel}
+          </p>
+          <p class="mt-3 text-[0.9375rem] leading-snug font-medium">{now.role}</p>
+          <p class="mt-1 text-sm text-muted">
+            {now.company}{now.location ? `, ${now.location}` : ''}
+          </p>
+        </div>
+        <div class="card p-5!">
+          <p class="text-4xl font-semibold tracking-tight">{profile.hero.yearsValue}</p>
+          <p class="mt-2 text-[0.8125rem] leading-snug text-muted">{profile.hero.yearsLabel}</p>
+        </div>
+        <a href={profile.cta.work.href} class="card group block p-5!">
+          <p class="label">{profile.hero.latestLabel}</p>
+          <p class="mt-3 flex items-center gap-1.5 text-[0.9375rem] font-medium">
+            {latest.name}
+            <Icon name="arrow-down" size={14} class="text-muted transition-transform group-hover:translate-y-0.5" />
+          </p>
+          <p class="mt-1 text-[0.8125rem] leading-snug text-muted">{latest.statuses[0].label}</p>
+        </a>
+        <div class="card col-span-2 px-5! py-4!">
+          <LocalTime />
+        </div>
       </div>
-      <div class="card p-5!">
-        <p class="text-4xl font-semibold tracking-tight">{profile.hero.yearsValue}</p>
-        <p class="mt-2 text-[0.8125rem] leading-snug text-muted">{profile.hero.yearsLabel}</p>
-      </div>
-      <a href={profile.cta.work.href} class="card group block p-5!">
-        <p class="label">{profile.hero.latestLabel}</p>
-        <p class="mt-3 flex items-center gap-1.5 text-[0.9375rem] font-medium">
-          {latest.name}
-          <Icon name="arrow-down" size={14} class="text-muted transition-transform group-hover:translate-y-0.5" />
-        </p>
-        <p class="mt-1 text-[0.8125rem] leading-snug text-muted">{latest.statuses[0].label}</p>
-      </a>
-      <div class="card col-span-2 px-5! py-4!">
-        <LocalTime />
-      </div>
-    </div>
+    </slot>
   </div>
 </section>
 

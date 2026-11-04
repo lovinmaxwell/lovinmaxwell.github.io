@@ -1,7 +1,10 @@
 ---
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
+import AgentObject from '../components/AgentObject.astro';
 import Now from '../components/Now.astro';
 import About from '../components/About.astro';
 import Highlights from '../components/Highlights.astro';
@@ -19,10 +22,12 @@ import TabBar from '../components/TabBar.astro';
 import '../styles/agent-build.css';
 ---
 
-<Base>
+<Base appearance="immersive">
   <Nav current="agent-build" />
   <main id="main">
-    <Hero />
+    <Hero>
+      <AgentObject slot="side" />
+    </Hero>
     <Now />
     <About />
     <Highlights />
