@@ -168,12 +168,64 @@ export function initAgentBuild(): void {
     return;
   }
 
-  run(sections);
+  // The page stays fully built and readable until the visitor says they want to watch it being
+  // made; then the whole build plays as a fast, hands-free tour (phone and desktop alike).
+  mountTourPrompt(sections);
+}
+
+function mountTourPrompt(sections: HTMLElement[]): void {
+  const previouslyFocused = document.activeElement as HTMLElement | null;
+  const scrim = document.createElement('div');
+  scrim.className = 'ab-ask';
+  scrim.innerHTML = `
+    <div class="ab-ask-card" role="dialog" aria-modal="true" aria-labelledby="ab-ask-title" aria-describedby="ab-ask-body">
+      <p class="ab-ask-eyebrow">Classic</p>
+      <h2 id="ab-ask-title">See how this site was built?</h2>
+      <p id="ab-ask-body">Watch the page assemble itself, section by section, at top speed. It takes under a minute, and you can skip it at any time.</p>
+      <div class="ab-ask-actions">
+        <button type="button" class="ab-ask-yes">Yes, show me</button>
+        <button type="button" class="ab-ask-no">No, just read</button>
+      </div>
+    </div>`;
+  document.body.appendChild(scrim);
+  document.documentElement.classList.add('ab-ask-open');
+
+  const yes = scrim.querySelector<HTMLButtonElement>('.ab-ask-yes')!;
+  const no = scrim.querySelector<HTMLButtonElement>('.ab-ask-no')!;
+  yes.focus({ preventScroll: true });
+
+  function close(): void {
+    scrim.remove();
+    document.documentElement.classList.remove('ab-ask-open');
+    document.removeEventListener('keydown', onKey);
+  }
+  function onKey(event: KeyboardEvent): void {
+    if (event.key === 'Escape') decline();
+    if (event.key === 'Tab') {
+      // Two buttons: keep focus inside the dialog.
+      event.preventDefault();
+      (document.activeElement === yes ? no : yes).focus({ preventScroll: true });
+    }
+  }
+  function accept(): void {
+    close();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    run(sections);
+  }
+  function decline(): void {
+    close();
+    sessionStorage.setItem(SESSION_KEY, '1');
+    mountReplayAffordance(sections);
+    previouslyFocused?.focus?.({ preventScroll: true });
+  }
+  yes.addEventListener('click', accept);
+  no.addEventListener('click', decline);
+  document.addEventListener('keydown', onKey);
 }
 
 function mountReplayAffordance(sections: HTMLElement[]): void {
   const pill = buildPill();
-  pill.agentsWrap.style.display = 'none';
+  pill.el.querySelectorAll<HTMLElement>('.ab-avatars, .ab-stat, .ab-progress').forEach((el) => (el.style.display = 'none'));
   pill.tourBtn.style.display = 'none';
   pill.speedBtn.style.display = 'none';
   pill.skipBtn.style.display = 'none';
@@ -226,7 +278,8 @@ function run(sections: HTMLElement[]): void {
 
   const mobile = isMobile();
   const poolSize = mobile ? 6 : AGENT_NAMES.length;
-  const concurrency = mobile ? 4 : 18;
+  const concurrency = mobile ? 6 : 18;
+  const TURBO_FACTOR = 4;
 
   const agents: Agent[] = Array.from({ length: poolSize }, (_, i) => {
     const name = AGENT_NAMES[i % AGENT_NAMES.length]!;
@@ -239,7 +292,7 @@ function run(sections: HTMLElement[]): void {
   });
 
   function wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms / (speed * boost)));
+    return new Promise((resolve) => setTimeout(resolve, ms / (speed * boost * TURBO_FACTOR)));
   }
 
   let waitingForScroll = false;
@@ -271,7 +324,7 @@ function run(sections: HTMLElement[]): void {
 
   function motionTick(): void {
     const now = performance.now();
-    boost = Math.max(1, boost - 0.012);
+    boost = Math.max(3, boost - 0.012);
     // Touring must reach ~80% built within each section's hold budget, so the pace never
     // drops below this floor while the tour is driving the scroll (scroll-detection boost
     // above 3 still applies normally).
@@ -469,17 +522,16 @@ function run(sections: HTMLElement[]): void {
     completeSection(section);
   }
 
-  // Past the hero, nothing in view may stay empty for long: the pace rises with what is still
-  // unbuilt on screen, and a layer stuck past the limit gets a quick selection flash and appears
-  // even if an agent already claimed it and is mid-animation — the slow in-flight build still
-  // finishes and frees its agent, but skips re-counting since ab-built is already set. The hero
-  // is exempt so it keeps its slow, full build.
-  const MAX_EMPTY_MS = 1500;
+  // Nothing in view may stay empty for long: the pace rises with what is still unbuilt on
+  // screen, and a layer stuck past the limit gets a quick selection flash and appears even if an
+  // agent already claimed it and is mid-animation — the slow in-flight build still finishes and
+  // frees its agent, but skips re-counting since ab-built is already set.
+  const MAX_EMPTY_MS = 600;
   const emptySince = new Map<HTMLElement, number>();
 
   function emptyLayersInView(): PageLayer[] {
     const visible: PageLayer[] = [];
-    for (const section of sections.slice(1)) {
+    for (const section of sections) {
       if (!isSectionNearViewport(section)) continue;
       for (const layer of sectionLayers.get(section) ?? []) {
         if (layer.el.classList.contains('ab-built')) continue;
@@ -620,7 +672,7 @@ function run(sections: HTMLElement[]): void {
         resolve();
         return;
       }
-      const duration = Math.max(400, Math.min(1200, Math.abs(distance) * 0.7));
+      const duration = Math.max(250, Math.min(500, Math.abs(distance) * 0.3));
       const t0 = performance.now();
       const step = (now: number) => {
         if (!touring) {
@@ -652,28 +704,38 @@ function run(sections: HTMLElement[]): void {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const holdHere = async (maxMs: number): Promise<void> => {
       const start = performance.now();
-      if (emptyLayersInView().length > 0) await sleep(1400);
+      if (emptyLayersInView().length > 0) await sleep(150);
       while (touring && emptyLayersInView().length > 0 && performance.now() - start < maxMs) {
-        await sleep(150);
+        await sleep(60);
       }
     };
 
-    if (touring) await sleep(2500);
+    if (touring) await sleep(200);
 
-    const step = window.innerHeight * 0.8;
+    const step = window.innerHeight * 0.9;
     const pageBottom = document.documentElement.scrollHeight - window.innerHeight;
     for (let y = sections[1]?.offsetTop ?? pageBottom; touring && y < pageBottom; y += step) {
       await scrollToY(y);
-      if (touring) await holdHere(3500);
+      if (touring) await holdHere(1800);
     }
     if (touring) await scrollToY(pageBottom);
-    if (touring) await holdHere(8000);
+    if (touring) await holdHere(2500);
     if (touring) stopTour();
+    // A hands-free tour always ends with the complete page, never a half-built one.
+    if (!done) skip();
   }
 
   pill.tourBtn.addEventListener('click', () => (touring ? stopTour() : void runTour()));
   for (const evt of ['wheel', 'touchstart', 'keydown']) {
-    window.addEventListener(evt, () => touring && stopTour(), { passive: true });
+    window.addEventListener(
+      evt,
+      (event) => {
+        if (!touring) return;
+        // Taking over the scroll mid-tour hands back the finished page rather than a half-built one.
+        if (!(event.target instanceof Element && event.target.closest('.ab-pill'))) skip();
+      },
+      { passive: true },
+    );
   }
 
   pill.speedBtn.addEventListener('click', () => {
@@ -715,9 +777,14 @@ function run(sections: HTMLElement[]): void {
     run(sections);
   });
 
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  pill.tourBtn.style.display = 'none';
+  pill.speedBtn.style.display = 'none';
+
   window.setTimeout(pressureTick, 150);
   motionRaf = requestAnimationFrame(motionTick);
   void openingBurst(overlay, agents, wait);
+  void runTour();
 }
 
 async function openingBurst(overlay: HTMLElement, agents: Agent[], wait: (ms: number) => Promise<void>): Promise<void> {

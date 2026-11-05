@@ -10,7 +10,7 @@ const { current } = Astro.props;
 
 const versions = [
   { id: 'new', href: withBase('/'), label: 'New', blurb: 'The immersive scroll-story walkthrough.' },
-  { id: 'agent-build', href: withBase('agent-build/'), label: 'Agent build', blurb: 'A live swarm-build demo.' },
+  { id: 'agent-build', href: withBase('agent-build/'), label: 'Classic', blurb: 'The full single page, with a live build-it-yourself tour.' },
 ] as const;
 
 const active = versions.find((v) => v.id === current) ?? versions[0];
