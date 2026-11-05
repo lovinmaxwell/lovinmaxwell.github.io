@@ -28,7 +28,7 @@ test('the classic route redirects to agent-build, preserving the URL hash, and i
   assert.match(classic, /rel="canonical" href="\/agent-build\/"/);
   assert.match(classic, /location\.replace\(target \+ location\.hash\)/);
   assert.match(classic, /<meta http-equiv="refresh" content="0;url=\/agent-build\/">/);
-  assert.match(classic, /href="\/agent-build\/">Continue to the Agent build page/);
+  assert.match(classic, /href="\/agent-build\/">Continue to the Classic page/);
   assert.doesNotMatch(read('sitemap-0.xml'), /\/classic\//);
 });
 
@@ -377,6 +377,6 @@ test('the agent-build swarm works where the visitor is looking and never leaves 
 
   // Agents choose the unbuilt layer nearest the viewport rather than walking the section in page order.
   assert.match(abChunk, /innerHeight/);
-  // A layer no agent reaches within 1.5 s of being on screen is revealed by the watchdog.
-  assert.match(abChunk, /1500|1\.5e3/);
+  // A layer no agent reaches within 0.6 s of being on screen is revealed by the watchdog.
+  assert.match(abChunk, /\b600\b/);
 });

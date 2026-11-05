@@ -11,7 +11,7 @@ const { target } = Astro.props;
 
 const copy = {
   new: { href: withBase('/'), label: 'New', blurb: 'There is also an immersive scroll-story version of this site.' },
-  'agent-build': { href: withBase('agent-build/'), label: 'Agent build', blurb: 'There is also a live swarm-build demo of this site.' },
+  'agent-build': { href: withBase('agent-build/'), label: 'Classic', blurb: 'There is also a classic single-page version, with a tour of how this site was built.' },
 } as const;
 
 const { href, label, blurb } = copy[target];
@@ -89,7 +89,15 @@ const storageKey = `portfolio-notice-dismissed-${target}`;
     background: var(--raised);
   }
 
+  :global(body:has(.ab-pill)) .version-notice {
+    bottom: 4.25rem;
+  }
+
   @media (width < 32rem) {
+    :global(body:has(.ab-pill)) .version-notice {
+      bottom: 4rem;
+    }
+
     .version-notice {
       flex-wrap: wrap;
       justify-content: center;
