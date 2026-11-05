@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import VersionSwitch from '../components/VersionSwitch.astro';
+import VersionNotice from '../components/VersionNotice.astro';
 import ProjectViewer from '../components/ProjectViewer.astro';
 import CareerJourney from '../components/CareerJourney.astro';
 import StoryStack from '../components/StoryStack.astro';
@@ -66,6 +67,7 @@ const current = profile.experience.jobs.find(job => job.current)!;
   </div>
   <ProjectViewer />
   <ChapterAtlas />
+  <VersionNotice target="agent-build" />
   <script>
     import { initStory } from '../lib/story';
     initStory();

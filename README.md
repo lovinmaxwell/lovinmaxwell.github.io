@@ -13,11 +13,14 @@ npm run build    # outputs to dist/
 npm run preview  # serve the build locally
 ```
 
-The default homepage is a dark "Launch Orange" portfolio: frosted glass panels, a launch-orange and lime signal pair, and an original 3D neural core. The top-right
-**New / Original** links switch between `/` and `/classic/`; both work without
-JavaScript. The original layout keeps its light/dark preference. The new
-homepage is intentionally dark and does not change that saved preference.
-`/classic/` shares the homepage canonical URL and is excluded from the sitemap.
+The site ships two versions: the default homepage, a dark "Launch Orange"
+immersive scroll-story (frosted glass panels, a launch-orange and lime signal
+pair, and an original 3D neural core), and `/agent-build/`, a swarm-build demo
+with its own light/dark theme. The top-right control switches between them;
+both work without JavaScript. A dismissible notice on each page points to the
+other. `/agent-build/` shares the homepage canonical URL and is excluded from
+the sitemap. `/classic/` (the retired original layout) now redirects to
+`/agent-build/`, preserving any URL hash.
 
 The homepage is one full-bleed stage with six scroll-scrubbed chapters over a
 near-black ambient field, Geist and Geist Mono typography, and an original glass
@@ -50,7 +53,7 @@ layout and game run in `src/lib/skill-tree.ts`; branch hub icons are in
 `public/images/stack/`. The complete categorized catalog, with search, stays in
 a secondary viewer. Work is hidden from
 the new view, including its navigation and archive viewer; projects and the
-full archive remain available in **Original** at `/classic/`.
+full archive remain available on the **Agent build** page at `/agent-build/`.
 The final Doha chapter keeps the original football-stadium and skyline drawing
 (an inline SVG in `QatarFinale.astro`), recoloured in the launch-orange and lime
 palette with a maroon stand ring and a small Qatar flag accent. With motion on,
@@ -77,7 +80,7 @@ still come from the shared profile.
 - Career, stack and Doha scenes are in `CareerJourney.astro`, `StoryStack.astro`, and `QatarFinale.astro`; their responsive styling is in `src/styles/journey.css` and `src/styles/skill-tree.css`.
 - The hero core and Systems walkthroughs are in `NeuralCore.astro` and `SystemsShowcase.astro`; the three.js scene is in `src/lib/neural-core.ts` and is only imported on demand. The unmounted `WorkShowcase.astro` retains the previous Work presentation.
 - `StackCatalog.astro` preserves every shared technology entry, its category filters and a search field inside the stack viewer.
-- Dialog content is in `src/components/ProjectViewer.astro`; original sections are composed in `src/pages/classic.astro`.
+- Dialog content is in `src/components/ProjectViewer.astro`; the Agent build page's sections are composed in `src/pages/agent-build.astro`, with its swarm-build demo styling in `src/styles/agent-build.css` and behaviour in `src/lib/agent-build.ts`. `src/pages/classic.astro` is now a redirect stub to `/agent-build/` that preserves the URL hash.
 - Head tags, SEO and the small inline scripts (theme toggle, reveals) are in `src/layouts/Base.astro`.
 - The social preview image is `public/og.png`, rendered from `public/og.svg`. To regenerate it after editing the SVG: `npm run og`.
 
@@ -118,8 +121,8 @@ gradient for active states, four branch colours for the Skill Tree, and pill
 controls. Shared color tokens live at the top of
 `story.css`. Chapter background colors in `src/data/story.ts` match the static
 scene backgrounds, so scroll transitions and motion-off views share the same
-palette. Dialogs and the chapter atlas use the same surfaces; the Original route
-retains its independent light/dark theme.
+palette. Dialogs and the chapter atlas use the same surfaces; the Agent build
+route retains its independent light/dark theme.
 Systems diagrams are inspectable: select a node to read its responsibility,
 use Left/Right or Home/End to move between nodes, and **Reset to overview** to
 return to the full explanation. These are explanatory diagrams, not live demos.

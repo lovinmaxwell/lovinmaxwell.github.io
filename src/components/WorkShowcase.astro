@@ -10,7 +10,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   <div class="work-window" data-work-window data-horizontal="work" role="region" aria-label="Selected projects" tabindex="0">
     <div class="work-track" data-work-track data-horizontal-track>
       {selected.map((project, index) => (
-        <a class:list={['work-piece', `piece-${slug(project.name)}`]} href={withBase(`classic/#project-${slug(project.name)}`)} data-project={slug(project.name)} data-horizontal-item>
+        <a class:list={['work-piece', `piece-${slug(project.name)}`]} href={withBase(`agent-build/#project-${slug(project.name)}`)} data-project={slug(project.name)} data-horizontal-item>
           <div class="work-art">
             {project.images ? (
               <div class="work-phones">{project.images.slice(0, 2).map(image => <img src={withBase(image.src)} alt={image.alt} width={image.width} height={image.height} loading="lazy" />)}</div>

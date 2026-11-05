@@ -4,10 +4,10 @@ import VersionSwitch from './VersionSwitch.astro';
 import { profile } from '../data/profile';
 
 interface Props {
-  current?: 'new' | 'classic' | 'agent-build';
+  current?: 'new' | 'agent-build';
 }
 
-const { current = 'classic' } = Astro.props;
+const { current = 'new' } = Astro.props;
 ---
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md">

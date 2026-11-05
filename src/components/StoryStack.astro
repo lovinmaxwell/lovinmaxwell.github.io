@@ -7,7 +7,7 @@ import { withBase } from '../lib/url';
 // Nodes start locked; hovering, tapping, focusing or scrolling lights them up; a branch hub sends a pulse down its
 // connections and lights what it passes. No scores, no levels.
 const { items, branches, groups, kicker, title } = profile.stack;
-const href = (detail: string) => detail === 'accessflow' ? withBase('classic/#project-accessflow') : `#detail-${detail}`;
+const href = (detail: string) => detail === 'accessflow' ? withBase('agent-build/#project-accessflow') : `#detail-${detail}`;
 const branched = branches.map(branch => ({
   branch,
   pages: branch.pages.map(page => items.filter(item => page.includes(item.category))),
