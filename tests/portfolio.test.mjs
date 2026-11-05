@@ -335,3 +335,31 @@ test('the agent-build Tour scrolls instantly and never double-counts a built lay
   const guards = [...abChunk.matchAll(/ab-built["']\)\|\|\([^)]*classList\.add\(["']ab-built["']\)/g)];
   assert.ok(guards.length >= 2, 'Both the worker path and the fast-finish path must guard against re-counting a built layer');
 });
+
+test('the agent-build Replay only appears once every section has completed, not partway through', () => {
+  const chunks = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((name) => name.endsWith('.js'));
+  const source = (name) => readFileSync(new URL(`../dist/_astro/${name}`, import.meta.url), 'utf8');
+  const abChunk = chunks.map(source).find((code) => code.includes('data-ab-layer'));
+  assert.ok(abChunk, 'Missing the agent-build script chunk');
+
+  // Bug: the finish/Replay path used to fire as soon as any one section completed, showing Replay
+  // at a partial count (e.g. 276/326) with agents still working. Finishing from normal completion
+  // must stay gated on the completed-sections count matching the total section count, and pass a
+  // falsy (non-skip) flag -- distinct from Skip's unconditional, truthy-flagged call.
+  assert.match(abChunk, /\.size\s*===\s*\w+\.length\s*&&\s*\w+\(!1\)/);
+
+  // Skip must still reach the same finish function, unconditionally, so it keeps working.
+  assert.match(abChunk, /\w+\(!0\)/);
+});
+
+test('the agent-build swarm works where the visitor is looking and never leaves visible layers empty', () => {
+  const chunks = readdirSync(new URL('../dist/_astro/', import.meta.url)).filter((name) => name.endsWith('.js'));
+  const source = (name) => readFileSync(new URL(`../dist/_astro/${name}`, import.meta.url), 'utf8');
+  const abChunk = chunks.map(source).find((code) => code.includes('data-ab-layer'));
+  assert.ok(abChunk, 'Missing the agent-build script chunk');
+
+  // Agents choose the unbuilt layer nearest the viewport rather than walking the section in page order.
+  assert.match(abChunk, /innerHeight/);
+  // A layer no agent reaches within 1.5 s of being on screen is revealed by the watchdog.
+  assert.match(abChunk, /1500|1\.5e3/);
+});

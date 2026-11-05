@@ -27,6 +27,7 @@ interface Agent {
   ty: number;
   busy: boolean;
   nextWanderAt: number;
+  section: HTMLElement | null;
 }
 
 interface Rect {
@@ -91,6 +92,16 @@ function discoverLayers(section: HTMLElement, picked: Set<HTMLElement>): PageLay
     layers.push({ el, kind: classify(el) });
   }
   return layers;
+}
+
+/** A section counts as "near the viewport" for the honest agent-count pill — it overlaps
+ * the viewport expanded by half a screen height on each side, roughly "about to scroll
+ * into view" or "just scrolled past" — so the count never includes agents stuck working
+ * far off-screen. */
+function isSectionNearViewport(section: HTMLElement): boolean {
+  const margin = window.innerHeight * 0.5;
+  const rect = section.getBoundingClientRect();
+  return rect.bottom > -margin && rect.top < window.innerHeight + margin;
 }
 
 function resetPageForReplay(sections: HTMLElement[]): void {
@@ -201,7 +212,13 @@ function run(sections: HTMLElement[]): void {
   for (const section of sections) section.classList.add('ab-building');
 
   let builtLayers = 0;
-  let sectionsCompleted = 0;
+  const completedSections = new Set<HTMLElement>();
+  function completeSection(section: HTMLElement): void {
+    if (completedSections.has(section)) return;
+    completedSections.add(section);
+    updatePill();
+    if (completedSections.size === sections.length) finish(false);
+  }
   let speed = 1;
   let boost = 1;
   let skipped = false;
@@ -218,7 +235,7 @@ function run(sections: HTMLElement[]): void {
     overlay.appendChild(el);
     // nextWanderAt starts at Infinity, not now: motionTick's first rAF must not immediately
     // call scheduleWander and fight openingBurst's synchronous centered placement below.
-    return { name, color, el, x: 0, y: 0, tx: 0, ty: 0, busy: false, nextWanderAt: Infinity };
+    return { name, color, el, x: 0, y: 0, tx: 0, ty: 0, busy: false, nextWanderAt: Infinity, section: null };
   });
 
   function wait(ms: number): Promise<void> {
@@ -226,10 +243,12 @@ function run(sections: HTMLElement[]): void {
   }
 
   let waitingForScroll = false;
+  let viewportPressure = 1;
 
   function updatePill(): void {
-    const active = agents.filter((a) => a.busy).length;
-    waitingForScroll = active === 0 && sectionsCompleted > 0 && sectionsCompleted < sections.length && !done;
+    const active = agents.filter((a) => a.busy && a.section && isSectionNearViewport(a.section)).length;
+    waitingForScroll =
+      active === 0 && completedSections.size > 0 && completedSections.size < sections.length && !done && !touring;
     if (waitingForScroll) {
       pill.agents.textContent = 'Scroll to keep building';
       pill.tourBtn.classList.add('is-emphasized');
@@ -253,6 +272,11 @@ function run(sections: HTMLElement[]): void {
   function motionTick(): void {
     const now = performance.now();
     boost = Math.max(1, boost - 0.012);
+    // Touring must reach ~80% built within each section's hold budget, so the pace never
+    // drops below this floor while the tour is driving the scroll (scroll-detection boost
+    // above 3 still applies normally).
+    if (touring && completedSections.has(sections[0]!)) boost = Math.max(boost, 3);
+    boost = Math.max(boost, viewportPressure);
     for (const a of agents) {
       if (!a.busy && now >= a.nextWanderAt) scheduleWander(a, now);
       a.x += (a.tx - a.x) * 0.14;
@@ -297,7 +321,32 @@ function run(sections: HTMLElement[]): void {
     return idle[Math.floor(Math.random() * idle.length)];
   }
 
-  async function buildLayer(layer: PageLayer, agent: Agent): Promise<void> {
+  const cancelledSections = new Set<HTMLElement>();
+  const claimedLayers = new WeakSet<HTMLElement>();
+
+  /** The unclaimed layer nearest the viewport, so agents always work where the visitor is
+   * looking. Ties keep page order, which leaves the hero's top-down build unchanged. */
+  function nextLayer(section: HTMLElement): PageLayer | null {
+    let best: PageLayer | null = null;
+    let bestDistance = Infinity;
+    for (const layer of sectionLayers.get(section) ?? []) {
+      if (claimedLayers.has(layer.el) || layer.el.classList.contains('ab-built')) continue;
+      const rect = layer.el.getBoundingClientRect();
+      const distance = rect.bottom < 0 ? -rect.bottom : Math.max(0, rect.top - window.innerHeight);
+      if (distance < bestDistance) {
+        best = layer;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  // A layer whose section has scrolled off (cancelledSections) must stop holding its agent:
+  // without this, an in-flight layer runs its full ~5-9s unboosted animation chain even after
+  // the visitor has scrolled past it, starving the section actually on screen of agents. Every
+  // major await below is followed by a cancellation check that bails out early (mark built,
+  // free the agent, strip any overlay chrome) instead of running the rest of the sequence.
+  async function buildLayer(layer: PageLayer, agent: Agent, section: HTMLElement): Promise<void> {
     const rect = layer.el.getBoundingClientRect();
     if (rect.width < 4 || rect.height < 4) {
       if (!layer.el.classList.contains('ab-built')) {
@@ -308,10 +357,24 @@ function run(sections: HTMLElement[]): void {
     }
 
     agent.busy = true;
+    agent.section = section;
     agent.tx = rect.left + 6;
     agent.ty = rect.top + 6;
     updatePill();
+
+    const bail = (cleanup?: () => void): void => {
+      cleanup?.();
+      if (!layer.el.classList.contains('ab-built')) {
+        layer.el.classList.add('ab-built');
+        onProgress();
+      }
+      agent.busy = false;
+      agent.section = null;
+      updatePill();
+    };
+
     await wait(1300 + Math.random() * 900);
+    if (cancelledSections.has(section)) return bail();
 
     const select = buildSelectBox();
     overlay.appendChild(select.el);
@@ -330,12 +393,22 @@ function run(sections: HTMLElement[]): void {
       guides.v.classList.add('is-on');
     });
 
+    const cleanupChrome = () => {
+      untrackBox(select.el);
+      untrackBox(guides.h);
+      untrackBox(guides.v);
+      select.el.remove();
+      guides.h.remove();
+      guides.v.remove();
+    };
+
     if (Math.random() < 0.15) {
       untrackBox(select.el);
       select.el.classList.add('is-wrong');
       const off = 12 + Math.random() * 10;
       positionBox(select.el, { left: rect.left - off, top: rect.top - off / 2, width: rect.width + off, height: rect.height + off / 2 });
       await wait(1000 + Math.random() * 500);
+      if (cancelledSections.has(section)) return bail(cleanupChrome);
       select.el.classList.remove('is-wrong');
       positionBox(select.el, layer.el.getBoundingClientRect());
       trackBox(select.el, layer.el, 'box');
@@ -344,6 +417,7 @@ function run(sections: HTMLElement[]): void {
     await wait(2000 + Math.random() * 1100);
     guides.h.classList.remove('is-on');
     guides.v.classList.remove('is-on');
+    if (cancelledSections.has(section)) return bail(cleanupChrome);
 
     if (layer.kind === 'heading') await revealHeading(layer.el, rect, overlay, agent.color, wait);
     else if (layer.kind === 'text') await revealText(layer.el, rect, overlay, wait);
@@ -352,22 +426,16 @@ function run(sections: HTMLElement[]): void {
 
     select.el.classList.remove('is-on');
     await wait(550 + Math.random() * 400);
-    untrackBox(select.el);
-    untrackBox(guides.h);
-    untrackBox(guides.v);
-    select.el.remove();
-    guides.h.remove();
-    guides.v.remove();
+    cleanupChrome();
 
     if (!layer.el.classList.contains('ab-built')) {
       layer.el.classList.add('ab-built');
       onProgress();
     }
     agent.busy = false;
+    agent.section = null;
     updatePill();
   }
-
-  const cancelledSections = new Set<HTMLElement>();
 
   async function buildSection(section: HTMLElement): Promise<void> {
     if (section.dataset.abDone) return;
@@ -375,14 +443,12 @@ function run(sections: HTMLElement[]): void {
 
     const layers = sectionLayers.get(section) ?? [];
     const workerCount = Math.max(1, Math.min(concurrency, layers.length));
-    let i = 0;
 
     const workers = Array.from({ length: workerCount }, () =>
       (async () => {
         while (true) {
           if (cancelledSections.has(section)) break;
-          if (i >= layers.length) break;
-          const layer = layers[i++]!;
+          if (!layers.some((l) => !claimedLayers.has(l.el) && !l.el.classList.contains('ab-built'))) break;
 
           let agent = pickIdleAgent();
           while (!agent) {
@@ -391,15 +457,70 @@ function run(sections: HTMLElement[]): void {
             agent = pickIdleAgent();
           }
           if (cancelledSections.has(section)) return;
-          await buildLayer(layer, agent);
+          const layer = nextLayer(section);
+          if (!layer) break;
+          claimedLayers.add(layer.el);
+          await buildLayer(layer, agent, section);
         }
       })(),
     );
     await Promise.all(workers);
     section.classList.remove('ab-building');
-    sectionsCompleted++;
-    updatePill();
-    if (sectionsCompleted === sections.length) finish(false);
+    completeSection(section);
+  }
+
+  // Past the hero, nothing in view may stay empty for long: the pace rises with what is still
+  // unbuilt on screen, and a layer stuck past the limit gets a quick selection flash and appears
+  // even if an agent already claimed it and is mid-animation — the slow in-flight build still
+  // finishes and frees its agent, but skips re-counting since ab-built is already set. The hero
+  // is exempt so it keeps its slow, full build.
+  const MAX_EMPTY_MS = 1500;
+  const emptySince = new Map<HTMLElement, number>();
+
+  function emptyLayersInView(): PageLayer[] {
+    const visible: PageLayer[] = [];
+    for (const section of sections.slice(1)) {
+      if (!isSectionNearViewport(section)) continue;
+      for (const layer of sectionLayers.get(section) ?? []) {
+        if (layer.el.classList.contains('ab-built')) continue;
+        const rect = layer.el.getBoundingClientRect();
+        if (rect.width >= 4 && rect.bottom > 0 && rect.top < window.innerHeight) visible.push(layer);
+      }
+    }
+    return visible;
+  }
+
+  function flashLayer(layer: PageLayer): void {
+    if (layer.el.classList.contains('ab-built')) return;
+    claimedLayers.add(layer.el);
+    const select = buildSelectBox();
+    overlay.appendChild(select.el);
+    positionBox(select.el, layer.el.getBoundingClientRect());
+    trackBox(select.el, layer.el, 'box');
+    select.el.classList.add('is-on');
+    layer.el.classList.add('ab-built');
+    onProgress();
+    window.setTimeout(() => {
+      untrackBox(select.el);
+      select.el.remove();
+    }, 450);
+  }
+
+  function pressureTick(): void {
+    if (done) return;
+    const now = performance.now();
+    const visible = emptyLayersInView();
+    const seen = new Set(visible.map((layer) => layer.el));
+    for (const el of emptySince.keys()) if (!seen.has(el)) emptySince.delete(el);
+
+    viewportPressure = visible.length ? Math.min(4, 1 + visible.length / 12) : 1;
+    for (const layer of visible) {
+      const first = emptySince.get(layer.el) ?? now;
+      emptySince.set(layer.el, first);
+      if (now - first < MAX_EMPTY_MS) continue;
+      flashLayer(layer);
+    }
+    window.setTimeout(pressureTick, 150);
   }
 
   function fastFinishSection(section: HTMLElement): void {
@@ -413,8 +534,7 @@ function run(sections: HTMLElement[]): void {
       }
     }
     section.classList.remove('ab-building');
-    sectionsCompleted++;
-    if (sectionsCompleted === sections.length) finish(false);
+    completeSection(section);
   }
 
   const observer = new IntersectionObserver(
@@ -439,6 +559,18 @@ function run(sections: HTMLElement[]): void {
       if (dy / dt > 1.2) boost = Math.min(5, boost + 1.5);
       lastScrollY = window.scrollY;
       lastScrollT = now;
+
+      // Reaching the bottom must never leave Contact blank: force every other section
+      // finished at once and throw every agent at Contact so it completes in a few seconds.
+      const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+      if (atBottom && !done) {
+        boost = 5;
+        const contact = sections[sections.length - 1]!;
+        for (const section of sections) {
+          if (section !== contact) fastFinishSection(section);
+        }
+        if (!contact.dataset.abDone) void buildSection(contact);
+      }
     },
     { passive: true },
   );
@@ -466,29 +598,80 @@ function run(sections: HTMLElement[]): void {
 
   let touring = false;
   let tourRaf = 0;
+
+  function sectionProgress(section: HTMLElement): number {
+    const layers = sectionLayers.get(section) ?? [];
+    if (layers.length === 0) return 1;
+    const built = layers.filter((l) => l.el.classList.contains('ab-built')).length;
+    return built / layers.length;
+  }
+
   function stopTour(): void {
     touring = false;
     if (tourRaf) cancelAnimationFrame(tourRaf);
     pill.tourBtn.textContent = 'Tour';
   }
-  function startTour(): void {
+
+  function scrollToY(target: number): Promise<void> {
+    return new Promise((resolve) => {
+      const start = window.scrollY;
+      const distance = target - start;
+      if (Math.abs(distance) < 2) {
+        resolve();
+        return;
+      }
+      const duration = Math.max(400, Math.min(1200, Math.abs(distance) * 0.7));
+      const t0 = performance.now();
+      const step = (now: number) => {
+        if (!touring) {
+          resolve();
+          return;
+        }
+        const p = Math.min(1, (now - t0) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        window.scrollTo({ top: start + distance * eased, behavior: 'instant' });
+        if (p < 1) tourRaf = requestAnimationFrame(step);
+        else resolve();
+      };
+      tourRaf = requestAnimationFrame(step);
+    });
+  }
+
+  // Tour leaves the hero alone at its normal pace, then eases down one screen at a time and
+  // holds until what is in view has built, so selection boxes stay visible through to Contact.
+  async function runTour(): Promise<void> {
     touring = true;
     pill.tourBtn.textContent = 'Stop';
-    const start = window.scrollY;
-    const end = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    const distance = Math.max(0, end - start);
-    const duration = Math.max(6000, Math.min(22000, distance * 10));
-    const t0 = performance.now();
-    const step = (now: number) => {
-      if (!touring) return;
-      const p = Math.min(1, (now - t0) / duration);
-      window.scrollTo({ top: start + distance * p, behavior: 'instant' });
-      if (p < 1) tourRaf = requestAnimationFrame(step);
-      else stopTour();
+
+    while (touring && !completedSections.has(sections[0]!)) {
+      await wait(200);
+    }
+
+    // Move one screen at a time rather than one section at a time: long sections such as
+    // Projects would otherwise be skipped past with most of their cards never seen building.
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const holdHere = async (maxMs: number): Promise<void> => {
+      const start = performance.now();
+      if (emptyLayersInView().length > 0) await sleep(1400);
+      while (touring && emptyLayersInView().length > 0 && performance.now() - start < maxMs) {
+        await sleep(150);
+      }
     };
-    tourRaf = requestAnimationFrame(step);
+
+    if (touring) await sleep(2500);
+
+    const step = window.innerHeight * 0.8;
+    const pageBottom = document.documentElement.scrollHeight - window.innerHeight;
+    for (let y = sections[1]?.offsetTop ?? pageBottom; touring && y < pageBottom; y += step) {
+      await scrollToY(y);
+      if (touring) await holdHere(3500);
+    }
+    if (touring) await scrollToY(pageBottom);
+    if (touring) await holdHere(8000);
+    if (touring) stopTour();
   }
-  pill.tourBtn.addEventListener('click', () => (touring ? stopTour() : startTour()));
+
+  pill.tourBtn.addEventListener('click', () => (touring ? stopTour() : void runTour()));
   for (const evt of ['wheel', 'touchstart', 'keydown']) {
     window.addEventListener(evt, () => touring && stopTour(), { passive: true });
   }
@@ -532,6 +715,7 @@ function run(sections: HTMLElement[]): void {
     run(sections);
   });
 
+  window.setTimeout(pressureTick, 150);
   motionRaf = requestAnimationFrame(motionTick);
   void openingBurst(overlay, agents, wait);
 }
