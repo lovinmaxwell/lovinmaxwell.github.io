@@ -1,0 +1,125 @@
+---
+import Icon from './Icon.astro';
+import { withBase } from '../lib/url';
+
+interface Props {
+  /** Which other version this notice points to. */
+  target: 'new' | 'agent-build';
+}
+
+const { target } = Astro.props;
+
+const copy = {
+  new: { href: withBase('/'), label: 'New', blurb: 'There is also an immersive scroll-story version of this site.' },
+  'agent-build': { href: withBase('agent-build/'), label: 'Agent build', blurb: 'There is also a live swarm-build demo of this site.' },
+} as const;
+
+const { href, label, blurb } = copy[target];
+const storageKey = `portfolio-notice-dismissed-${target}`;
+---
+
+<aside class="version-notice" data-version-notice data-storage-key={storageKey} hidden aria-label={`Try the ${label} version`}>
+  <p><strong>Try {label}.</strong> {blurb}</p>
+  <a href={href} class="version-notice-link">
+    View <Icon name="arrow-up-right" size={14} />
+  </a>
+  <button type="button" class="version-notice-close" data-version-notice-close aria-label="Dismiss">
+    <Icon name="x" size={14} />
+  </button>
+</aside>
+
+<style>
+  .version-notice {
+    position: fixed;
+    left: 50%;
+    bottom: 1rem;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 2rem);
+    padding: 10px 10px 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    transform: translateX(-50%);
+  }
+
+  .version-notice[hidden] {
+    display: none;
+  }
+
+  .version-notice p {
+    margin: 0;
+    color: var(--fg);
+  }
+
+  .version-notice p strong {
+    font-weight: 650;
+  }
+
+  .version-notice-link {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    padding: 5px 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .version-notice-close {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    color: var(--muted);
+  }
+
+  .version-notice-close:hover {
+    background: var(--raised);
+  }
+
+  @media (width < 32rem) {
+    .version-notice {
+      flex-wrap: wrap;
+      justify-content: center;
+      text-align: center;
+      bottom: 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-version-notice]').forEach((notice) => {
+    const key = notice.dataset.storageKey;
+    if (!key) return;
+
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(key) === '1';
+    } catch {
+      /* storage is optional */
+    }
+    if (dismissed) return;
+
+    notice.hidden = false;
+    notice.querySelector('[data-version-notice-close]')?.addEventListener('click', () => {
+      notice.hidden = true;
+      try {
+        localStorage.setItem(key, '1');
+      } catch {
+        /* storage is optional */
+      }
+    });
+  });
+</script>

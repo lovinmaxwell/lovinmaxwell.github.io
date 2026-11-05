@@ -8,29 +8,46 @@ const classic = read('classic/index.html');
 const agentBuild = read('agent-build/index.html');
 const sections = ['top', 'about', 'highlights', 'domains', 'stack', 'experience', 'projects', 'archive', 'open-source', 'contact', 'ask'];
 
-test('the new and original designs have separate routes and a shared canonical', () => {
+test('the new and agent-build designs have separate routes and a shared canonical', () => {
   assert.match(story, /data-appearance="immersive"/);
-  assert.doesNotMatch(classic, /data-appearance="immersive"/);
-  for (const html of [story, classic]) {
+  assert.doesNotMatch(agentBuild, /data-appearance="immersive"/);
+  for (const html of [story, agentBuild]) {
     assert.match(html, /rel="canonical" href="https:\/\/lovinmaxwell\.github\.io\/"/);
     assert.match(html, /aria-label="Portfolio version"/);
-    assert.match(html, /href="\/classic\/"/);
+    assert.match(html, /href="\/agent-build\/"/);
     assert.match(html, /href="\/"/);
+    assert.doesNotMatch(html, /\/classic\//);
   }
   assert.match(story, /href="\/" aria-current="page"/);
-  assert.match(classic, /href="\/classic\/" aria-current="page"/);
+  assert.match(agentBuild, /href="\/agent-build\/" aria-current="page"/);
+  assert.doesNotMatch(read('sitemap-0.xml'), /\/agent-build\//);
+});
+
+test('the classic route redirects to agent-build, preserving the URL hash, and is noindexed', () => {
+  assert.match(classic, /name="robots" content="noindex"/);
+  assert.match(classic, /rel="canonical" href="\/agent-build\/"/);
+  assert.match(classic, /location\.replace\(target \+ location\.hash\)/);
+  assert.match(classic, /<meta http-equiv="refresh" content="0;url=\/agent-build\/">/);
+  assert.match(classic, /href="\/agent-build\/">Continue to the Agent build page/);
   assert.doesNotMatch(read('sitemap-0.xml'), /\/classic\//);
 });
 
-test('the story uses six scenes while classic preserves the complete original sections', () => {
+test('the story uses six scenes while agent-build preserves the complete original sections', () => {
   assert.equal([...story.matchAll(/\sdata-scene(?:\s|>)/g)].length, 6);
-  for (const [html, expected] of [[story, ['top', 'about', 'experience', 'systems', 'stack', 'contact']], [classic, sections]]) {
+  for (const [html, expected] of [[story, ['top', 'about', 'experience', 'systems', 'stack', 'contact']], [agentBuild, sections]]) {
     const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
     for (const section of expected) assert.ok(ids.has(section), `Missing ${section}`);
     for (const [, anchor] of html.matchAll(/href="#([^"]+)"/g)) {
       assert.ok(ids.has(anchor), `Missing target #${anchor}`);
     }
   }
+});
+
+test('each surviving version carries a dismissible notice pointing to the other', () => {
+  assert.match(story, /data-version-notice data-storage-key="portfolio-notice-dismissed-agent-build"/);
+  assert.match(story, /href="\/agent-build\/" class="version-notice-link"/);
+  assert.match(agentBuild, /data-version-notice data-storage-key="portfolio-notice-dismissed-new"/);
+  assert.match(agentBuild, /href="\/" class="version-notice-link"/);
 });
 
 const profile = JSON.parse(read('profile.json'));
@@ -61,7 +78,7 @@ test('education, certifications and courses are available inside the new experie
   assert.match(story, /<noscript>/);
 });
 
-test('the full technology catalog remains and the archive is preserved in Original', () => {
+test('the full technology catalog remains and the archive is preserved on the agent-build page', () => {
   for (const category of profile.stack.categories) {
     assert.ok(text.includes(`data-story-category="${category.name}"`));
     for (const tool of category.items) {
@@ -69,8 +86,8 @@ test('the full technology catalog remains and the archive is preserved in Origin
       assert.ok(text.includes(name), `Missing tool: ${name}`);
     }
   }
-  const classicText = classic.replaceAll('&amp;', '&').replaceAll('&#38;', '&');
-  for (const item of profile.archive) assert.ok(classicText.includes(item.name), `Missing original archive: ${item.name}`);
+  const agentBuildText = agentBuild.replaceAll('&amp;', '&').replaceAll('&#38;', '&');
+  for (const item of profile.archive) assert.ok(agentBuildText.includes(item.name), `Missing original archive: ${item.name}`);
   assert.doesNotMatch(story, /id="detail-workbench"|data-detail="workbench"/);
 });
 
@@ -86,25 +103,25 @@ test('the final scene celebrates the current Doha role with original stadium art
 test('Work is hidden in the new view without removing original projects or contextual details', () => {
   assert.doesNotMatch(story, /id="projects"|data-chapter="projects"|data-horizontal="work"/);
   for (const name of ['holywhisper', 'accessflow', 'diskmanager-pro']) {
-    assert.ok(classic.includes(`id="project-${name}"`));
+    assert.ok(agentBuild.includes(`id="project-${name}"`));
   }
-  assert.match(story, /href="\/classic\/#project-accessflow"/);
+  assert.match(story, /href="\/agent-build\/#project-accessflow"/);
   assert.match(story, /id="detail-accessflow"/);
   assert.match(story, /In development/);
-  assert.match(classic, /In App Store review/);
+  assert.match(agentBuild, /In App Store review/);
   assert.ok(read('case-studies/jev-docai-routing/index.html').includes('Confidence-Based Document Routing'));
 });
 
-test('dark-only story omits the theme command without removing it from classic', () => {
+test('dark-only story omits the theme command without removing it from agent-build', () => {
   assert.doesNotMatch(story, /data-kind="theme"/);
-  assert.match(classic, /data-kind="theme"/);
-  assert.match(classic, /id="theme-toggle"/);
+  assert.match(agentBuild, /data-kind="theme"/);
+  assert.match(agentBuild, /id="theme-toggle"/);
 });
 
 test('profile metadata and machine-readable outputs remain available', () => {
   const profile = JSON.parse(read('profile.json'));
   assert.ok(profile);
-  for (const html of [story, classic]) {
+  for (const html of [story, agentBuild]) {
     assert.match(html, /application\/ld\+json/);
     assert.match(html, /name="google-site-verification"/);
     assert.match(html, /name="msvalidate.01"/);
@@ -202,7 +219,7 @@ test('the visual chapter atlas exposes all six destinations and accessible searc
   for (const id of ['top', 'about', 'experience', 'systems', 'stack', 'contact']) {
     assert.match(story, new RegExp(`href="#${id}" data-atlas-chapter="${id}"`));
   }
-  assert.doesNotMatch(classic, /data-atlas-open|data-atlas-chapter/);
+  assert.doesNotMatch(agentBuild, /data-atlas-open|data-atlas-chapter/);
 });
 
 test('the spatial hero keeps its artwork decorative and the blueprint loops stay silent', () => {
@@ -295,7 +312,7 @@ test('play and sound: the hero core is grabbable, hubs pulse, and sound ships as
   assert.equal((story.match(/data-horizontal-item/g) ?? []).length, 6, 'Six career stops, six pentatonic steps');
 });
 
-test('the agent-build route mirrors the classic sections with a swarm-build overlay, excluded from the sitemap', () => {
+test('the agent-build route carries the full original sections with a swarm-build overlay, excluded from the sitemap', () => {
   assert.match(agentBuild, /aria-label="Portfolio version"/);
   assert.match(agentBuild, /href="\/agent-build\/" aria-current="page"/);
   assert.match(agentBuild, /rel="canonical" href="https:\/\/lovinmaxwell\.github\.io\/"/);

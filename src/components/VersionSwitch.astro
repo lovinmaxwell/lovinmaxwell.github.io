@@ -3,14 +3,13 @@ import Icon from './Icon.astro';
 import { withBase } from '../lib/url';
 
 interface Props {
-  current: 'new' | 'classic' | 'agent-build';
+  current: 'new' | 'agent-build';
 }
 
 const { current } = Astro.props;
 
 const versions = [
   { id: 'new', href: withBase('/'), label: 'New', blurb: 'The immersive scroll-story walkthrough.' },
-  { id: 'classic', href: withBase('classic/'), label: 'Original', blurb: 'The classic single-page layout.' },
   { id: 'agent-build', href: withBase('agent-build/'), label: 'Agent build', blurb: 'A live swarm-build demo.' },
 ] as const;
 
