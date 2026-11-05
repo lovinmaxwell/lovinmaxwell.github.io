@@ -1,4 +1,5 @@
 ---
+import Icon from './Icon.astro';
 import { withBase } from '../lib/url';
 
 interface Props {
@@ -6,50 +7,161 @@ interface Props {
 }
 
 const { current } = Astro.props;
+
+const versions = [
+  { id: 'new', href: withBase('/'), label: 'New', blurb: 'The immersive scroll-story walkthrough.' },
+  { id: 'classic', href: withBase('classic/'), label: 'Original', blurb: 'The classic single-page layout.' },
+  { id: 'agent-build', href: withBase('agent-build/'), label: 'Agent build', blurb: 'A live swarm-build demo.' },
+] as const;
+
+const active = versions.find((v) => v.id === current) ?? versions[0];
 ---
 
-<nav class="version-switch" aria-label="Portfolio version">
-  <a href={withBase('/')} aria-current={current === 'new' ? 'page' : undefined}>New</a>
-  <a href={withBase('classic/')} aria-current={current === 'classic' ? 'page' : undefined}>Original</a>
-  <a href={withBase('agent-build/')} aria-current={current === 'agent-build' ? 'page' : undefined}>Agent build</a>
+<nav class="version-switch" aria-label="Portfolio version" data-version-switch>
+  <details class="vs-details">
+    <summary class="vs-trigger tap-area">
+      <Icon name="layers" size={14} />
+      <span class="vs-trigger-label">{active.label}</span>
+      <svg class="vs-chevron" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+        <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </summary>
+    <div class="vs-panel">
+      {versions.map((v) => (
+        <a href={v.href} aria-current={v.id === current ? 'page' : undefined} class="vs-option">
+          <span class="vs-option-top">
+            <span class="vs-option-label">{v.label}</span>
+            {v.id === current && <span class="vs-badge">Viewing</span>}
+          </span>
+          <span class="vs-option-blurb">{v.blurb}</span>
+        </a>
+      ))}
+    </div>
+  </details>
 </nav>
 
 <style>
   .version-switch {
     display: inline-flex;
     flex-shrink: 0;
-    gap: 3px;
-    padding: 3px;
-    border: 1px solid var(--line-strong);
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 550;
+    position: relative;
   }
 
-  a {
-    display: grid;
-    place-items: center;
+  .vs-details {
+    position: relative;
+  }
+
+  .vs-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     min-height: 34px;
-    padding: 0 12px;
+    padding: 0 10px;
+    border: 1px solid var(--line-strong);
     border-radius: 999px;
+    color: var(--fg);
+    font-size: 12px;
+    font-weight: 550;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .vs-trigger::-webkit-details-marker { display: none; }
+
+  .vs-trigger:hover { background: var(--raised); }
+
+  .vs-trigger-label {
+    max-width: 6.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .vs-chevron {
+    flex-shrink: 0;
     color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+
+  .vs-details[open] .vs-chevron { transform: rotate(180deg); }
+
+  .vs-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 15rem;
+    padding: 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: var(--bg);
+    box-shadow: var(--shadow);
+  }
+
+  .vs-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: var(--fg);
     text-decoration: none;
   }
 
-  a:hover { color: var(--fg); }
-  a[aria-current] { background: var(--fg); color: var(--bg); }
+  .vs-option:hover { background: var(--raised); }
+  .vs-option[aria-current] { background: var(--raised); }
+
+  .vs-option-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .vs-badge {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--fg);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .vs-option-blurb {
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.3;
+  }
 
   @media (width < 26rem) {
-    .version-switch {
-      gap: 1px;
-      padding: 1px;
-      font-size: 10px;
-    }
-
-    a {
-      min-height: 28px;
-      padding: 0 5px;
-      letter-spacing: -0.01em;
-    }
+    .vs-trigger { padding: 0 7px; font-size: 11px; }
+    .vs-trigger-label { max-width: 4.5rem; }
+    .vs-panel { width: 13.5rem; }
   }
 </style>
+
+<script>
+  const switches = Array.from(document.querySelectorAll<HTMLDetailsElement>('[data-version-switch] details'));
+
+  for (const details of switches) {
+    document.addEventListener('click', (event) => {
+      if (details.open && !details.contains(event.target as Node)) details.open = false;
+    });
+
+    details.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && details.open) {
+        details.open = false;
+        details.querySelector('summary')?.focus();
+      }
+    });
+  }
+</script>
