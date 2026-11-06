@@ -43,6 +43,21 @@
   --tabbar: 4rem;
   --tabbar-gap: 0.75rem;
   --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --text-6: 0.375rem;
+  --text-7: 0.4375rem;
+  --text-8: 0.5rem;
+  --text-9: 0.5625rem;
+  --text-10: 0.625rem;
+  --text-11: 0.6875rem;
+  --text-12: 0.75rem;
+  --text-13: 0.8125rem;
+  --text-14: 0.875rem;
+  --text-15: 0.9375rem;
+  --text-16: 1rem;
+  --text-18: 1.125rem;
+  --text-24: 1.5rem;
+  --text-25: 1.5625rem;
+  --text-26: 1.625rem;
   color-scheme: dark;
 }
 
@@ -172,7 +187,7 @@
   }
 
   .kbd {
-    @apply inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-line bg-raised px-1.5 font-mono text-[0.6875rem] leading-none text-muted;
+    @apply inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-line bg-raised px-1.5 font-mono text-[length:var(--text-11)] leading-none text-muted;
   }
 
   .toast {
@@ -210,11 +225,11 @@
   }
 
   .chip {
-    @apply inline-flex items-center rounded-lg border border-line bg-raised px-2.5 py-1 text-[0.8125rem] leading-snug text-fg;
+    @apply inline-flex items-center rounded-lg border border-line bg-raised px-2.5 py-1 text-[length:var(--text-13)] leading-snug text-fg;
   }
 
   .label {
-    @apply font-mono text-[0.6875rem] tracking-[0.16em] text-muted uppercase;
+    @apply font-mono text-[length:var(--text-11)] tracking-[0.16em] text-muted uppercase;
   }
 
   /* Filter chips (Stack and Archive): one scrollable row on phones, wrapping from sm up.
@@ -259,7 +274,7 @@
     border-radius: 9999px;
     background: var(--card);
     color: var(--muted);
-    font-size: 0.8125rem;
+    font-size: var(--text-13);
     font-weight: 500;
     white-space: nowrap;
     cursor: pointer;
@@ -288,7 +303,7 @@
 
   .filter-count {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--text-11);
     opacity: 0.7;
   }
 
@@ -492,7 +507,7 @@
   }
 
   .status {
-    @apply inline-flex items-center gap-2 rounded-full border border-line bg-raised px-3 py-1 font-mono text-[0.6875rem] tracking-wide text-fg;
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-raised px-3 py-1 font-mono text-[length:var(--text-11)] tracking-wide text-fg;
   }
 
   .status::before {
@@ -686,7 +701,7 @@
     flex: 1 1 0;
     height: 3.25rem;
     border-radius: 9999px;
-    font-size: 1rem;
+    font-size: var(--text-16);
   }
 
   .hero-actions nav {
@@ -756,7 +771,7 @@
   .filter-chip {
     height: 2.75rem;
     padding-inline: 1rem;
-    font-size: 0.875rem;
+    font-size: var(--text-14);
   }
 
   /* Long lists: [data-collapse] hides its extra items, [data-fold] hides one item's details. */
@@ -774,7 +789,7 @@
     width: 100%;
     min-height: 3rem;
     color: var(--muted);
-    font-size: 0.875rem;
+    font-size: var(--text-14);
     font-weight: 500;
     cursor: pointer;
   }
@@ -796,7 +811,7 @@
     height: 1.75rem;
     border-radius: 9999px;
     background: var(--raised);
-    font-size: 1.125rem;
+    font-size: var(--text-18);
     line-height: 1;
     transform: rotate(90deg);
     transition: transform 0.25s var(--ease-out);
@@ -853,7 +868,7 @@
 
 @media (width < 40rem) {
   .label {
-    font-size: 0.75rem;
+    font-size: var(--text-12);
     letter-spacing: 0.14em;
   }
 
@@ -933,7 +948,7 @@
 }
 
 .cs-body h2 {
-  font-size: 1.625rem;
+  font-size: var(--text-26);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -941,7 +956,7 @@
 
 .cs-body h3 {
   margin-top: 2rem;
-  font-size: 1.125rem;
+  font-size: var(--text-18);
   font-weight: 600;
 }
 
@@ -972,7 +987,7 @@
   background: var(--card);
   border-radius: 0.75rem;
   padding: 0.875rem 1rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-15);
   line-height: 1.6;
 }
 
@@ -995,7 +1010,7 @@
   border-radius: 0.875rem;
   padding: 0.875rem 1rem;
   line-height: 1.45;
-  font-size: 0.9375rem;
+  font-size: var(--text-15);
 }
 
 .cs-step-n {
@@ -1008,7 +1023,7 @@
   background: var(--accent);
   color: var(--accent-ink);
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--text-13);
   font-weight: 700;
 }
 
@@ -1031,7 +1046,7 @@
 
 .cs-dl dt {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-12);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1040,7 +1055,7 @@
 
 .cs-dl dd {
   min-width: 0;
-  font-size: 0.9375rem;
+  font-size: var(--text-15);
 }
 
 .cs-list {
@@ -1060,7 +1075,7 @@
   background: var(--card);
   border-radius: 0.875rem;
   padding: 1rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-13);
   line-height: 1.6;
 }
 
@@ -1080,13 +1095,13 @@
 .cs-table table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--text-14);
   line-height: 1.45;
 }
 
 .cs-body section > .cs-caption {
   margin-top: 0.625rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-13);
   line-height: 1.5;
   color: var(--muted);
 }
@@ -1101,7 +1116,7 @@
 
 .cs-table thead th {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-11);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1128,7 +1143,7 @@
   border-radius: 999px;
   padding: 0.125rem 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-12);
   white-space: nowrap;
   border: 1px solid var(--line-strong);
 }
@@ -1147,12 +1162,12 @@
 
 @media (width < 64rem) {
   .cs-body h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-24);
   }
 
   .cs-body section > p,
   .cs-body section > ul {
-    font-size: 1rem;
+    font-size: var(--text-16);
   }
 }
 
