@@ -12,7 +12,7 @@ import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal
 import geistMonoLatin from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
 
 interface Props {
-  /** 'immersive' forces dark-only (the New page). 'builder' keeps Geist + the data-appearance hook but leaves light/dark theming on (the Agent build page). */
+  /** 'immersive' forces dark-only and renders in Geist/Geist Mono (the New page, story.css). 'builder' keeps the data-appearance hook but renders in the default Inter/JetBrains Mono, with light/dark theming on (the Agent build page). */
   appearance?: 'immersive' | 'builder';
   /** Page title. Defaults to the home page title. */
   title?: string;
@@ -75,8 +75,8 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
     {seo.googleSiteVerification && <meta name="google-site-verification" content={seo.googleSiteVerification} />}
     {seo.bingSiteVerification && <meta name="msvalidate.01" content={seo.bingSiteVerification} />}
 
-    <link rel="preload" href={props.appearance ? geistLatin : interLatin} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={props.appearance ? geistMonoLatin : monoLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={props.appearance === 'immersive' ? geistLatin : interLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={props.appearance === 'immersive' ? geistMonoLatin : monoLatin} as="font" type="font/woff2" crossorigin />
 
     <link rel="icon" href={withBase('favicon.ico')} sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
