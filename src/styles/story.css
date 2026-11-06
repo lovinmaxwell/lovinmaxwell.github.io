@@ -23,7 +23,6 @@ html[data-appearance="immersive"] {
   --branch-ai: #ff8cc6;
   --glass: rgba(20, 20, 22, .58);
   --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 1px 0 rgba(0, 0, 0, .6), 0 24px 60px -24px rgba(0, 0, 0, .7);
-  --ease-out: cubic-bezier(.22, 1, .36, 1);
   --display: var(--font-sans);
   background: var(--page);
   scroll-padding-top: 100px;

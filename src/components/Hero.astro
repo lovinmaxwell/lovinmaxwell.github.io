@@ -134,8 +134,8 @@ const latest = profile.projects.items.find((p) => p.featured) ?? profile.project
     opacity: 0;
     transform: translateY(0.45em);
     transition:
-      opacity 0.55s ease,
-      transform 0.55s ease;
+      opacity 0.55s var(--ease-out),
+      transform 0.55s var(--ease-out);
     pointer-events: none;
   }
 

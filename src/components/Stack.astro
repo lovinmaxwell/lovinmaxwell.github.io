@@ -274,7 +274,7 @@ const showLessLabel = stack.showLessLabel;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     white-space: nowrap;
-    transition: color 0.2s ease;
+    transition: color 0.2s var(--ease-out);
   }
 
   .marquee-item:hover {
@@ -324,9 +324,9 @@ const showLessLabel = stack.showLessLabel;
     background: var(--raised);
     color: var(--muted);
     transition:
-      color 0.2s ease,
-      background-color 0.2s ease,
-      border-color 0.2s ease;
+      color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out);
   }
 
   @media (hover: hover) {

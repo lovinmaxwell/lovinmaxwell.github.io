@@ -80,7 +80,7 @@ const active = versions.find((v) => v.id === current) ?? versions[0];
   .vs-chevron {
     flex-shrink: 0;
     color: var(--muted);
-    transition: transform 0.15s ease;
+    transition: transform 0.15s var(--ease-out);
   }
 
   .vs-details[open] .vs-chevron { transform: rotate(180deg); }
