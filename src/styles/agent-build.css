@@ -193,10 +193,12 @@ body.ab-opening [data-tagline-rotator] {
 .ab-progress > span {
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--ab-progress, 0%);
+  width: 100%;
+  transform: scaleX(var(--ab-progress, 0));
+  transform-origin: left;
   background: var(--accent);
   border-radius: 999px;
-  transition: width 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .ab-pill button {

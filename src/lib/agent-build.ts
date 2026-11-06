@@ -311,7 +311,7 @@ function run(sections: HTMLElement[]): void {
     }
     pill.layers.textContent = `${builtLayers} / ${totalLayers} layers`;
     const pct = totalLayers === 0 ? 0 : Math.round((builtLayers / totalLayers) * 100);
-    pill.progressFill.style.setProperty('--ab-progress', `${pct}%`);
+    pill.progressFill.style.setProperty('--ab-progress', String(pct / 100));
   }
 
   function onProgress(): void {
