@@ -183,7 +183,9 @@ html[data-appearance="immersive"] {
 [data-motion="on"] .story-timeline { position: absolute; inset: auto 0 0; background: transparent; }
 .story[data-motion="off"] .story-header { position: sticky; top: 12px; }
 .story-viewer-open { overflow: hidden; }
-.project-viewer { position: fixed; inset: 16px; width: calc(100% - 32px); height: calc(100dvh - 32px); max-width: none; max-height: none; border: 1px solid var(--line-strong); border-radius: 20px; background: var(--bg); color: var(--fg); padding: 0; margin: auto; z-index: 100; }
+/* Opened with showModal(), so the browser already puts it in the top layer above everything else;
+   90 just keeps it above the highest in-flow overlay (agent-build.css, 80) instead of the arbitrary 100. */
+.project-viewer { position: fixed; inset: 16px; width: calc(100% - 32px); height: calc(100dvh - 32px); max-width: none; max-height: none; border: 1px solid var(--line-strong); border-radius: 20px; background: var(--bg); color: var(--fg); padding: 0; margin: auto; z-index: 90; }
 .project-viewer::backdrop { background: #0b0b0ccc; backdrop-filter: blur(12px); }
 .project-viewer[open] { animation: viewer-enter .5s cubic-bezier(.2,.8,.2,1) both; }
 .story[data-motion="off"] ~ .project-viewer[open] { animation: none; }
