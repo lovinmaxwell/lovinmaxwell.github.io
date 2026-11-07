@@ -667,9 +667,9 @@
   /* App canvas: true black behind slightly lifted cards. The light theme keeps its own palette. */
   :root:not([data-theme="light"]):not([data-appearance="immersive"]) {
     --bg: #000000;
-    --card: #0e0e10;
-    --raised: #1a1a1d;
-    --line: #232327;
+    --card: #181818;
+    --raised: #1f1f1f;
+    --line: #272727;
   }
 
   /* Sections are separated by air, not rules, and content sits in large rounded cards. */
