@@ -27,7 +27,7 @@ const data = {
   <div class="terminal-body p-4 sm:p-5">
     <!-- Without JS this is a plain list of every question and answer, so crawlers get the full FAQ as HTML.
          The script swaps it for the log. -->
-    <dl class="terminal-static space-y-4 font-mono text-sm leading-relaxed sm:text-[0.8125rem]">
+    <dl class="terminal-static space-y-4 font-mono text-sm leading-relaxed sm:text-[length:var(--text-13)]">
       {
         ask.faq.map((f) => (
           <div>
@@ -42,7 +42,7 @@ const data = {
 
     <div class="terminal-live">
       <div
-        class="terminal-log font-mono text-sm leading-relaxed sm:text-[0.8125rem]"
+        class="terminal-log font-mono text-sm leading-relaxed sm:text-[length:var(--text-13)]"
         data-ask-log
         tabindex="0"
         role="group"
@@ -64,12 +64,12 @@ const data = {
         }
       </ul>
 
-      <form class="mt-4 flex items-center gap-2.5 border-t border-line pt-4 font-mono text-[0.8125rem]" data-ask-form>
+      <form class="mt-4 flex items-center gap-2.5 border-t border-line pt-4 font-mono text-[length:var(--text-13)]" data-ask-form>
         <label for="ask-input" class="shrink-0 text-muted">{ask.prompt}</label>
         <input
           id="ask-input"
           type="text"
-          class="h-11 min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-muted/70 sm:text-[0.8125rem] lg:h-9"
+          class="h-11 min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-muted/70 sm:text-[length:var(--text-13)] lg:h-9"
           placeholder={ask.placeholder}
           aria-label={ask.inputLabel}
           autocomplete="off"

@@ -59,11 +59,11 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                 <div class="mt-5 grid gap-6 border-t border-line pt-5">
                   <div>
                     <h4 class="label">{projects.problemLabel}</h4>
-                    <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted sm:text-base">{p.problem}</p>
+                    <p class="mt-2 text-[length:var(--text-15)] leading-relaxed text-muted sm:text-base">{p.problem}</p>
                   </div>
                   <div>
                     <h4 class="label">{projects.approachLabel}</h4>
-                    <ul class="mt-2 grid gap-2 text-[0.9375rem] leading-relaxed text-muted">
+                    <ul class="mt-2 grid gap-2 text-[length:var(--text-15)] leading-relaxed text-muted">
                       {p.approach.map((a) => (
                         <li class="flex gap-2.5">
                           <span class="mt-[0.65em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
@@ -75,7 +75,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                   {p.features && (
                     <div>
                       <h4 class="label">{projects.featuresLabel}</h4>
-                      <ul class="mt-2 grid gap-x-6 gap-y-2 text-[0.9375rem] leading-snug text-muted sm:grid-cols-2">
+                      <ul class="mt-2 grid gap-x-6 gap-y-2 text-[length:var(--text-15)] leading-snug text-muted sm:grid-cols-2">
                         {p.features.map((f) => (
                           <li class="flex gap-2.5">
                             <span class="mt-[0.55em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
@@ -172,11 +172,11 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
               <div class="mt-5 grid gap-5 border-t border-line pt-5">
                 <div>
                   <h4 class="label">{projects.problemLabel}</h4>
-                  <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted">{p.problem}</p>
+                  <p class="mt-2 text-[length:var(--text-15)] leading-relaxed text-muted">{p.problem}</p>
                 </div>
                 <div>
                   <h4 class="label">{projects.approachLabel}</h4>
-                  <ul class="mt-2 grid gap-2 text-[0.9375rem] leading-relaxed text-muted">
+                  <ul class="mt-2 grid gap-2 text-[length:var(--text-15)] leading-relaxed text-muted">
                     {p.approach.map((a) => (
                       <li class="flex gap-2.5">
                         <span class="mt-[0.65em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
@@ -188,7 +188,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                 {p.features && (
                   <div>
                     <h4 class="label">{projects.featuresLabel}</h4>
-                    <ul class="mt-2 grid gap-2 text-[0.9375rem] leading-snug text-muted">
+                    <ul class="mt-2 grid gap-2 text-[length:var(--text-15)] leading-snug text-muted">
                       {p.features.map((f) => (
                         <li class="flex gap-2.5">
                           <span class="mt-[0.55em] size-1 shrink-0 rounded-full bg-fg/50" aria-hidden="true" />
@@ -213,7 +213,7 @@ const tilt = ['sm:-rotate-3 sm:translate-y-4', 'z-10 sm:-translate-y-3', 'sm:rot
                             {r.name}
                             <span class="sr-only">{profile.a11y.newTab}</span>
                           </a>
-                          <p class="mt-1 text-[0.875rem] leading-snug text-muted">{r.description}</p>
+                          <p class="mt-1 text-[length:var(--text-14)] leading-snug text-muted">{r.description}</p>
                         </li>
                       ))}
                     </ul>
