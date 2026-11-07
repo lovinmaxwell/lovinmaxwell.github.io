@@ -197,7 +197,7 @@ body.ab-opening [data-tagline-rotator] {
   transform: scaleX(var(--ab-progress, 0));
   transform-origin: left;
   background: var(--accent);
-  border-radius: 999px;
+  /* No radius here: scaleX would squash it into an ellipse. The track's own radius + overflow:hidden rounds the visible edge. */
   transition: transform 0.3s var(--ease-out);
 }
 
