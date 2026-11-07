@@ -28,6 +28,8 @@ interface Props {
   jsonLd?: Record<string, unknown>;
   /** Open Graph article fields, for article pages. */
   article?: { published: string; modified?: string; section?: string; tags?: string[] };
+  /** Keep this page out of search results, e.g. the 404 page. Also drops its canonical link. */
+  noindex?: boolean;
 }
 
 const { seo } = profile;
@@ -67,11 +69,11 @@ const jsonLd = props.jsonLd ?? homeLd(Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content={profile.name} />
-    <link rel="canonical" href={canonical} />
+    {!props.noindex && <link rel="canonical" href={canonical} />}
     <meta name="theme-color" content={props.appearance === 'immersive' ? '#0b0b0c' : seo.themeColorDark} />
     <meta name="generator" content={Astro.generator} />
 
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="robots" content={props.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1'} />
     {seo.googleSiteVerification && <meta name="google-site-verification" content={seo.googleSiteVerification} />}
     {seo.bingSiteVerification && <meta name="msvalidate.01" content={seo.bingSiteVerification} />}
 

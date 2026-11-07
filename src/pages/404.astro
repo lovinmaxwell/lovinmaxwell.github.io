@@ -4,7 +4,7 @@ import { profile } from '../data/profile';
 import { withBase } from '../lib/url';
 ---
 
-<Base title={`Page not found — ${profile.name}`} description="This page doesn't exist. Find your way back to the portfolio home page." path="404/">
+<Base title={`Page not found — ${profile.name}`} description="This page doesn't exist. Find your way back to the portfolio home page." path="404/" noindex>
   <main id="main" class="flex min-h-dvh flex-col items-center justify-center px-4 py-24 text-center">
     <p class="font-mono text-xs tracking-[0.18em] text-muted uppercase">404</p>
     <h1 class="mt-4 text-3xl font-semibold text-fg sm:text-4xl">Page not found</h1>
