@@ -4,7 +4,7 @@
 .story[data-motion="off"] .bp-grid { grid-auto-rows: 318px; }
 [data-motion="on"] .bp-grid { flex: 1; min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); max-height: 680px; }
 .bp-grid > li { min-height: 0; }
-.bp-tile { --k: var(--accent); position: relative; display: flex; flex-direction: column; height: 100%; padding: 14px 18px 16px; border: 1px solid #26262a; border-radius: 18px; background: linear-gradient(180deg, #151517, #111113); color: var(--fg); text-decoration: none; overflow: hidden; transition: transform .28s var(--ease-out), border-color .2s, box-shadow .28s var(--ease-out); }
+.bp-tile { --k: var(--accent); position: relative; display: flex; flex-direction: column; height: 100%; padding: 14px 18px 16px; border: 1px solid #26262a; border-radius: 18px; background: #131315; color: var(--fg); text-decoration: none; overflow: hidden; transition: transform .28s var(--ease-out), border-color .2s, box-shadow .28s var(--ease-out); }
 .bp-tile:hover, .bp-tile:focus-visible { transform: translateY(-4px); border-color: var(--k); box-shadow: 0 18px 50px -12px #000c, 0 0 0 1px var(--k), 0 0 24px -6px var(--k); outline: none; }
 .bp-tile:focus-visible { box-shadow: 0 18px 50px -12px #000c, 0 0 0 2px var(--k), 0 0 24px -6px var(--k); }
 .bp-num { font: 500 var(--text-12)/1.5 var(--font-mono); color: var(--subtle); }
