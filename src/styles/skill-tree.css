@@ -94,14 +94,14 @@
 .st-close:hover { color: var(--fg); background: var(--raised); }
 .st-card-glyph { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: color-mix(in srgb, var(--b) 14%, var(--bg)); color: var(--b); }
 .st-card-glyph svg { width: 22px; height: 22px; fill: currentColor; }
-.st-card-glyph .st-mono { font-size: 14px; opacity: 1; }
+.st-card-glyph .st-mono { font-size: var(--text-14); opacity: 1; }
 .st-card h3 { margin-top: 14px; font: 600 18px/1.3 var(--font-sans); letter-spacing: -.02em; }
 .st-card-meta { margin-top: 4px; font: 500 11px/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--b); }
-.st-card-detail { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.st-card-detail { margin-top: 10px; font-size: var(--text-14); line-height: 20px; color: var(--muted); }
 .st-card-detail:empty { display: none; }
 .st-card-block { margin-top: 14px; }
 .st-card-label { display: block; font: 500 11px/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--subtle); }
-.st-card-block p { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--fg); }
+.st-card-block p { margin-top: 4px; font-size: var(--text-14); line-height: 20px; color: var(--fg); }
 .st-card-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .st-card-chips button { height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font: 500 12px var(--font-mono); letter-spacing: .04em; cursor: pointer; transition: color .2s, border-color .2s; }
 .st-card-chips button:hover { color: var(--fg); border-color: var(--line-strong); }
@@ -111,10 +111,10 @@
 .st-count { display: flex; align-items: baseline; gap: 12px; }
 .st-count-label { font: 500 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--subtle); }
 .st-count-value { font: 600 20px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
-.st-hint { font-size: 13px; color: var(--muted); }
+.st-hint { font-size: var(--text-13); color: var(--muted); }
 .st-hint[hidden] { display: none; }
 .st-hud-actions { display: flex; align-items: center; gap: 10px; }
-.st-reveal, .st-index { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); font-size: 13px; font-weight: 500; cursor: pointer; transition: border-color .2s, color .2s; }
+.st-reveal, .st-index { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); font-size: var(--text-13); font-weight: 500; cursor: pointer; transition: border-color .2s, color .2s; }
 .st-reveal:hover { border-color: var(--line-strong); }
 .st-reveal:disabled { color: var(--subtle); cursor: default; }
 .st-index { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
@@ -125,11 +125,11 @@
 .st-list h3 { font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
 .st-list h3 small { display: block; margin-top: 4px; font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .st-list ul { list-style: none; padding: 0; margin: 14px 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.st-list li { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.st-list li { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: var(--text-13); }
 .st-list li strong { font-weight: 500; }
 .st-list li span { color: var(--muted); }
 .st-list li span::before { content: " · "; }
-.st-list a { color: var(--accent); font-size: 13px; }
+.st-list a { color: var(--accent); font-size: var(--text-13); }
 html:not(.js) :is(.st-stage, .st-tabs) { display: none; }
 /* The chapter timeline is 78px tall and fixed to the bottom of the stage; keep the HUD above it. */
 [data-motion="on"] .scene-stack { padding-top: 88px; padding-bottom: 96px; }
@@ -137,7 +137,7 @@ html:not(.js) :is(.st-stage, .st-tabs) { display: none; }
 @media (width < 700px) {
   .scene-stack { gap: 10px; }
   .st-head { flex-direction: column; align-items: stretch; gap: 10px; }
-  .st-title h2 { font-size: 26px; margin-top: 6px; }
+  .st-title h2 { font-size: var(--text-26); margin-top: 6px; }
   .st-field { width: 100%; }
   .st-field kbd, .st-chips { display: none; }
   .js [data-st-layout="paged"] .st-tabs { width: auto; }
@@ -147,8 +147,8 @@ html:not(.js) :is(.st-stage, .st-tabs) { display: none; }
   .st-card { z-index: 41; left: 8px; right: 8px; bottom: 8px; top: auto !important; width: auto; translate: none; border-radius: 28px; padding: 24px; }
   .st-hud { flex-wrap: wrap; gap: 8px 16px; padding-top: 10px; min-height: 0; }
   .st-hint { display: none; }
-  .st-count-value { font-size: 18px; }
-  .st-reveal, .st-index { min-height: 36px; padding: 0 12px; font-size: 12px; }
+  .st-count-value { font-size: var(--text-18); }
+  .st-reveal, .st-index { min-height: 36px; padding: 0 12px; font-size: var(--text-12); }
   .st-list { grid-template-columns: 1fr; }
   .story[data-motion="off"] .st-stage { height: auto; }
   [data-motion="on"] .scene-stack { padding-top: 78px; padding-bottom: 84px; }
