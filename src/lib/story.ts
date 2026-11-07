@@ -408,7 +408,11 @@ export function initStory() {
       if (gestured) sfx.play('timeline-step', { rate: STEP_RATE[Math.min(index, STEP_RATE.length - 1)] });
     };
     stopWatchers.push(watchStop);
-    gallery.addEventListener('scroll', () => { if (!animated()) requestAnimationFrame(watchStop); }, { passive: true });
+    let stopFrame = 0;
+    gallery.addEventListener('scroll', () => {
+      if (animated() || stopFrame) return;
+      stopFrame = requestAnimationFrame(() => { stopFrame = 0; watchStop(); });
+    }, { passive: true });
     const moveGallery = (direction: number) => {
       const pieces = Array.from(track.querySelectorAll<HTMLElement>('[data-horizontal-item]'));
       if (!animated()) {

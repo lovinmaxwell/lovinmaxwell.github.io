@@ -42,6 +42,22 @@
   --grain: 0.07;
   --tabbar: 4rem;
   --tabbar-gap: 0.75rem;
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --text-6: 0.375rem;
+  --text-7: 0.4375rem;
+  --text-8: 0.5rem;
+  --text-9: 0.5625rem;
+  --text-10: 0.625rem;
+  --text-11: 0.6875rem;
+  --text-12: 0.75rem;
+  --text-13: 0.8125rem;
+  --text-14: 0.875rem;
+  --text-15: 0.9375rem;
+  --text-16: 1rem;
+  --text-18: 1.125rem;
+  --text-24: 1.5rem;
+  --text-25: 1.5625rem;
+  --text-26: 1.625rem;
   color-scheme: dark;
 }
 
@@ -136,8 +152,8 @@
     @apply relative overflow-hidden rounded-2xl border border-line bg-card p-6 sm:p-7;
     transition:
       transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
-      border-color 0.3s ease,
-      box-shadow 0.3s ease;
+      border-color 0.3s var(--ease-out),
+      box-shadow 0.3s var(--ease-out);
   }
 
   /* Pointer spotlight. --mx / --my are set by a small script in Base.astro. */
@@ -147,7 +163,7 @@
     inset: 0;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s var(--ease-out);
     background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), var(--glow), transparent 65%);
   }
 
@@ -171,7 +187,7 @@
   }
 
   .kbd {
-    @apply inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-line bg-raised px-1.5 font-mono text-[0.6875rem] leading-none text-muted;
+    @apply inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-line bg-raised px-1.5 font-mono text-[length:var(--text-11)] leading-none text-muted;
   }
 
   .toast {
@@ -182,8 +198,8 @@
     pointer-events: none;
     transform: translate(-50%, 8px);
     transition:
-      opacity 0.2s ease,
-      transform 0.2s ease,
+      opacity 0.2s var(--ease-out),
+      transform 0.2s var(--ease-out),
       visibility 0.2s;
   }
 
@@ -209,11 +225,11 @@
   }
 
   .chip {
-    @apply inline-flex items-center rounded-lg border border-line bg-raised px-2.5 py-1 text-[0.8125rem] leading-snug text-fg;
+    @apply inline-flex items-center rounded-lg border border-line bg-raised px-2.5 py-1 text-[length:var(--text-13)] leading-snug text-fg;
   }
 
   .label {
-    @apply font-mono text-[0.6875rem] tracking-[0.16em] text-muted uppercase;
+    @apply font-mono text-[length:var(--text-11)] tracking-[0.16em] text-muted uppercase;
   }
 
   /* Filter chips (Stack and Archive): one scrollable row on phones, wrapping from sm up.
@@ -258,16 +274,16 @@
     border-radius: 9999px;
     background: var(--card);
     color: var(--muted);
-    font-size: 0.8125rem;
+    font-size: var(--text-13);
     font-weight: 500;
     white-space: nowrap;
     cursor: pointer;
     scroll-snap-align: start;
     transition:
-      color 0.2s ease,
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.15s ease;
+      color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out),
+      transform 0.15s var(--ease-out);
   }
 
   .filter-chip:active {
@@ -287,7 +303,7 @@
 
   .filter-count {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--text-11);
     opacity: 0.7;
   }
 
@@ -306,10 +322,10 @@
   .btn {
     @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold whitespace-nowrap;
     transition:
-      transform 0.2s ease,
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
+      transform 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out);
   }
 
   .btn:active {
@@ -337,9 +353,9 @@
   .icon-link {
     @apply inline-flex size-10 items-center justify-center rounded-xl border border-line bg-card text-muted;
     transition:
-      color 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.2s ease;
+      color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out),
+      transform 0.2s var(--ease-out);
   }
 
   .icon-link:hover {
@@ -370,9 +386,9 @@
     color: var(--fg);
     opacity: 0;
     transition:
-      opacity 0.18s ease,
-      overlay 0.18s ease allow-discrete,
-      display 0.18s ease allow-discrete;
+      opacity 0.18s var(--ease-out),
+      overlay 0.18s var(--ease-out) allow-discrete,
+      display 0.18s var(--ease-out) allow-discrete;
   }
 
   .sheet:not([open]) {
@@ -388,9 +404,9 @@
     backdrop-filter: blur(6px);
     opacity: 0;
     transition:
-      opacity 0.18s ease,
-      overlay 0.18s ease allow-discrete,
-      display 0.18s ease allow-discrete;
+      opacity 0.18s var(--ease-out),
+      overlay 0.18s var(--ease-out) allow-discrete,
+      display 0.18s var(--ease-out) allow-discrete;
   }
 
   .sheet[open]::backdrop {
@@ -491,7 +507,7 @@
   }
 
   .status {
-    @apply inline-flex items-center gap-2 rounded-full border border-line bg-raised px-3 py-1 font-mono text-[0.6875rem] tracking-wide text-fg;
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-raised px-3 py-1 font-mono text-[length:var(--text-11)] tracking-wide text-fg;
   }
 
   .status::before {
@@ -541,11 +557,9 @@
     inset: 0;
     pointer-events: none;
     background-image:
-      radial-gradient(640px circle at 18% -10%, var(--glow), transparent 70%),
       linear-gradient(var(--grid) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size:
-      100% 100%,
       44px 44px,
       44px 44px;
     mask-image: radial-gradient(ellipse 90% 85% at 40% 0%, #000 35%, transparent 100%);
@@ -653,9 +667,9 @@
   /* App canvas: true black behind slightly lifted cards. The light theme keeps its own palette. */
   :root:not([data-theme="light"]):not([data-appearance="immersive"]) {
     --bg: #000000;
-    --card: #0e0e10;
-    --raised: #1a1a1d;
-    --line: #232327;
+    --card: #181818;
+    --raised: #1f1f1f;
+    --line: #272727;
   }
 
   /* Sections are separated by air, not rules, and content sits in large rounded cards. */
@@ -685,7 +699,7 @@
     flex: 1 1 0;
     height: 3.25rem;
     border-radius: 9999px;
-    font-size: 1rem;
+    font-size: var(--text-16);
   }
 
   .hero-actions nav {
@@ -755,7 +769,7 @@
   .filter-chip {
     height: 2.75rem;
     padding-inline: 1rem;
-    font-size: 0.875rem;
+    font-size: var(--text-14);
   }
 
   /* Long lists: [data-collapse] hides its extra items, [data-fold] hides one item's details. */
@@ -773,7 +787,7 @@
     width: 100%;
     min-height: 3rem;
     color: var(--muted);
-    font-size: 0.875rem;
+    font-size: var(--text-14);
     font-weight: 500;
     cursor: pointer;
   }
@@ -795,10 +809,10 @@
     height: 1.75rem;
     border-radius: 9999px;
     background: var(--raised);
-    font-size: 1.125rem;
+    font-size: var(--text-18);
     line-height: 1;
     transform: rotate(90deg);
-    transition: transform 0.25s ease;
+    transition: transform 0.25s var(--ease-out);
   }
 
   .collapse-toggle[aria-expanded="true"] .collapse-chevron {
@@ -852,7 +866,7 @@
 
 @media (width < 40rem) {
   .label {
-    font-size: 0.75rem;
+    font-size: var(--text-12);
     letter-spacing: 0.14em;
   }
 
@@ -932,7 +946,7 @@
 }
 
 .cs-body h2 {
-  font-size: 1.625rem;
+  font-size: var(--text-26);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -940,7 +954,7 @@
 
 .cs-body h3 {
   margin-top: 2rem;
-  font-size: 1.125rem;
+  font-size: var(--text-18);
   font-weight: 600;
 }
 
@@ -971,7 +985,7 @@
   background: var(--card);
   border-radius: 0.75rem;
   padding: 0.875rem 1rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-15);
   line-height: 1.6;
 }
 
@@ -994,7 +1008,7 @@
   border-radius: 0.875rem;
   padding: 0.875rem 1rem;
   line-height: 1.45;
-  font-size: 0.9375rem;
+  font-size: var(--text-15);
 }
 
 .cs-step-n {
@@ -1007,7 +1021,7 @@
   background: var(--accent);
   color: var(--accent-ink);
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--text-13);
   font-weight: 700;
 }
 
@@ -1030,7 +1044,7 @@
 
 .cs-dl dt {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-12);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1039,7 +1053,7 @@
 
 .cs-dl dd {
   min-width: 0;
-  font-size: 0.9375rem;
+  font-size: var(--text-15);
 }
 
 .cs-list {
@@ -1059,7 +1073,7 @@
   background: var(--card);
   border-radius: 0.875rem;
   padding: 1rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-13);
   line-height: 1.6;
 }
 
@@ -1079,13 +1093,13 @@
 .cs-table table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--text-14);
   line-height: 1.45;
 }
 
 .cs-body section > .cs-caption {
   margin-top: 0.625rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-13);
   line-height: 1.5;
   color: var(--muted);
 }
@@ -1100,7 +1114,7 @@
 
 .cs-table thead th {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-11);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1127,7 +1141,7 @@
   border-radius: 999px;
   padding: 0.125rem 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-12);
   white-space: nowrap;
   border: 1px solid var(--line-strong);
 }
@@ -1146,12 +1160,12 @@
 
 @media (width < 64rem) {
   .cs-body h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-24);
   }
 
   .cs-body section > p,
   .cs-body section > ul {
-    font-size: 1rem;
+    font-size: var(--text-16);
   }
 }
 

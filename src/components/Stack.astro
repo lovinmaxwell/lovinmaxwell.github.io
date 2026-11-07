@@ -84,7 +84,7 @@ const showLessLabel = stack.showLessLabel;
               ))}
             </div>
             <h3 class="mt-6 text-xl font-semibold tracking-tight sm:text-2xl">{f.title}</h3>
-            <p class="mt-2 text-[0.9375rem] leading-relaxed text-muted max-lg:text-base">{f.text}</p>
+            <p class="mt-2 text-[length:var(--text-15)] leading-relaxed text-muted max-lg:text-base">{f.text}</p>
           </article>
         ))
       }
@@ -130,12 +130,12 @@ const showLessLabel = stack.showLessLabel;
                 )}
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-[0.9375rem] leading-snug font-medium">{item.name}</p>
+                <p class="text-[length:var(--text-15)] leading-snug font-medium">{item.name}</p>
                 {item.detail && <p class="text-xs leading-snug text-muted">{item.detail}</p>}
               </div>
-              <span class="label shrink-0 self-start text-[0.6875rem]! lg:text-[0.625rem]!">{item.category}</span>
+              <span class="label shrink-0 self-start text-[length:var(--text-11)]! lg:text-[length:var(--text-10)]!">{item.category}</span>
             </div>
-            {item.note && <p class="mt-3 text-[0.8125rem] leading-snug text-muted">{item.note}</p>}
+            {item.note && <p class="mt-3 text-[length:var(--text-13)] leading-snug text-muted">{item.note}</p>}
           </li>
         ))
       }
@@ -272,9 +272,9 @@ const showLessLabel = stack.showLessLabel;
     gap: 0.625rem;
     color: var(--muted);
     font-family: var(--font-mono);
-    font-size: 0.8125rem;
+    font-size: var(--text-13);
     white-space: nowrap;
-    transition: color 0.2s ease;
+    transition: color 0.2s var(--ease-out);
   }
 
   .marquee-item:hover {
@@ -324,9 +324,9 @@ const showLessLabel = stack.showLessLabel;
     background: var(--raised);
     color: var(--muted);
     transition:
-      color 0.2s ease,
-      background-color 0.2s ease,
-      border-color 0.2s ease;
+      color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out);
   }
 
   @media (hover: hover) {

@@ -35,7 +35,7 @@ const kindLabel = {
 
     <div class="mt-10" data-reveal>
       <p class="label">{openSource.picksLabel}</p>
-      <p class="mt-2 max-w-2xl text-[0.9375rem] leading-relaxed text-muted sm:text-base">{openSource.picksSubline}</p>
+      <p class="mt-2 max-w-2xl text-[length:var(--text-15)] leading-relaxed text-muted sm:text-base">{openSource.picksSubline}</p>
     </div>
 
     <ul class="swipe mt-6 grid gap-4 lg:grid-cols-3" data-swipe>
@@ -54,7 +54,7 @@ const kindLabel = {
               </span>
               <h3 class="text-xl font-semibold tracking-tight sm:text-2xl">{pick.name}</h3>
             </div>
-            <p class="mt-5 text-[0.9375rem] leading-relaxed text-muted max-lg:text-base sm:text-base">{pick.text}</p>
+            <p class="mt-5 text-[length:var(--text-15)] leading-relaxed text-muted max-lg:text-base sm:text-base">{pick.text}</p>
             <div class="mt-auto space-y-3 pt-6">
               <p>
                 <a
@@ -113,7 +113,7 @@ const kindLabel = {
                 class="text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-fg"
               />
             </div>
-            <h4 class="static mt-4 font-mono text-[0.9375rem] font-semibold">
+            <h4 class="static mt-4 font-mono text-[length:var(--text-15)] font-semibold">
               <a
                 href={repo.href}
                 class="rounded-2xl after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-(--focus)"
@@ -124,7 +124,7 @@ const kindLabel = {
                 <span class="sr-only">{profile.a11y.newTab}</span>
               </a>
             </h4>
-            <p class="mt-2 text-[0.875rem] leading-relaxed text-muted sm:text-[0.9375rem]">{repo.description}</p>
+            <p class="mt-2 text-[length:var(--text-14)] leading-relaxed text-muted sm:text-[length:var(--text-15)]">{repo.description}</p>
           </li>
         ))
       }
@@ -206,9 +206,9 @@ const kindLabel = {
 
   .logo-tile {
     transition:
-      color 0.2s ease,
-      background-color 0.2s ease,
-      border-color 0.2s ease;
+      color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out);
   }
 
   @media (hover: hover) {
