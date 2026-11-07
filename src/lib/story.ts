@@ -184,6 +184,8 @@ export function initStory() {
     timeline = undefined;
     root.dataset.motion = requestedMotion && !reduced.matches && !short.matches ? 'on' : 'off';
     document.documentElement.dataset.storyMotion = root.dataset.motion;
+    // The name's colour is plain CSS, so it also runs on short phones where the scroll stage stays off.
+    root.dataset.nameFlow = requestedMotion && !reduced.matches ? 'on' : 'off';
     tree.setMode(animated());
     stage.style.removeProperty('--orbit-x');
     stage.style.removeProperty('--orbit-y');

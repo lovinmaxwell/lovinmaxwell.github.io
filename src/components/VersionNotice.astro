@@ -10,16 +10,17 @@ interface Props {
 const { target } = Astro.props;
 
 const copy = {
-  new: { href: withBase('/'), label: 'New', blurb: 'There is also an immersive scroll-story version of this site.' },
-  'agent-build': { href: withBase('agent-build/'), label: 'Classic', blurb: 'There is also a classic single-page version, with a tour of how this site was built.' },
+  new: { href: withBase('/'), label: 'New', blurb: 'There is also an immersive scroll-story version of this site.', short: 'Prefer the scroll story?' },
+  'agent-build': { href: withBase('agent-build/'), label: 'Classic', blurb: 'There is also a classic single-page version, with a tour of how this site was built.', short: 'Prefer a single page?' },
 } as const;
 
-const { href, label, blurb } = copy[target];
+const { href, label, blurb, short } = copy[target];
 const storageKey = `portfolio-notice-dismissed-${target}`;
 ---
 
 <aside class="version-notice" data-version-notice data-storage-key={storageKey} hidden aria-label={`Try the ${label} version`}>
-  <p><strong>Try {label}.</strong> {blurb}</p>
+  <p class="version-notice-full"><strong>Try {label}.</strong> {blurb}</p>
+  <p class="version-notice-short">{short}</p>
   <a href={href} class="version-notice-link">
     View <Icon name="arrow-up-right" size={14} />
   </a>
@@ -37,6 +38,7 @@ const storageKey = `portfolio-notice-dismissed-${target}`;
     display: flex;
     align-items: center;
     gap: 10px;
+    width: max-content;
     max-width: calc(100vw - 2rem);
     padding: 10px 10px 10px 14px;
     border: 1px solid var(--line-strong);
@@ -58,6 +60,10 @@ const storageKey = `portfolio-notice-dismissed-${target}`;
 
   .version-notice p strong {
     font-weight: 650;
+  }
+
+  .version-notice-short {
+    display: none;
   }
 
   .version-notice-link {
@@ -93,16 +99,57 @@ const storageKey = `portfolio-notice-dismissed-${target}`;
     bottom: 4.25rem;
   }
 
-  @media (width < 32rem) {
-    :global(body:has(.ab-pill)) .version-notice {
-      bottom: 4rem;
+  /* Phones and small tablets: a slim docked bar. The pill above only reads
+     well on one line, so here it swaps to short copy and a softer radius. */
+  @media (width < 48rem) {
+    .version-notice {
+      right: 0.75rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      left: 0.75rem;
+      gap: 4px;
+      width: auto;
+      max-width: none;
+      padding: 4px 4px 4px 14px;
+      border-radius: 14px;
+      transform: none;
+      animation: version-notice-in 240ms var(--ease-out) both;
     }
 
+    :global(body:has(.ab-pill)) .version-notice {
+      bottom: calc(4rem + env(safe-area-inset-bottom));
+    }
+
+    .version-notice-full {
+      display: none;
+    }
+
+    .version-notice-short {
+      display: block;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .version-notice-link {
+      min-height: 40px;
+      padding: 0 14px;
+    }
+
+    .version-notice-close {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  @keyframes version-notice-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
     .version-notice {
-      flex-wrap: wrap;
-      justify-content: center;
-      text-align: center;
-      bottom: 0.5rem;
+      animation: none;
     }
   }
 </style>
@@ -120,7 +167,6 @@ const storageKey = `portfolio-notice-dismissed-${target}`;
     }
     if (dismissed) return;
 
-    notice.hidden = false;
     notice.querySelector('[data-version-notice-close]')?.addEventListener('click', () => {
       notice.hidden = true;
       try {
@@ -129,5 +175,20 @@ const storageKey = `portfolio-notice-dismissed-${target}`;
         /* storage is optional */
       }
     });
+
+    // On small screens the first view stays clear: wait until the visitor has
+    // scrolled past most of it.
+    const pastFirstView = () => window.scrollY > window.innerHeight * 0.6;
+    if (!window.matchMedia('(max-width: 47.9375rem)').matches || pastFirstView()) {
+      notice.hidden = false;
+      return;
+    }
+
+    const onScroll = () => {
+      if (!pastFirstView()) return;
+      window.removeEventListener('scroll', onScroll);
+      notice.hidden = false;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
   });
 </script>

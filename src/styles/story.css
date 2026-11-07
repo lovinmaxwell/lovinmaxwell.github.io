@@ -82,6 +82,13 @@ html[data-appearance="immersive"] {
 .scene-intro h1 { font-family: var(--display); font-size: clamp(56px, 9vw, 128px); line-height: .92; font-weight: 600; letter-spacing: -.045em; }
 .scene-intro h1 > span:last-child { background: linear-gradient(110deg, var(--fg) 40%, #ffb08a 70%, #ff5b1f); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .scene-intro h1 > span { display: block; }
+/* The accent runs through the name: it leaves "Maxwell.", crosses "Lovin", then settles back on the last letters.
+   The gradient is four windows wide; the second window is the resting look, so the loop has no visible jump. */
+.story[data-name-flow="on"] .scene-intro h1 > span { width: fit-content; padding-right: .06em; background-repeat: no-repeat; background-size: 400% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.story[data-name-flow="on"] .scene-intro h1 > span:first-child { background-image: linear-gradient(110deg, var(--fg) 34%, #ffb08a 44%, #ff5b1f 50%, #ffb08a 56%, var(--fg) 66%); background-position: 0% 0; animation: name-flow-first 10s linear 1.2s infinite; }
+.story[data-name-flow="on"] .scene-intro h1 > span:last-child { background-image: linear-gradient(110deg, var(--fg) 35%, #ffb08a 42.5%, #ff5b1f 50%, var(--fg) 58%); background-position: 33.33% 0; animation: name-flow-last 10s linear 1.2s infinite; }
+@keyframes name-flow-first { 0%, 8% { background-position: 100% 0; } 30%, 100% { background-position: 0% 0; } }
+@keyframes name-flow-last { 0% { background-position: 33.33% 0; } 8% { background-position: 0% 0; } 8.01%, 16% { background-position: 100% 0; } 38%, 100% { background-position: 33.33% 0; } }
 .intro-statement { margin-top: 28px; font-size: clamp(15px, 1.4vw, 21px); line-height: 1.6; color: var(--muted); letter-spacing: -.02em; }
 .intro-copy .story-link { margin-top: 28px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 500; transition: translate .25s var(--ease-out), box-shadow .25s var(--ease-out); }
 .intro-copy .story-link:hover { color: var(--accent-ink); translate: 0 -2px; box-shadow: 0 12px 30px -12px rgba(255, 91, 31, .55); }
